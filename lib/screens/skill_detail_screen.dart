@@ -513,36 +513,34 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                     ),
                   ),
                   Expanded(
-                    child: Stack(
-                      children: [
-                        // Background Bar
-                        Container(
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                        // Fill Bar
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 600),
-                          curve: Curves.fastOutSlowIn,
-                          height: 10,
-                          width: count > 0 ? null : 0, // dynamic width via constraints
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: FractionallySizedBox(
-                              widthFactor: count > 0 ? ratio : 0.001,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.75),
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxWidth = constraints.maxWidth;
+                        final targetWidth = count > 0 ? maxWidth * ratio : 0.0;
+                        return Stack(
+                          children: [
+                            // Background Bar
+                            Container(
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(5),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
+                            // Fill Bar
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 600),
+                              curve: Curves.fastOutSlowIn,
+                              height: 10,
+                              width: targetWidth,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.75),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),

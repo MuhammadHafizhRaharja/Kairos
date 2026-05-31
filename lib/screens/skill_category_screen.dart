@@ -62,6 +62,15 @@ class SkillCategoryScreen extends StatelessWidget {
                         category.id ?? -1,
                       );
 
+                      // Hitung rata-rata kemajuan kategori
+                      double categoryProgress = 0.0;
+                      if (skillsInCategory.isNotEmpty) {
+                        final totalScore = skillsInCategory.map((s) {
+                          return ((s.level - 1) + s.progress) / 5.0;
+                        }).reduce((a, b) => a + b);
+                        categoryProgress = (totalScore / skillsInCategory.length).clamp(0.0, 1.0);
+                      }
+
                       return GestureDetector(
                         // Gesture 1: Ketuk sekali untuk menavigasi ke halaman detail skill
                         onTap: () {
@@ -147,11 +156,34 @@ class SkillCategoryScreen extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      '${skillsInCategory.length} Keahlian',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.hintColor,
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${skillsInCategory.length} Keahlian',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: theme.hintColor,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${(categoryProgress * 100).toInt()}%',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(category.colorValue),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: categoryProgress,
+                                        backgroundColor: Color(category.colorValue).withValues(alpha: 0.1),
+                                        color: Color(category.colorValue),
+                                        minHeight: 5,
                                       ),
                                     ),
                                   ],

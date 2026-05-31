@@ -28,13 +28,21 @@ class SkillDetailScreen extends StatelessWidget {
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : skills.isEmpty
-          ? _buildEmptyState(context, theme, categoryColor)
           : ListView.builder(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 120),
-              itemCount: skills.length,
+              itemCount: skills.isEmpty ? 2 : skills.length + 1,
               itemBuilder: (context, index) {
-                final skill = skills[index];
+                // Tampilkan summary card pada indeks pertama
+                if (index == 0) {
+                  return _buildCategorySummaryHeaderCard(context, skills, categoryColor);
+                }
+
+                // Tampilkan empty state jika tidak ada skill
+                if (skills.isEmpty) {
+                  return _buildEmptyState(context, theme, categoryColor);
+                }
+
+                final skill = skills[index - 1];
 
                 // Menggunakan Gesture Swipe-to-Delete dengan Dismissible
                 return Dismissible(
@@ -331,5 +339,148 @@ class SkillDetailScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  /// Kartu ringkasan kemajuan untuk kategori pembelajaran tertentu
+  Widget _buildCategorySummaryHeaderCard(
+    BuildContext context,
+    List<Skill> skills,
+    Color categoryColor,
+  ) {
+    final theme = Theme.of(context);
+    final totalSkills = skills.length;
+
+    // Hitung rata-rata level dan kemajuan total
+    double avgLevel = 0.0;
+    double overallProgress = 0.0;
+
+    if (skills.isNotEmpty) {
+      avgLevel = skills.map((s) => s.level.toDouble()).reduce((a, b) => a + b) / skills.length;
+      final totalScore = skills.map((s) => ((s.level - 1) + s.progress) / 5.0).reduce((a, b) => a + b);
+      overallProgress = (totalScore / skills.length).clamp(0.0, 1.0);
+    }
+
+    return Card(
+      elevation: 0,
+      color: categoryColor.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: categoryColor.withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+      ),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: categoryColor.withValues(alpha: 0.2),
+                  child: Icon(
+                    _getIconData(category.icon),
+                    color: categoryColor,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Target Penguasaan Kategori',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildSummaryStat('Total Skill', totalSkills.toString(), theme),
+                Container(width: 1.5, height: 36, color: theme.dividerColor.withValues(alpha: 0.3)),
+                _buildSummaryStat('Rerata Level', avgLevel > 0 ? avgLevel.toStringAsFixed(1) : '-', theme),
+                Container(width: 1.5, height: 36, color: theme.dividerColor.withValues(alpha: 0.3)),
+                _buildSummaryStat('Penguasaan', '${(overallProgress * 100).toInt()}%', theme, color: categoryColor),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: overallProgress,
+                backgroundColor: categoryColor.withValues(alpha: 0.1),
+                color: categoryColor,
+                minHeight: 8,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryStat(String label, String value, ThemeData theme, {Color? color}) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: color ?? theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: theme.hintColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'code':
+        return Icons.code;
+      case 'fitness_center':
+        return Icons.fitness_center;
+      case 'translate':
+        return Icons.translate;
+      case 'music_note':
+        return Icons.music_note;
+      case 'book':
+        return Icons.book;
+      case 'brush':
+        return Icons.brush;
+      case 'sports_basketball':
+        return Icons.sports_basketball;
+      default:
+        return Icons.star;
+    }
   }
 }

@@ -13,12 +13,14 @@ class ProgressPlaceholderScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Jurnal Progres'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Jurnal Progres'), centerTitle: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 120),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 120,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -27,7 +29,10 @@ class ProgressPlaceholderScreen extends StatelessWidget {
               height: 180,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [theme.colorScheme.tertiaryContainer, theme.colorScheme.primaryContainer],
+                  colors: [
+                    theme.colorScheme.tertiaryContainer,
+                    theme.colorScheme.primaryContainer,
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -44,13 +49,17 @@ class ProgressPlaceholderScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Jurnal Progres Harian',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Fitur ini mencatat perjalanan harian Anda dalam melatih keterampilan, merekam kendala, serta memetakan milestone.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -58,20 +67,29 @@ class ProgressPlaceholderScreen extends StatelessWidget {
             // Bagian Integrasi Shared Preferences
             Text(
               'Pengaturan Jurnal',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8.0,
+                  horizontal: 16.0,
+                ),
                 child: Column(
                   children: [
                     // Slider Ukuran Font
                     ListTile(
                       title: const Text('Ukuran Font Catatan'),
-                      subtitle: Text('${provider.fontSize.toStringAsFixed(1)} pt (Seret slider untuk mencoba)'),
+                      subtitle: Text(
+                        '${provider.fontSize.toStringAsFixed(1)} pt (Seret slider untuk mencoba)',
+                      ),
                     ),
                     Slider(
                       value: provider.fontSize,
@@ -115,7 +133,9 @@ class ProgressPlaceholderScreen extends StatelessWidget {
                           provider.updateViewMode(newSelection.first);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Layout diubah ke: ${newSelection.first}'),
+                              content: Text(
+                                'Layout diubah ke: ${newSelection.first}',
+                              ),
                               duration: const Duration(seconds: 1),
                             ),
                           );
@@ -131,9 +151,13 @@ class ProgressPlaceholderScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.1),
+                ),
               ),
               child: Row(
                 children: [

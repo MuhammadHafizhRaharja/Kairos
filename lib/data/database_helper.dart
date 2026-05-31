@@ -71,10 +71,26 @@ class DatabaseHelper {
   /// Memasukkan data kategori default ke dalam database.
   Future _seedDefaultCategories(Database db) async {
     final defaultCategories = [
-      SkillCategory(name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3), // Biru
-      SkillCategory(name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50), // Hijau
-      SkillCategory(name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800), // Jingga
-      SkillCategory(name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0), // Ungu
+      SkillCategory(
+        name: 'Pemrograman',
+        icon: 'code',
+        colorValue: 0xFF2196F3,
+      ), // Biru
+      SkillCategory(
+        name: 'Kebugaran',
+        icon: 'fitness_center',
+        colorValue: 0xFF4CAF50,
+      ), // Hijau
+      SkillCategory(
+        name: 'Bahasa',
+        icon: 'translate',
+        colorValue: 0xFFFF9800,
+      ), // Jingga
+      SkillCategory(
+        name: 'Musik & Seni',
+        icon: 'music_note',
+        colorValue: 0xFF9C27B0,
+      ), // Ungu
     ];
 
     for (var category in defaultCategories) {
@@ -164,11 +180,7 @@ class DatabaseHelper {
   /// Delete: Menghapus data skill berdasarkan ID.
   Future<int> deleteSkill(int id) async {
     final db = await instance.database;
-    return await db.delete(
-      'skills',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('skills', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Menutup database jika tidak digunakan lagi (misalnya untuk pengujian).

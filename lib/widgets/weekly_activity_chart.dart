@@ -53,8 +53,8 @@ class WeeklyActivityChart extends StatelessWidget {
               children: List.generate(7, (index) {
                 final heightFactor = activityHeights[index];
                 final isToday = index == todayIndex;
-                final barColor = isToday 
-                    ? theme.colorScheme.primary 
+                final barColor = isToday
+                    ? theme.colorScheme.primary
                     : theme.colorScheme.primary.withValues(alpha: 0.3);
 
                 return Column(
@@ -73,21 +73,22 @@ class WeeklyActivityChart extends StatelessWidget {
                         height: 100 * heightFactor,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              barColor.withValues(alpha: 0.7),
-                              barColor,
-                            ],
+                            colors: [barColor.withValues(alpha: 0.7), barColor],
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
                           ),
                           borderRadius: BorderRadius.circular(8),
-                          boxShadow: isToday ? [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ] : null,
+                          boxShadow: isToday
+                              ? [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
                         ),
                       ),
                     ),
@@ -96,8 +97,12 @@ class WeeklyActivityChart extends StatelessWidget {
                       days[index],
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                        color: isToday ? theme.colorScheme.primary : theme.hintColor,
+                        fontWeight: isToday
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isToday
+                            ? theme.colorScheme.primary
+                            : theme.hintColor,
                       ),
                     ),
                   ],

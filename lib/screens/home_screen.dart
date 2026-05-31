@@ -21,10 +21,28 @@ class _HomeScreenState extends State<HomeScreen> {
   // Method untuk memformat tanggal ke bahasa Indonesia secara manual tanpa konfigurasi locale eksternal
   String _getFormattedDate() {
     final now = DateTime.now();
-    final days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    final days = [
+      'Minggu',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+    ];
     final months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     final dayName = days[now.weekday % 7];
     final monthName = months[now.month - 1];
@@ -40,7 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0, bottom: 120.0),
+          padding: const EdgeInsets.only(
+            left: 20.0,
+            right: 20.0,
+            top: 20.0,
+            bottom: 120.0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -87,11 +110,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Button Toggle Dark Mode (Shared Pref: appTheme)
                       IconButton(
-                        icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+                        icon: Icon(
+                          isDark
+                              ? Icons.light_mode_rounded
+                              : Icons.dark_mode_rounded,
+                        ),
                         style: IconButton.styleFrom(
                           backgroundColor: theme.colorScheme.surfaceContainer,
                           padding: const EdgeInsets.all(12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         onPressed: () {
                           provider.toggleTheme(!provider.isDarkMode);
@@ -100,26 +129,34 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 10),
                       // Tappable Avatar dengan outline bercahaya
                       GestureDetector(
-                        onTap: () => _showEditProfileBottomSheet(context, provider),
+                        onTap: () =>
+                            _showEditProfileBottomSheet(context, provider),
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.5,
+                              ),
                               width: 2.0,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 blurRadius: 6,
-                              )
+                              ),
                             ],
                           ),
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            backgroundColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
                             child: Text(
-                              provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
+                              provider.userName.isNotEmpty
+                                  ? provider.userName[0].toUpperCase()
+                                  : 'K',
                               style: TextStyle(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -172,7 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitle: '${provider.skills.length} Keahlian',
                       icon: Icons.emoji_events_rounded,
                       startColor: theme.colorScheme.primary,
-                      endColor: theme.colorScheme.primary.withValues(alpha: 0.7),
+                      endColor: theme.colorScheme.primary.withValues(
+                        alpha: 0.7,
+                      ),
                       onTap: () => widget.onNavigate?.call(1),
                     ),
                   ),
@@ -181,7 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _buildFeatureBarItem(
                       context: context,
                       title: 'Referensi',
-                      subtitle: provider.isNotificationEnabled ? 'Notifikasi Aktif' : 'Notifikasi Mati',
+                      subtitle: provider.isNotificationEnabled
+                          ? 'Notifikasi Aktif'
+                          : 'Notifikasi Mati',
                       icon: Icons.auto_stories_rounded,
                       startColor: const Color(0xFF4CAF50),
                       endColor: const Color(0xFF81C784),
@@ -228,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: theme.colorScheme.primary.withValues(alpha: 0.25),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -269,7 +310,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Bagian Aktivitas Keahlian Terkini
-  Widget _buildRecentSkillsSection(BuildContext context, SkillProvider provider, ThemeData theme) {
+  Widget _buildRecentSkillsSection(
+    BuildContext context,
+    SkillProvider provider,
+    ThemeData theme,
+  ) {
     final List<Skill> recentSkills = provider.skills.take(3).toList();
     if (recentSkills.isEmpty) return const SizedBox.shrink();
 
@@ -294,10 +339,16 @@ class _HomeScreenState extends State<HomeScreen> {
             // Cari kategori skill untuk warna dan ikon
             SkillCategory? parentCat;
             try {
-              parentCat = provider.categories.firstWhere((c) => c.id == skill.categoryId);
+              parentCat = provider.categories.firstWhere(
+                (c) => c.id == skill.categoryId,
+              );
             } catch (_) {
               // Jika kategori tidak ditemukan, buat placeholder
-              parentCat = SkillCategory(name: 'Lainnya', icon: 'star', colorValue: 0xFF9C27B0);
+              parentCat = SkillCategory(
+                name: 'Lainnya',
+                icon: 'star',
+                colorValue: 0xFF9C27B0,
+              );
             }
             final catColor = Color(parentCat.colorValue);
 
@@ -306,7 +357,9 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.only(bottom: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
+                side: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.05),
+                ),
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
@@ -315,19 +368,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SkillDetailScreen(category: parentCat!),
+                        builder: (context) =>
+                            SkillDetailScreen(category: parentCat!),
                       ),
                     );
                   }
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 18,
                         backgroundColor: catColor.withValues(alpha: 0.15),
-                        child: Icon(_getIconData(parentCat.icon), color: catColor, size: 16),
+                        child: Icon(
+                          _getIconData(parentCat.icon),
+                          color: catColor,
+                          size: 16,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -336,14 +397,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               skill.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13.5,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               parentCat.name,
-                              style: TextStyle(color: theme.hintColor, fontSize: 11),
+                              style: TextStyle(
+                                color: theme.hintColor,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -353,7 +420,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: catColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
@@ -374,7 +444,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(3),
                               child: LinearProgressIndicator(
                                 value: skill.progress,
-                                backgroundColor: catColor.withValues(alpha: 0.1),
+                                backgroundColor: catColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 color: catColor,
                                 minHeight: 4,
                               ),
@@ -393,7 +465,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showEditProfileBottomSheet(BuildContext context, SkillProvider provider) {
+  void _showEditProfileBottomSheet(
+    BuildContext context,
+    SkillProvider provider,
+  ) {
     final nameController = TextEditingController(text: provider.userName);
     final theme = Theme.of(context);
 
@@ -453,9 +528,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 Center(
                   child: CircleAvatar(
                     radius: 36,
-                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    backgroundColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.12,
+                    ),
                     child: Text(
-                      provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
+                      provider.userName.isNotEmpty
+                          ? provider.userName[0].toUpperCase()
+                          : 'K',
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -469,11 +548,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   controller: nameController,
                   decoration: InputDecoration(
                     labelText: 'Nama Panggilan',
-                    prefixIcon: const Icon(Icons.person_rounded, color: Colors.deepPurple),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    prefixIcon: const Icon(
+                      Icons.person_rounded,
+                      color: Colors.deepPurple,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                      borderSide: const BorderSide(
+                        color: Colors.deepPurple,
+                        width: 2,
+                      ),
                     ),
                   ),
                   textCapitalization: TextCapitalization.words,
@@ -487,7 +574,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.pop(modalContext);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Nama profil berhasil disimpan secara persisten!'),
+                          content: Text(
+                            'Nama profil berhasil disimpan secara persisten!',
+                          ),
                           duration: Duration(seconds: 1),
                         ),
                       );
@@ -519,9 +608,11 @@ class _HomeScreenState extends State<HomeScreen> {
     // 1. Hitung progres Skill
     double skillProgress = 0.0;
     if (provider.skills.isNotEmpty) {
-      final totalScore = provider.skills.map((s) {
-        return ((s.level - 1) + s.progress) / 5.0;
-      }).reduce((a, b) => a + b);
+      final totalScore = provider.skills
+          .map((s) {
+            return ((s.level - 1) + s.progress) / 5.0;
+          })
+          .reduce((a, b) => a + b);
       skillProgress = (totalScore / provider.skills.length).clamp(0.0, 1.0);
     }
 
@@ -532,7 +623,8 @@ class _HomeScreenState extends State<HomeScreen> {
     resourceProgress = resourceProgress.clamp(0.15, 0.95);
 
     // 3. Hitung progres Progress Log
-    double progressLogProgress = 0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
+    double progressLogProgress =
+        0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
     progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
 
     return Card(
@@ -607,10 +699,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -739,10 +828,7 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: startColor.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
+        side: BorderSide(color: startColor.withValues(alpha: 0.2), width: 1.5),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -760,7 +846,10 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 14.0,
+              horizontal: 8.0,
+            ),
             child: Column(
               children: [
                 Container(
@@ -783,10 +872,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: theme.hintColor,
-                  ),
+                  style: TextStyle(fontSize: 9.5, color: theme.hintColor),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

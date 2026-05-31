@@ -8,25 +8,24 @@ import '../providers/skill_provider.dart';
 class ActivityRingsChart extends StatelessWidget {
   final double size;
 
-  const ActivityRingsChart({
-    super.key,
-    this.size = 200,
-  });
+  const ActivityRingsChart({super.key, this.size = 200});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
-    
+
     // 1. Menghitung ring luar (Skill): Rata-rata pencapaian tingkat keahlian (level 1-5 & progres)
     double skillProgress = 0.0;
     if (provider.skills.isNotEmpty) {
-      final totalScore = provider.skills.map((s) {
-        // Asumsi level maksimal = 5.
-        // Formula: (level_saat_ini - 1 + progres) / 5
-        // Level 1 progres 0% -> 0.0
-        // Level 5 progres 100% -> 1.0 (Naik ke tingkat berikutnya)
-        return ((s.level - 1) + s.progress) / 5.0;
-      }).reduce((a, b) => a + b);
+      final totalScore = provider.skills
+          .map((s) {
+            // Asumsi level maksimal = 5.
+            // Formula: (level_saat_ini - 1 + progres) / 5
+            // Level 1 progres 0% -> 0.0
+            // Level 5 progres 100% -> 1.0 (Naik ke tingkat berikutnya)
+            return ((s.level - 1) + s.progress) / 5.0;
+          })
+          .reduce((a, b) => a + b);
       skillProgress = (totalScore / provider.skills.length).clamp(0.0, 1.0);
     } else {
       skillProgress = 0.0; // Jika belum ada skill
@@ -44,7 +43,8 @@ class ActivityRingsChart extends StatelessWidget {
 
     // 3. Ring dalam (Progress Log): Responsif terhadap ukuran font catatan (mock)
     // Pemetaan ukuran font 12 pt s.d. 24 pt ke rentang progres 0.3 s.d. 0.8
-    double progressLogProgress = 0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
+    double progressLogProgress =
+        0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
     progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
 
     return SizedBox(
@@ -134,7 +134,8 @@ class _RingsPainter extends CustomPainter {
     final Paint activePaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round // Ujung membulat yang mewah
+      ..strokeCap = StrokeCap
+          .round // Ujung membulat yang mewah
       ..strokeWidth = strokeWidth;
 
     // Mulai menggambar dari posisi atas (-90 derajat atau -pi/2)

@@ -75,14 +75,18 @@ class SkillProvider extends ChangeNotifier {
   Future<void> updateUserName(String newName) async {
     _userName = newName;
     notifyListeners(); // Update UI langsung
-    await _prefsHelper.setUserName(newName); // Simpan ke Shared Preferences di background
+    await _prefsHelper.setUserName(
+      newName,
+    ); // Simpan ke Shared Preferences di background
   }
 
   /// Mengaktifkan/menonaktifkan mode gelap dan menyimpannya secara persisten.
   Future<void> toggleTheme(bool isDark) async {
     _isDarkMode = isDark;
     notifyListeners(); // Update UI langsung
-    await _prefsHelper.setIsDarkMode(isDark); // Simpan ke Shared Preferences di background
+    await _prefsHelper.setIsDarkMode(
+      isDark,
+    ); // Simpan ke Shared Preferences di background
   }
 
   /// Mengatur bahasa default untuk Modul Resource.

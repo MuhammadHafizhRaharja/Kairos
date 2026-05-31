@@ -13,12 +13,14 @@ class ResourcePlaceholderScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Referensi Belajar'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Referensi Belajar'), centerTitle: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 120),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 120,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -27,7 +29,10 @@ class ResourcePlaceholderScreen extends StatelessWidget {
               height: 180,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [theme.colorScheme.primaryContainer, theme.colorScheme.secondaryContainer],
+                  colors: [
+                    theme.colorScheme.primaryContainer,
+                    theme.colorScheme.secondaryContainer,
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -44,13 +49,17 @@ class ResourcePlaceholderScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Referensi & Sumber Belajar',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Fitur ini dirancang untuk mencatat referensi bacaan, artikel, dan video tutorial yang menunjang perkembangan keahlian Anda.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -58,26 +67,39 @@ class ResourcePlaceholderScreen extends StatelessWidget {
             // Bagian Integrasi Shared Preferences
             Text(
               'Preferensi Referensi',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8.0,
+                  horizontal: 16.0,
+                ),
                 child: Column(
                   children: [
                     // Switch Notifikasi
                     SwitchListTile(
                       title: const Text('Aktifkan Notifikasi Harian'),
-                      subtitle: const Text('Kirim pengingat belajar secara berkala'),
+                      subtitle: const Text(
+                        'Kirim pengingat belajar secara berkala',
+                      ),
                       value: provider.isNotificationEnabled,
                       onChanged: (val) {
                         provider.toggleNotification(val);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(val ? 'Notifikasi diaktifkan!' : 'Notifikasi dimatikan!'),
+                            content: Text(
+                              val
+                                  ? 'Notifikasi diaktifkan!'
+                                  : 'Notifikasi dimatikan!',
+                            ),
                             duration: const Duration(seconds: 1),
                           ),
                         );
@@ -87,7 +109,9 @@ class ResourcePlaceholderScreen extends StatelessWidget {
                     // Dropdown Bahasa
                     ListTile(
                       title: const Text('Bahasa Utama Konten'),
-                      subtitle: const Text('Bahasa rujukan untuk artikel & materi'),
+                      subtitle: const Text(
+                        'Bahasa rujukan untuk artikel & materi',
+                      ),
                       trailing: DropdownButton<String>(
                         value: provider.defaultLang,
                         underline: const SizedBox(),
@@ -96,16 +120,27 @@ class ResourcePlaceholderScreen extends StatelessWidget {
                             provider.updateDefaultLang(newValue);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Bahasa utama diubah ke: ${newValue.toUpperCase()}'),
+                                content: Text(
+                                  'Bahasa utama diubah ke: ${newValue.toUpperCase()}',
+                                ),
                                 duration: const Duration(seconds: 1),
                               ),
                             );
                           }
                         },
                         items: const [
-                          DropdownMenuItem(value: 'id', child: Text('Indonesia (ID)')),
-                          DropdownMenuItem(value: 'en', child: Text('English (EN)')),
-                          DropdownMenuItem(value: 'jp', child: Text('日本語 (JP)')),
+                          DropdownMenuItem(
+                            value: 'id',
+                            child: Text('Indonesia (ID)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text('English (EN)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'jp',
+                            child: Text('日本語 (JP)'),
+                          ),
                         ],
                       ),
                     ),
@@ -118,9 +153,13 @@ class ResourcePlaceholderScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.1),
+                ),
               ),
               child: Row(
                 children: [

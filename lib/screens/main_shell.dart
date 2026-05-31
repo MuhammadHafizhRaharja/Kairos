@@ -41,24 +41,26 @@ class _MainShellState extends State<MainShell> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      extendBody: true, // Konten layar mengalir indah di bawah navbar yang melayang
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      extendBody:
+          true, // Konten layar mengalir indah di bawah navbar yang melayang
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(bottom: 24, left: 16, right: 16, top: 10),
         height: 72,
         decoration: BoxDecoration(
-          color: isDark ? Colors.black.withValues(alpha: 0.75) : Colors.white.withValues(alpha: 0.9),
+          color: isDark
+              ? Colors.black.withValues(alpha: 0.75)
+              : Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: (isDark ? Colors.white : theme.colorScheme.primary).withValues(alpha: 0.08),
+            color: (isDark ? Colors.white : theme.colorScheme.primary)
+                .withValues(alpha: 0.08),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? Colors.black : theme.colorScheme.primary).withValues(alpha: 0.12),
+              color: (isDark ? Colors.black : theme.colorScheme.primary)
+                  .withValues(alpha: 0.12),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -105,7 +107,9 @@ class _MainShellState extends State<MainShell> {
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? activeColor.withValues(alpha: 0.12) : Colors.transparent,
+                color: isSelected
+                    ? activeColor.withValues(alpha: 0.12)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(

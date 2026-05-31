@@ -18,7 +18,8 @@ class SkillCategoryScreen extends StatefulWidget {
 class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String _selectedFilter = 'Semua'; // 'Semua', 'Aktif', 'Menguasai', 'Belum Dimulai'
+  String _selectedFilter =
+      'Semua'; // 'Semua', 'Aktif', 'Menguasai', 'Belum Dimulai'
 
   @override
   void dispose() {
@@ -37,10 +38,12 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     List<Map<String, dynamic>> processedCategories = [];
     for (var cat in rawCategories) {
       final skills = provider.getSkillsForCategory(cat.id ?? -1);
-      
+
       double progress = 0.0;
       if (skills.isNotEmpty) {
-        final totalScore = skills.map((s) => ((s.level - 1) + s.progress) / 5.0).reduce((a, b) => a + b);
+        final totalScore = skills
+            .map((s) => ((s.level - 1) + s.progress) / 5.0)
+            .reduce((a, b) => a + b);
         progress = (totalScore / skills.length).clamp(0.0, 1.0);
       }
 
@@ -52,14 +55,19 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     }
 
     // 2. Terapkan Filter & Pencarian
-    List<Map<String, dynamic>> filteredCategories = processedCategories.where((item) {
+    List<Map<String, dynamic>> filteredCategories = processedCategories.where((
+      item,
+    ) {
       final SkillCategory cat = item['category'];
       final List<Skill> skills = item['skills'];
       final double progress = item['progress'];
 
       // Pencarian berdasarkan nama kategori ATAU nama skill di dalamnya
-      final matchesQuery = cat.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          skills.any((s) => s.name.toLowerCase().contains(_searchQuery.toLowerCase()));
+      final matchesQuery =
+          cat.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          skills.any(
+            (s) => s.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+          );
 
       bool matchesFilter = true;
       if (_selectedFilter == 'Aktif') {
@@ -88,225 +96,286 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : rawCategories.isEmpty
-              ? _buildEmptyState(context, theme)
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. DASHBOARD STATISTIK DENGAN GRAFIK DISTRIBUSI & METRIK LENGKAP
-                      _buildRichDashboardCard(context, rawCategories, provider),
-                      const SizedBox(height: 20),
+          ? _buildEmptyState(context, theme)
+          : SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: 120,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. DASHBOARD STATISTIK DENGAN GRAFIK DISTRIBUSI & METRIK LENGKAP
+                  _buildRichDashboardCard(context, rawCategories, provider),
+                  const SizedBox(height: 20),
 
-                      // 2. PANEL PENCARIAN & FILTER CHIP
-                      _buildSearchAndFilterPanel(context, theme),
-                      const SizedBox(height: 16),
+                  // 2. PANEL PENCARIAN & FILTER CHIP
+                  _buildSearchAndFilterPanel(context, theme),
+                  const SizedBox(height: 16),
 
-                      // 3. DAFTAR GRID KATEGORI
-                      filteredCategories.isEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 40.0),
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.search_off_rounded, size: 48, color: theme.hintColor),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Tidak ada kategori yang cocok',
-                                      style: TextStyle(color: theme.hintColor, fontSize: 14),
-                                    ),
-                                  ],
+                  // 3. DAFTAR GRID KATEGORI
+                  filteredCategories.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40.0),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.search_off_rounded,
+                                  size: 48,
+                                  color: theme.hintColor,
                                 ),
-                              ),
-                            )
-                          : GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.zero,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tidak ada kategori yang cocok',
+                                  style: TextStyle(
+                                    color: theme.hintColor,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 14,
                                 mainAxisSpacing: 14,
-                                childAspectRatio: 0.95, // Diberi sedikit rasio lebih tinggi untuk preview skill
+                                childAspectRatio:
+                                    0.95, // Diberi sedikit rasio lebih tinggi untuk preview skill
                               ),
-                              itemCount: filteredCategories.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredCategories[index];
-                                final SkillCategory category = item['category'];
-                                final List<Skill> skillsInCategory = item['skills'];
-                                final double progress = item['progress'];
-                                final color = Color(category.colorValue);
+                          itemCount: filteredCategories.length,
+                          itemBuilder: (context, index) {
+                            final item = filteredCategories[index];
+                            final SkillCategory category = item['category'];
+                            final List<Skill> skillsInCategory = item['skills'];
+                            final double progress = item['progress'];
+                            final color = Color(category.colorValue);
 
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SkillDetailScreen(category: category),
-                                      ),
-                                    );
-                                  },
-                                  onLongPress: () {
-                                    _showCategoryOptionsBottomSheet(context, provider, category);
-                                  },
-                                  onDoubleTap: () {
-                                    _showQuickAddSkillDialog(context, provider, category);
-                                  },
-                                  child: Card(
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      side: BorderSide(
-                                        color: color.withValues(alpha: 0.25),
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            color.withValues(alpha: isDark ? 0.05 : 0.02),
-                                            color.withValues(alpha: isDark ? 0.15 : 0.08),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          // Bagian Atas: Ikon + Mastery Tier Badge
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              CircleAvatar(
-                                                radius: 18,
-                                                backgroundColor: color.withValues(alpha: 0.2),
-                                                child: Icon(
-                                                  _getIconData(category.icon),
-                                                  color: color,
-                                                  size: 18,
-                                                ),
-                                              ),
-                                              _buildTierBadge(progress, skillsInCategory.isEmpty),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-
-                                          // Bagian Tengah: Nama Kategori & Preview Sub-Skills
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  category.name,
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 4),
-                                                
-                                                // Preview 2 skill pertama
-                                                if (skillsInCategory.isNotEmpty)
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: skillsInCategory.take(2).map((s) {
-                                                        return Padding(
-                                                          padding: const EdgeInsets.only(top: 2.0),
-                                                          child: Row(
-                                                            children: [
-                                                              Container(
-                                                                width: 4,
-                                                                height: 4,
-                                                                decoration: BoxDecoration(
-                                                                  color: color,
-                                                                  shape: BoxShape.circle,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(width: 4),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  '${s.name} (Lvl ${s.level})',
-                                                                  style: TextStyle(
-                                                                    fontSize: 9.5,
-                                                                    color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                                                                  ),
-                                                                  maxLines: 1,
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        );
-                                                      }).toList(),
-                                                    ),
-                                                  )
-                                                else
-                                                  Text(
-                                                    'Belum ada keahlian',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontStyle: FontStyle.italic,
-                                                      color: theme.hintColor,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-
-                                          // Bagian Bawah: Statistik Progres
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    '${skillsInCategory.length} Skill',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: theme.hintColor,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    '${(progress * 100).toInt()}%',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: color,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              ClipRRect(
-                                                borderRadius: BorderRadius.circular(4),
-                                                child: LinearProgressIndicator(
-                                                  value: progress,
-                                                  backgroundColor: color.withValues(alpha: 0.1),
-                                                  color: color,
-                                                  minHeight: 4,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        SkillDetailScreen(category: category),
                                   ),
                                 );
                               },
-                            ),
-                    ],
-                  ),
-                ),
+                              onLongPress: () {
+                                _showCategoryOptionsBottomSheet(
+                                  context,
+                                  provider,
+                                  category,
+                                );
+                              },
+                              onDoubleTap: () {
+                                _showQuickAddSkillDialog(
+                                  context,
+                                  provider,
+                                  category,
+                                );
+                              },
+                              child: Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: BorderSide(
+                                    color: color.withValues(alpha: 0.25),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        color.withValues(
+                                          alpha: isDark ? 0.05 : 0.02,
+                                        ),
+                                        color.withValues(
+                                          alpha: isDark ? 0.15 : 0.08,
+                                        ),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      // Bagian Atas: Ikon + Mastery Tier Badge
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 18,
+                                            backgroundColor: color.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                            child: Icon(
+                                              _getIconData(category.icon),
+                                              color: color,
+                                              size: 18,
+                                            ),
+                                          ),
+                                          _buildTierBadge(
+                                            progress,
+                                            skillsInCategory.isEmpty,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+
+                                      // Bagian Tengah: Nama Kategori & Preview Sub-Skills
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              category.name,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+
+                                            // Preview 2 skill pertama
+                                            if (skillsInCategory.isNotEmpty)
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: skillsInCategory.take(2).map((
+                                                    s,
+                                                  ) {
+                                                    return Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            top: 2.0,
+                                                          ),
+                                                      child: Row(
+                                                        children: [
+                                                          Container(
+                                                            width: 4,
+                                                            height: 4,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color: color,
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 4,
+                                                          ),
+                                                          Expanded(
+                                                            child: Text(
+                                                              '${s.name} (Lvl ${s.level})',
+                                                              style: TextStyle(
+                                                                fontSize: 9.5,
+                                                                color: theme
+                                                                    .textTheme
+                                                                    .bodyMedium
+                                                                    ?.color
+                                                                    ?.withValues(
+                                                                      alpha:
+                                                                          0.7,
+                                                                    ),
+                                                              ),
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              )
+                                            else
+                                              Text(
+                                                'Belum ada keahlian',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontStyle: FontStyle.italic,
+                                                  color: theme.hintColor,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // Bagian Bawah: Statistik Progres
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                '${skillsInCategory.length} Skill',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: theme.hintColor,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${(progress * 100).toInt()}%',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: color,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                            child: LinearProgressIndicator(
+                                              value: progress,
+                                              backgroundColor: color.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              color: color,
+                                              minHeight: 4,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ],
+              ),
+            ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80.0),
         child: FloatingActionButton(
@@ -351,7 +420,9 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -383,7 +454,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 0.8),
+        border: Border.all(
+          color: badgeColor.withValues(alpha: 0.4),
+          width: 0.8,
+        ),
       ),
       child: Text(
         label,
@@ -417,7 +491,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
             style: const TextStyle(fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Cari kategori atau sub-keahlian...',
-              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Colors.deepPurple),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: Colors.deepPurple,
+              ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear_rounded, size: 18),
@@ -430,7 +508,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     )
                   : null,
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
             onChanged: (val) {
               setState(() {
@@ -454,8 +535,12 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     filter,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : Colors.black87),
                     ),
                   ),
                   selected: isSelected,
@@ -492,7 +577,9 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     double globalMastery = 0.0;
     int masteredSkillsCount = 0;
     if (totalSkillsCount > 0) {
-      final totalScore = totalSkills.map((s) => ((s.level - 1) + s.progress) / 5.0).reduce((a, b) => a + b);
+      final totalScore = totalSkills
+          .map((s) => ((s.level - 1) + s.progress) / 5.0)
+          .reduce((a, b) => a + b);
       globalMastery = (totalScore / totalSkillsCount).clamp(0.0, 1.0);
       masteredSkillsCount = totalSkills.where((s) => s.level >= 5).length;
     }
@@ -518,10 +605,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               children: [
                 const Text(
                   'Dashboard Keahlian',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 Icon(
                   Icons.dashboard_customize_rounded,
@@ -544,7 +628,9 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       height: 64,
                       child: CircularProgressIndicator(
                         value: globalMastery,
-                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.1,
+                        ),
                         color: theme.colorScheme.primary,
                         strokeWidth: 7,
                         strokeCap: StrokeCap.round,
@@ -566,9 +652,22 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildDashboardStat('Kategori', categories.length.toString(), theme),
-                      _buildDashboardStat('Keahlian', totalSkillsCount.toString(), theme),
-                      _buildDashboardStat('Master 🏆', masteredSkillsCount.toString(), theme, color: Colors.amber),
+                      _buildDashboardStat(
+                        'Kategori',
+                        categories.length.toString(),
+                        theme,
+                      ),
+                      _buildDashboardStat(
+                        'Keahlian',
+                        totalSkillsCount.toString(),
+                        theme,
+                      ),
+                      _buildDashboardStat(
+                        'Master 🏆',
+                        masteredSkillsCount.toString(),
+                        theme,
+                        color: Colors.amber,
+                      ),
                     ],
                   ),
                 ),
@@ -584,12 +683,16 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              
+
               // Tampilkan mini bar proporsi
               Column(
                 children: categories.take(3).map((category) {
-                  final skills = provider.getSkillsForCategory(category.id ?? -1);
-                  final double ratio = totalSkillsCount > 0 ? skills.length / totalSkillsCount : 0.0;
+                  final skills = provider.getSkillsForCategory(
+                    category.id ?? -1,
+                  );
+                  final double ratio = totalSkillsCount > 0
+                      ? skills.length / totalSkillsCount
+                      : 0.0;
                   final color = Color(category.colorValue);
 
                   return Padding(
@@ -602,11 +705,18 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                           children: [
                             Text(
                               category.name,
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             Text(
                               '${(ratio * 100).toInt()}% (${skills.length} Skill)',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
                             ),
                           ],
                         ),
@@ -632,7 +742,12 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     );
   }
 
-  Widget _buildDashboardStat(String label, String value, ThemeData theme, {Color? color}) {
+  Widget _buildDashboardStat(
+    String label,
+    String value,
+    ThemeData theme, {
+    Color? color,
+  }) {
     return Column(
       children: [
         Text(
@@ -644,13 +759,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: theme.hintColor,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 10, color: theme.hintColor)),
       ],
     );
   }
@@ -677,7 +786,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   }
 
   /// Bottom sheet opsi kategori (Ubah / Hapus) yang dipercantik dengan drag pill handle
-  void _showCategoryOptionsBottomSheet(BuildContext parentContext, SkillProvider provider, SkillCategory category) {
+  void _showCategoryOptionsBottomSheet(
+    BuildContext parentContext,
+    SkillProvider provider,
+    SkillCategory category,
+  ) {
     showModalBottomSheet(
       context: parentContext,
       shape: const RoundedRectangleBorder(
@@ -708,8 +821,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   child: const Icon(Icons.edit_rounded, color: Colors.blue),
                 ),
-                title: const Text('Ubah Kategori', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Sesuaikan nama, ikon, atau warna kategori'),
+                title: const Text(
+                  'Ubah Kategori',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'Sesuaikan nama, ikon, atau warna kategori',
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _showEditCategoryDialog(parentContext, provider, category);
@@ -718,10 +836,21 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
-                  child: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.redAccent,
+                  ),
                 ),
-                title: const Text('Hapus Kategori', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                subtitle: const Text('Menghapus permanen kategori beserta seluruh skill di dalamnya'),
+                title: const Text(
+                  'Hapus Kategori',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Menghapus permanen kategori beserta seluruh skill di dalamnya',
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _showDeleteConfirmDialog(parentContext, provider, category);
@@ -757,11 +886,19 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
             ),
             child: const Column(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.white, size: 48),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.white,
+                  size: 48,
+                ),
                 SizedBox(height: 8),
                 Text(
                   'Hapus Kategori?',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -780,8 +917,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
             OutlinedButton(
               onPressed: () => Navigator.pop(dialogContext),
               style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
               ),
               child: const Text('Batal'),
             ),
@@ -801,8 +943,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
               ),
               child: const Text('Hapus'),
             ),
@@ -813,12 +960,24 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   }
 
   /// Dialog dengan input kustom untuk mengedit Kategori yang ada (UI dipercantik)
-  void _showEditCategoryDialog(BuildContext parentContext, SkillProvider provider, SkillCategory category) {
+  void _showEditCategoryDialog(
+    BuildContext parentContext,
+    SkillProvider provider,
+    SkillCategory category,
+  ) {
     final nameController = TextEditingController(text: category.name);
     String selectedIcon = category.icon;
     int selectedColor = category.colorValue;
 
-    final iconsList = ['code', 'fitness_center', 'translate', 'music_note', 'book', 'brush', 'sports_basketball'];
+    final iconsList = [
+      'code',
+      'fitness_center',
+      'translate',
+      'music_note',
+      'book',
+      'brush',
+      'sports_basketball',
+    ];
     final colorsList = [
       {'name': 'Biru', 'value': 0xFF2196F3},
       {'name': 'Hijau', 'value': 0xFF4CAF50},
@@ -850,12 +1009,20 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     CircleAvatar(
                       radius: 26,
                       backgroundColor: Colors.white24,
-                      child: Icon(Icons.mode_edit_outline_rounded, color: Colors.white, size: 26),
+                      child: Icon(
+                        Icons.mode_edit_outline_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'Ubah Kategori',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -871,18 +1038,32 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       decoration: InputDecoration(
                         labelText: 'Nama Kategori',
                         hintText: 'misal: Memasak, Menulis',
-                        prefixIcon: const Icon(Icons.category_rounded, color: Colors.deepPurple),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(
+                          Icons.category_rounded,
+                          color: Colors.deepPurple,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                          borderSide: const BorderSide(
+                            color: Colors.deepPurple,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Pilihan Ikon
-                    const Text('Pilih Ikon:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Pilih Ikon:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -898,10 +1079,14 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isSelected ? Color(selectedColor) : Colors.transparent,
+                              color: isSelected
+                                  ? Color(selectedColor)
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? Color(selectedColor) : Colors.grey.withValues(alpha: 0.5),
+                                color: isSelected
+                                    ? Color(selectedColor)
+                                    : Colors.grey.withValues(alpha: 0.5),
                                 width: 1.5,
                               ),
                             ),
@@ -915,9 +1100,15 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Pilihan Warna
-                    const Text('Pilih Warna:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Pilih Warna:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -939,13 +1130,20 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? (Theme.of(builderContext).brightness == Brightness.dark ? Colors.white : Colors.black)
+                                    ? (Theme.of(builderContext).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black)
                                     : Colors.transparent,
                                 width: 2.5,
                               ),
                             ),
                             child: isSelected
-                                ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
+                                ? const Icon(
+                                    Icons.check_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
                                 : null,
                           ),
                         );
@@ -954,7 +1152,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   ],
                 ),
               ),
-              actionsPadding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
+              actionsPadding: const EdgeInsets.only(
+                bottom: 16,
+                right: 16,
+                left: 16,
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
@@ -965,16 +1167,20 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   onPressed: () {
                     final text = nameController.text.trim();
                     if (text.isNotEmpty) {
-                      provider.updateCategory(SkillCategory(
-                        id: category.id,
-                        name: text,
-                        icon: selectedIcon,
-                        colorValue: selectedColor,
-                      ));
+                      provider.updateCategory(
+                        SkillCategory(
+                          id: category.id,
+                          name: text,
+                          icon: selectedIcon,
+                          colorValue: selectedColor,
+                        ),
+                      );
                       Navigator.pop(dialogContext);
                       ScaffoldMessenger.of(parentContext).showSnackBar(
                         SnackBar(
-                          content: Text('Kategori "$text" berhasil diperbarui!'),
+                          content: Text(
+                            'Kategori "$text" berhasil diperbarui!',
+                          ),
                         ),
                       );
                     }
@@ -984,8 +1190,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ],
@@ -997,12 +1208,23 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   }
 
   /// Dialog input untuk menambahkan Kategori baru (UI dipercantik)
-  void _showAddCategoryDialog(BuildContext parentContext, SkillProvider provider) {
+  void _showAddCategoryDialog(
+    BuildContext parentContext,
+    SkillProvider provider,
+  ) {
     final nameController = TextEditingController();
     String selectedIcon = 'code';
     int selectedColor = 0xFF2196F3;
 
-    final iconsList = ['code', 'fitness_center', 'translate', 'music_note', 'book', 'brush', 'sports_basketball'];
+    final iconsList = [
+      'code',
+      'fitness_center',
+      'translate',
+      'music_note',
+      'book',
+      'brush',
+      'sports_basketball',
+    ];
     final colorsList = [
       {'name': 'Biru', 'value': 0xFF2196F3},
       {'name': 'Hijau', 'value': 0xFF4CAF50},
@@ -1034,12 +1256,20 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     CircleAvatar(
                       radius: 26,
                       backgroundColor: Colors.white24,
-                      child: Icon(Icons.category_rounded, color: Colors.white, size: 26),
+                      child: Icon(
+                        Icons.category_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'Tambah Kategori',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -1055,18 +1285,32 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       decoration: InputDecoration(
                         labelText: 'Nama Kategori',
                         hintText: 'misal: Memasak, Menulis',
-                        prefixIcon: const Icon(Icons.category_outlined, color: Colors.deepPurple),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(
+                          Icons.category_outlined,
+                          color: Colors.deepPurple,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                          borderSide: const BorderSide(
+                            color: Colors.deepPurple,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Pilihan Ikon
-                    const Text('Pilih Ikon:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Pilih Ikon:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -1082,10 +1326,14 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isSelected ? Color(selectedColor) : Colors.transparent,
+                              color: isSelected
+                                  ? Color(selectedColor)
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? Color(selectedColor) : Colors.grey.withValues(alpha: 0.5),
+                                color: isSelected
+                                    ? Color(selectedColor)
+                                    : Colors.grey.withValues(alpha: 0.5),
                                 width: 1.5,
                               ),
                             ),
@@ -1099,9 +1347,15 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Pilihan Warna
-                    const Text('Pilih Warna:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text(
+                      'Pilih Warna:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -1123,13 +1377,20 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? (Theme.of(builderContext).brightness == Brightness.dark ? Colors.white : Colors.black)
+                                    ? (Theme.of(builderContext).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black)
                                     : Colors.transparent,
                                 width: 2.5,
                               ),
                             ),
                             child: isSelected
-                                ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
+                                ? const Icon(
+                                    Icons.check_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
                                 : null,
                           ),
                         );
@@ -1138,7 +1399,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   ],
                 ),
               ),
-              actionsPadding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
+              actionsPadding: const EdgeInsets.only(
+                bottom: 16,
+                right: 16,
+                left: 16,
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
@@ -1153,7 +1418,9 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       Navigator.pop(dialogContext);
                       ScaffoldMessenger.of(parentContext).showSnackBar(
                         SnackBar(
-                          content: Text('Kategori "$text" berhasil ditambahkan!'),
+                          content: Text(
+                            'Kategori "$text" berhasil ditambahkan!',
+                          ),
                         ),
                       );
                     }
@@ -1163,8 +1430,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ],
@@ -1197,19 +1469,29 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
             padding: const EdgeInsets.symmetric(vertical: 20),
             decoration: BoxDecoration(
               color: accentColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               children: [
                 CircleAvatar(
                   radius: 26,
                   backgroundColor: Colors.white24,
-                  child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 26),
+                  child: const Icon(
+                    Icons.bolt_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Tambah Cepat (${category.name})',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -1225,7 +1507,9 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     labelText: 'Nama Keahlian',
                     hintText: 'misal: Refactoring, UI Design',
                     prefixIcon: Icon(Icons.book_rounded, color: accentColor),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: accentColor, width: 2),
@@ -1238,8 +1522,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   decoration: InputDecoration(
                     labelText: 'Deskripsi (Opsional)',
                     hintText: 'misal: Belajar pola Clean Architecture',
-                    prefixIcon: Icon(Icons.edit_note_rounded, color: accentColor),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: Icon(
+                      Icons.edit_note_rounded,
+                      color: accentColor,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: accentColor, width: 2),
@@ -1250,7 +1539,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
+          actionsPadding: const EdgeInsets.only(
+            bottom: 16,
+            right: 16,
+            left: 16,
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -1283,8 +1576,13 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
               ),
             ),
           ],

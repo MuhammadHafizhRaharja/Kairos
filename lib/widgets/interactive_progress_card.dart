@@ -25,7 +25,8 @@ class InteractiveProgressCard extends StatefulWidget {
   });
 
   @override
-  State<InteractiveProgressCard> createState() => _InteractiveProgressCardState();
+  State<InteractiveProgressCard> createState() =>
+      _InteractiveProgressCardState();
 }
 
 class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
@@ -54,7 +55,7 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
 
   void _handleDragUpdate(DragUpdateDetails details, double cardWidth) {
     if (cardWidth <= 0) return;
-    
+
     setState(() {
       _isDragging = true;
       // Menghitung delta perubahan berdasarkan lebar widget sesungguhnya
@@ -66,7 +67,7 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
         _localLevel += 1;
         _localProgress = 0.0; // Reset progres untuk tingkat berikutnya
         _triggerLevelUpAnim = true; // Memicu mikro-animasi
-        
+
         // Memberikan feedback haptic sederhana menggunakan default Flutter feedback
         Feedback.forLongPress(context);
       }
@@ -202,7 +203,9 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                           children: [
                             // Indikator Level dengan Mikro-Animasi Scale & Rotate
                             TweenAnimationBuilder<double>(
-                              key: ValueKey('${_localLevel}_$_triggerLevelUpAnim'),
+                              key: ValueKey(
+                                '${_localLevel}_$_triggerLevelUpAnim',
+                              ),
                               tween: Tween<double>(
                                 begin: _triggerLevelUpAnim ? 0.7 : 1.0,
                                 end: 1.0,
@@ -225,25 +228,33 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _triggerLevelUpAnim 
-                                          ? Colors.amber 
-                                          : widget.themeColor.withValues(alpha: 0.15),
+                                      color: _triggerLevelUpAnim
+                                          ? Colors.amber
+                                          : widget.themeColor.withValues(
+                                              alpha: 0.15,
+                                            ),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
-                                        color: _triggerLevelUpAnim 
-                                            ? Colors.orange 
-                                            : widget.themeColor.withValues(alpha: 0.5),
+                                        color: _triggerLevelUpAnim
+                                            ? Colors.orange
+                                            : widget.themeColor.withValues(
+                                                alpha: 0.5,
+                                              ),
                                       ),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          _triggerLevelUpAnim ? Icons.emoji_events : Icons.trending_up,
+                                          _triggerLevelUpAnim
+                                              ? Icons.emoji_events
+                                              : Icons.trending_up,
                                           size: 14,
-                                          color: _triggerLevelUpAnim 
-                                              ? Colors.white 
-                                              : (isDark ? Colors.white : widget.themeColor),
+                                          color: _triggerLevelUpAnim
+                                              ? Colors.white
+                                              : (isDark
+                                                    ? Colors.white
+                                                    : widget.themeColor),
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
@@ -251,9 +262,11 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w800,
-                                            color: _triggerLevelUpAnim 
-                                                ? Colors.white 
-                                                : (isDark ? Colors.white : widget.themeColor),
+                                            color: _triggerLevelUpAnim
+                                                ? Colors.white
+                                                : (isDark
+                                                      ? Colors.white
+                                                      : widget.themeColor),
                                           ),
                                         ),
                                       ],
@@ -265,7 +278,9 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                             const SizedBox(width: 8),
                             IconButton(
                               icon: Icon(
-                                _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                _isExpanded
+                                    ? Icons.keyboard_arrow_up_rounded
+                                    : Icons.keyboard_arrow_down_rounded,
                                 size: 20,
                                 color: theme.hintColor,
                               ),
@@ -287,7 +302,8 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
 
                     // Area Pengukuran Progres Interaktif dengan GESTURE DETECTOR
                     GestureDetector(
-                      onHorizontalDragUpdate: (details) => _handleDragUpdate(details, cardWidth),
+                      onHorizontalDragUpdate: (details) =>
+                          _handleDragUpdate(details, cardWidth),
                       onHorizontalDragEnd: (_) => _handleDragEnd(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -301,7 +317,9 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: _isDragging ? widget.themeColor : theme.hintColor,
+                                  color: _isDragging
+                                      ? widget.themeColor
+                                      : theme.hintColor,
                                 ),
                               ),
                               if (_isDragging)
@@ -316,13 +334,21 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                               else
                                 Row(
                                   children: [
-                                    Icon(Icons.swipe_left_alt, size: 12, color: theme.hintColor.withValues(alpha: 0.7)),
+                                    Icon(
+                                      Icons.swipe_left_alt,
+                                      size: 12,
+                                      color: theme.hintColor.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ),
                                     const SizedBox(width: 2),
                                     Text(
                                       'Geser untuk mengubah',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: theme.hintColor.withValues(alpha: 0.7),
+                                        color: theme.hintColor.withValues(
+                                          alpha: 0.7,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -334,19 +360,25 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                           Container(
                             height: 14,
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.grey[800] : Colors.grey[200],
+                              color: isDark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[200],
                               borderRadius: BorderRadius.circular(7),
                             ),
                             child: Stack(
                               children: [
                                 // Fill bar progres
                                 FractionallySizedBox(
-                                  widthFactor: _localProgress > 0.0 ? _localProgress : 0.001,
+                                  widthFactor: _localProgress > 0.0
+                                      ? _localProgress
+                                      : 0.001,
                                   child: Container(
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          widget.themeColor.withValues(alpha: 0.7),
+                                          widget.themeColor.withValues(
+                                            alpha: 0.7,
+                                          ),
                                           widget.themeColor,
                                         ],
                                       ),
@@ -354,10 +386,11 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                       boxShadow: _isDragging
                                           ? [
                                               BoxShadow(
-                                                color: widget.themeColor.withValues(alpha: 0.4),
+                                                color: widget.themeColor
+                                                    .withValues(alpha: 0.4),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),
-                                              )
+                                              ),
                                             ]
                                           : null,
                                     ),
@@ -366,11 +399,16 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                 // Handle geser visual kecil saat dragging
                                 if (_isDragging && _localProgress > 0.02)
                                   Align(
-                                    alignment: Alignment(_localProgress * 2 - 1, 0),
+                                    alignment: Alignment(
+                                      _localProgress * 2 - 1,
+                                      0,
+                                    ),
                                     child: Container(
                                       width: 8,
                                       height: 8,
-                                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 3,
+                                      ),
                                       decoration: const BoxDecoration(
                                         color: Colors.white,
                                         shape: BoxShape.circle,
@@ -394,7 +432,7 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                             padding: EdgeInsets.symmetric(vertical: 12.0),
                             child: Divider(height: 1),
                           ),
-                          
+
                           // Deskripsi Lengkap
                           if (widget.skill.description.isNotEmpty) ...[
                             Text(
@@ -411,7 +449,8 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                               style: TextStyle(
                                 fontSize: 13,
                                 height: 1.4,
-                                color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.85),
+                                color: theme.textTheme.bodyMedium?.color
+                                    ?.withValues(alpha: 0.85),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -431,8 +470,12 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                             child: Row(
                               children: [
                                 Icon(
-                                  _localLevel >= 5 ? Icons.emoji_events : Icons.lightbulb_outline_rounded,
-                                  color: _localLevel >= 5 ? Colors.amber : widget.themeColor,
+                                  _localLevel >= 5
+                                      ? Icons.emoji_events
+                                      : Icons.lightbulb_outline_rounded,
+                                  color: _localLevel >= 5
+                                      ? Colors.amber
+                                      : widget.themeColor,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 10),
@@ -441,7 +484,8 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                     _getMotivationalMessage(_localLevel),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+                                      color: theme.textTheme.bodyMedium?.color
+                                          ?.withValues(alpha: 0.8),
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
@@ -468,14 +512,16 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                   _buildQuickButton(
                                     icon: Icons.remove,
                                     label: '-10%',
-                                    onPressed: () => _changeProgressByAmount(-0.1),
+                                    onPressed: () =>
+                                        _changeProgressByAmount(-0.1),
                                     color: Colors.redAccent,
                                   ),
                                   const SizedBox(width: 6),
                                   _buildQuickButton(
                                     icon: Icons.add,
                                     label: '+10%',
-                                    onPressed: () => _changeProgressByAmount(0.1),
+                                    onPressed: () =>
+                                        _changeProgressByAmount(0.1),
                                     color: Colors.green,
                                   ),
                                   const SizedBox(width: 6),
@@ -484,17 +530,28 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                                       backgroundColor: Colors.amber,
                                       foregroundColor: Colors.white,
                                       elevation: 0,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
                                       minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                     ),
-                                    icon: const Icon(Icons.emoji_events_rounded, size: 12, color: Colors.white),
+                                    icon: const Icon(
+                                      Icons.emoji_events_rounded,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
                                     label: const Text(
                                       'Level Up',
-                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     onPressed: _triggerLevelUp,
                                   ),
@@ -510,33 +567,62 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                             children: [
                               OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  side: BorderSide(
+                                    color: theme.dividerColor.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                icon: Icon(Icons.edit_rounded, size: 16, color: widget.themeColor),
+                                icon: Icon(
+                                  Icons.edit_rounded,
+                                  size: 16,
+                                  color: widget.themeColor,
+                                ),
                                 label: Text(
                                   'Ubah',
-                                  style: TextStyle(fontSize: 13, color: theme.textTheme.bodyLarge?.color),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: theme.textTheme.bodyLarge?.color,
+                                  ),
                                 ),
                                 onPressed: widget.onEdit,
                               ),
                               const SizedBox(width: 8),
                               OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.redAccent),
-                                  backgroundColor: Colors.redAccent.withValues(alpha: 0.05),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  side: const BorderSide(
+                                    color: Colors.redAccent,
+                                  ),
+                                  backgroundColor: Colors.redAccent.withValues(
+                                    alpha: 0.05,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.redAccent),
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 16,
+                                  color: Colors.redAccent,
+                                ),
                                 label: const Text(
                                   'Hapus',
-                                  style: TextStyle(fontSize: 13, color: Colors.redAccent, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 onPressed: widget.onDelete,
                               ),
@@ -544,7 +630,9 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                           ),
                         ],
                       ),
-                      crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                      crossFadeState: _isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
                       duration: const Duration(milliseconds: 250),
                     ),
                   ],
@@ -571,9 +659,7 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       onPressed: onPressed,
       child: Row(
@@ -583,7 +669,11 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
           const SizedBox(width: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ],
       ),

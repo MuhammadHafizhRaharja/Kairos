@@ -106,6 +106,23 @@ class SkillDetailScreen extends StatelessWidget {
                       );
                       provider.updateSkill(updatedSkill);
                     },
+                    onLongPress: () {
+                      _showEditSkillDialog(context, provider, skill);
+                    },
+                    onEdit: () {
+                      _showEditSkillDialog(context, provider, skill);
+                    },
+                    onDelete: () async {
+                      final confirmed = await _showDeleteConfirmDialog(context, skill.name);
+                      if (confirmed == true && context.mounted) {
+                        provider.deleteSkill(skill.id!);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Skill "${skill.name}" berhasil dihapus!'),
+                          ),
+                        );
+                      }
+                    },
                   ),
                 );
               },
@@ -149,25 +166,20 @@ class SkillDetailScreen extends StatelessWidget {
   }
 
   /// Dialog konfirmasi penghapusan skill
-  Future<bool?> _showDeleteConfirmDialog(
-    BuildContext context,
-    String skillName,
-  ) {
+  Future<bool?> _showDeleteConfirmDialog(BuildContext parentContext, String skillName) {
     return showDialog<bool>(
-      context: context,
-      builder: (context) {
+      context: parentContext,
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Hapus Skill?'),
-          content: Text(
-            'Apakah Anda yakin ingin menghapus keterampilan "$skillName" dari pelacakan?',
-          ),
+          content: Text('Apakah Anda yakin ingin menghapus keterampilan "$skillName" dari pelacakan?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Batal'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(dialogContext, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Hapus'),
             ),
@@ -178,13 +190,13 @@ class SkillDetailScreen extends StatelessWidget {
   }
 
   /// Dialog input untuk menambahkan keahlian baru
-  void _showAddSkillDialog(BuildContext context, SkillProvider provider) {
+  void _showAddSkillDialog(BuildContext parentContext, SkillProvider provider) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
 
     showDialog(
-      context: context,
-      builder: (context) {
+      context: parentContext,
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Tambah Keahlian Baru'),
           content: SingleChildScrollView(
@@ -214,7 +226,7 @@ class SkillDetailScreen extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Batal'),
             ),
             ElevatedButton(
@@ -228,10 +240,81 @@ class SkillDetailScreen extends StatelessWidget {
                     name: name,
                     description: desc,
                   );
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(parentContext).showSnackBar(
                     SnackBar(
                       content: Text('Keahlian "$name" berhasil ditambahkan!'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Dialog input untuk mengedit keahlian
+  void _showEditSkillDialog(BuildContext parentContext, SkillProvider provider, Skill skill) {
+    final nameController = TextEditingController(text: skill.name);
+    final descController = TextEditingController(text: skill.description);
+
+    showDialog(
+      context: parentContext,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Ubah Keahlian'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Keahlian',
+                    hintText: 'misal: Refactoring, UI Design',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(
+                    labelText: 'Deskripsi (Opsional)',
+                    hintText: 'misal: Belajar pola Clean Architecture',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                final desc = descController.text.trim();
+
+                if (name.isNotEmpty) {
+                  provider.updateSkill(Skill(
+                    id: skill.id,
+                    categoryId: skill.categoryId,
+                    name: name,
+                    description: desc,
+                    level: skill.level,
+                    progress: skill.progress,
+                    createdAt: skill.createdAt,
+                  ));
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(parentContext).showSnackBar(
+                    SnackBar(
+                      content: Text('Keahlian "$name" berhasil diperbarui!'),
                     ),
                   );
                 }

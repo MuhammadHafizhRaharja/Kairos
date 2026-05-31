@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/skill.dart';
 
 /// Widget kustom untuk menampilkan kartu keahlian (Skill).
@@ -8,12 +9,18 @@ class InteractiveProgressCard extends StatefulWidget {
   final Skill skill;
   final Color themeColor;
   final Function(int newLevel, double newProgress) onProgressChanged;
+  final VoidCallback onLongPress;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   const InteractiveProgressCard({
     super.key,
     required this.skill,
     required this.themeColor,
     required this.onProgressChanged,
+    required this.onLongPress,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -93,11 +100,14 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
               width: _isDragging ? 1.5 : 1,
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: InkWell(
+            onLongPress: widget.onLongPress,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Baris Atas: Nama Skill & Indikator Level Up Animasi
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -125,71 +135,103 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'Dilacak sejak: ${DateFormat('dd MMM yyyy').format(widget.skill.createdAt)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.hintColor.withValues(alpha: 0.7),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // Indikator Level dengan Mikro-Animasi Scale & Rotate
-                    TweenAnimationBuilder<double>(
-                      key: ValueKey('${_localLevel}_$_triggerLevelUpAnim'),
-                      tween: Tween<double>(
-                        begin: _triggerLevelUpAnim ? 0.7 : 1.0,
-                        end: 1.0,
-                      ),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.elasticOut,
-                      onEnd: () {
-                        if (_triggerLevelUpAnim) {
-                          setState(() {
-                            _triggerLevelUpAnim = false;
-                          });
-                        }
-                      },
-                      builder: (context, scale, child) {
-                        return Transform.scale(
-                          scale: scale,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _triggerLevelUpAnim 
-                                  ? Colors.amber 
-                                  : widget.themeColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _triggerLevelUpAnim 
-                                    ? Colors.orange 
-                                    : widget.themeColor.withValues(alpha: 0.5),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _triggerLevelUpAnim ? Icons.emoji_events : Icons.trending_up,
-                                  size: 14,
-                                  color: _triggerLevelUpAnim 
-                                      ? Colors.white 
-                                      : (isDark ? Colors.white : widget.themeColor),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Indikator Level dengan Mikro-Animasi Scale & Rotate
+                        TweenAnimationBuilder<double>(
+                          key: ValueKey('${_localLevel}_$_triggerLevelUpAnim'),
+                          tween: Tween<double>(
+                            begin: _triggerLevelUpAnim ? 0.7 : 1.0,
+                            end: 1.0,
+                          ),
+                          duration: const Duration(milliseconds: 600),
+                          curve: Curves.elasticOut,
+                          onEnd: () {
+                            if (_triggerLevelUpAnim) {
+                              setState(() {
+                                _triggerLevelUpAnim = false;
+                              });
+                            }
+                          },
+                          builder: (context, scale, child) {
+                            return Transform.scale(
+                              scale: scale,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Lvl $_localLevel',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
+                                decoration: BoxDecoration(
+                                  color: _triggerLevelUpAnim 
+                                      ? Colors.amber 
+                                      : widget.themeColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
                                     color: _triggerLevelUpAnim 
-                                        ? Colors.white 
-                                        : (isDark ? Colors.white : widget.themeColor),
+                                        ? Colors.orange 
+                                        : widget.themeColor.withValues(alpha: 0.5),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _triggerLevelUpAnim ? Icons.emoji_events : Icons.trending_up,
+                                      size: 14,
+                                      color: _triggerLevelUpAnim 
+                                          ? Colors.white 
+                                          : (isDark ? Colors.white : widget.themeColor),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Lvl $_localLevel',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: _triggerLevelUpAnim 
+                                            ? Colors.white 
+                                            : (isDark ? Colors.white : widget.themeColor),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        // Tombol Edit Kustom (Explicit CRUD Update)
+                        IconButton(
+                          icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.blue),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Ubah Skill',
+                          onPressed: widget.onEdit,
+                        ),
+                        const SizedBox(width: 10),
+                        // Tombol Hapus Kustom (Explicit CRUD Delete)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Hapus Skill',
+                          onPressed: widget.onDelete,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -295,7 +337,7 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                 ),
               ],
             ),
-          ),
+          ),),
         );
       },
     );

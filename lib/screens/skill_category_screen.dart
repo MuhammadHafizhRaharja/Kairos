@@ -16,7 +16,11 @@ class SkillCategoryScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Modul Keahlian'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Modul Keahlian'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : categories.isEmpty
@@ -47,9 +51,9 @@ class SkillCategoryScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  // Gesture 2: Tekan lama untuk memicu dialog hapus kategori
+                  // Gesture 2: Tekan lama untuk memicu opsi Kategori (Ubah/Hapus)
                   onLongPress: () {
-                    _showDeleteConfirmDialog(context, provider, category);
+                    _showCategoryOptionsBottomSheet(context, provider, category);
                   },
                   child: Card(
                     elevation: 1,
@@ -79,18 +83,45 @@ class SkillCategoryScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Bagian Ikon Kategori
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Color(
-                              category.colorValue,
-                            ).withValues(alpha: 0.2),
-                            child: Icon(
-                              _getIconData(category.icon),
-                              color: Color(category.colorValue),
-                              size: 24,
-                            ),
-                          ),
+                           // Bagian Ikon Kategori & Aksi Cepat (Explicit CRUD Update & Delete)
+                           Row(
+                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                             children: [
+                               CircleAvatar(
+                                 radius: 20,
+                                 backgroundColor: Color(category.colorValue).withValues(alpha: 0.2),
+                                 child: Icon(
+                                   _getIconData(category.icon),
+                                   color: Color(category.colorValue),
+                                   size: 20,
+                                 ),
+                               ),
+                               Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   IconButton(
+                                     icon: const Icon(Icons.edit_rounded, size: 16),
+                                     color: Color(category.colorValue),
+                                     padding: EdgeInsets.zero,
+                                     constraints: const BoxConstraints(),
+                                     visualDensity: VisualDensity.compact,
+                                     tooltip: 'Ubah Kategori',
+                                     onPressed: () => _showEditCategoryDialog(context, provider, category),
+                                   ),
+                                   const SizedBox(width: 8),
+                                   IconButton(
+                                     icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                                     color: Colors.redAccent,
+                                     padding: EdgeInsets.zero,
+                                     constraints: const BoxConstraints(),
+                                     visualDensity: VisualDensity.compact,
+                                     tooltip: 'Hapus Kategori',
+                                     onPressed: () => _showDeleteConfirmDialog(context, provider, category),
+                                   ),
+                                 ],
+                               ),
+                             ],
+                           ),
                           // Bagian Teks & Statistik
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,21 +215,56 @@ class SkillCategoryScreen extends StatelessWidget {
     }
   }
 
+  /// Bottom sheet opsi kategori untuk memilih antara edit atau hapus
+  void _showCategoryOptionsBottomSheet(BuildContext parentContext, SkillProvider provider, SkillCategory category) {
+    showModalBottomSheet(
+      context: parentContext,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.blue),
+                title: const Text('Ubah Kategori'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showEditCategoryDialog(parentContext, provider, category);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Hapus Kategori'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDeleteConfirmDialog(parentContext, provider, category);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   /// Dialog konfirmasi penghapusan kategori (dengan relasi cascade delete)
   void _showDeleteConfirmDialog(
-    BuildContext context,
+    BuildContext parentContext,
     SkillProvider provider,
     SkillCategory category,
   ) {
     showDialog(
-      context: context,
-      builder: (context) {
+      context: parentContext,
+      builder: (dialogContext) {
         return AlertDialog(
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.red),
-              const SizedBox(width: 8),
-              const Text('Hapus Kategori?'),
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Hapus Kategori?'),
             ],
           ),
           content: Text(
@@ -207,14 +273,14 @@ class SkillCategoryScreen extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Batal'),
             ),
             TextButton(
               onPressed: () {
                 provider.deleteCategory(category.id!);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(parentContext).showSnackBar(
                   SnackBar(
                     content: Text(
                       'Kategori "${category.name}" berhasil dihapus!',
@@ -227,6 +293,166 @@ class SkillCategoryScreen extends StatelessWidget {
               child: const Text('Hapus'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// Dialog dengan input kustom untuk mengedit Kategori yang ada
+  void _showEditCategoryDialog(BuildContext parentContext, SkillProvider provider, SkillCategory category) {
+    final nameController = TextEditingController(text: category.name);
+    String selectedIcon = category.icon;
+    int selectedColor = category.colorValue;
+
+    final iconsList = ['code', 'fitness_center', 'translate', 'music_note', 'book', 'brush', 'sports_basketball'];
+    final colorsList = [
+      {'name': 'Biru', 'value': 0xFF2196F3},
+      {'name': 'Hijau', 'value': 0xFF4CAF50},
+      {'name': 'Jingga', 'value': 0xFFFF9800},
+      {'name': 'Ungu', 'value': 0xFF9C27B0},
+      {'name': 'Merah', 'value': 0xFFE91E63},
+      {'name': 'Toska', 'value': 0xFF009688},
+      {'name': 'Indigo', 'value': 0xFF3F51B5},
+    ];
+
+    showDialog(
+      context: parentContext,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (builderContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('Ubah Kategori'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Kategori',
+                        hintText: 'misal: Memasak, Menulis',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Pilihan Ikon
+                    const Text('Pilih Ikon:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 48,
+                      child: ExcludeSemantics(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: iconsList.map((icon) {
+                              final isSelected = selectedIcon == icon;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setDialogState(() {
+                                      selectedIcon = icon;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Color(selectedColor)
+                                          : Theme.of(builderContext).colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Color(selectedColor)
+                                            : Theme.of(builderContext).dividerColor.withValues(alpha: 0.2),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      _getIconData(icon),
+                                      size: 20,
+                                      color: isSelected ? Colors.white : Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Pilihan Warna
+                    const Text('Pilih Warna:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: colorsList.map((colorMap) {
+                        final colorVal = colorMap['value'] as int;
+                        final isSelected = selectedColor == colorVal;
+                        return GestureDetector(
+                          onTap: () {
+                            setDialogState(() {
+                              selectedColor = colorVal;
+                            });
+                          },
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Color(colorVal),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? (Theme.of(builderContext).brightness == Brightness.dark ? Colors.white : Colors.black)
+                                    : Colors.transparent,
+                                width: 2.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 2,
+                                  offset: const Offset(0, 1),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final text = nameController.text.trim();
+                    if (text.isNotEmpty) {
+                      provider.updateCategory(SkillCategory(
+                        id: category.id,
+                        name: text,
+                        icon: selectedIcon,
+                        colorValue: selectedColor,
+                      ));
+                      Navigator.pop(dialogContext);
+                      ScaffoldMessenger.of(parentContext).showSnackBar(
+                        SnackBar(
+                          content: Text('Kategori "$text" berhasil diperbarui!'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/skill_provider.dart';
-import 'skill_category_screen.dart';
-import 'resource_placeholder_screen.dart';
-import 'progress_placeholder_screen.dart';
+import '../widgets/activity_rings_chart.dart';
 
 /// Dashboard Utama aplikasi Kairos.
 /// Menjadi pintu masuk navigasi ke semua modul dan mengelola data profil serta tema utama.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(int)? onNavigate;
+  const HomeScreen({super.key, this.onNavigate});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -96,6 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
+              // GRAFIK RING KEMAJUAN KUSTOM
+              _buildActivityRingsCard(context, provider),
+              const SizedBox(height: 20),
+
               // KARTU STATISTIK PROGRESS
               _buildStatsCard(context, provider),
               const SizedBox(height: 32),
@@ -114,12 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: 'CRUD Kategori & Keahlian',
                 description: 'Lacak keterampilan pemrograman, bahasa, olahraga, dll.',
                 icon: Icons.emoji_events_rounded,
-                color: const Color(0xFF2196F3),
+                color: theme.colorScheme.primary,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SkillCategoryScreen()),
-                  );
+                  widget.onNavigate?.call(1);
                 },
               ),
               const SizedBox(height: 14),
@@ -131,10 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.auto_stories_rounded,
                 color: const Color(0xFF4CAF50),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ResourcePlaceholderScreen()),
-                  );
+                  widget.onNavigate?.call(2);
                 },
               ),
               const SizedBox(height: 14),
@@ -146,10 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.trending_up_rounded,
                 color: const Color(0xFFFF9800),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProgressPlaceholderScreen()),
-                  );
+                  widget.onNavigate?.call(3);
                 },
               ),
               const SizedBox(height: 32),
@@ -234,6 +228,125 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildActivityRingsCard(BuildContext context, SkillProvider provider) {
+    final theme = Theme.of(context);
+
+    // 1. Hitung progres Skill
+    double skillProgress = 0.0;
+    if (provider.skills.isNotEmpty) {
+      final totalScore = provider.skills.map((s) {
+        return ((s.level - 1) + s.progress) / 5.0;
+      }).reduce((a, b) => a + b);
+      skillProgress = (totalScore / provider.skills.length).clamp(0.0, 1.0);
+    }
+
+    // 2. Hitung progres Resource
+    double resourceProgress = 0.5;
+    if (provider.isNotificationEnabled) resourceProgress += 0.2;
+    if (provider.defaultLang == 'id') resourceProgress += 0.1;
+    resourceProgress = resourceProgress.clamp(0.15, 0.95);
+
+    // 3. Hitung progres Progress Log
+    double progressLogProgress = 0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
+    progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Cincin Kemajuan',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(
+                  Icons.analytics_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const ActivityRingsChart(size: 110),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildRingLegendItem(
+                        color: theme.colorScheme.primary,
+                        label: 'Modul Skill',
+                        value: '${(skillProgress * 100).toInt()}%',
+                      ),
+                      const SizedBox(height: 10),
+                      _buildRingLegendItem(
+                        color: const Color(0xFF4CAF50),
+                        label: 'Modul Resource',
+                        value: '${(resourceProgress * 100).toInt()}%',
+                      ),
+                      const SizedBox(height: 10),
+                      _buildRingLegendItem(
+                        color: const Color(0xFFFF9800),
+                        label: 'Modul Progress',
+                        value: '${(progressLogProgress * 100).toInt()}%',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRingLegendItem({
+    required Color color,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildStatsCard(BuildContext context, SkillProvider provider) {
     final theme = Theme.of(context);

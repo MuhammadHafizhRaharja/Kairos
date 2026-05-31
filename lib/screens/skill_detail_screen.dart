@@ -10,10 +10,7 @@ import '../widgets/interactive_progress_card.dart';
 class SkillDetailScreen extends StatelessWidget {
   final SkillCategory category;
 
-  const SkillDetailScreen({
-    super.key,
-    required this.category,
-  });
+  const SkillDetailScreen({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {
@@ -32,87 +29,87 @@ class SkillDetailScreen extends StatelessWidget {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : skills.isEmpty
-              ? _buildEmptyState(context, theme, categoryColor)
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: skills.length,
-                  itemBuilder: (context, index) {
-                    final skill = skills[index];
+          ? _buildEmptyState(context, theme, categoryColor)
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              itemCount: skills.length,
+              itemBuilder: (context, index) {
+                final skill = skills[index];
 
-                    // Menggunakan Gesture Swipe-to-Delete dengan Dismissible
-                    return Dismissible(
-                      key: Key('skill_${skill.id}'),
-                      direction: DismissDirection.endToStart,
-                      // Visual background merah saat diswipe ke kiri
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Hapus',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.delete, color: Colors.white),
-                          ],
-                        ),
-                      ),
-                      // Dialog konfirmasi sebelum benar-benar menghapus
-                      confirmDismiss: (direction) async {
-                        return await _showDeleteConfirmDialog(context, skill.name);
-                      },
-                      // Aksi yang dilakukan setelah disetujui untuk dihapus
-                      onDismissed: (direction) {
-                        provider.deleteSkill(skill.id!);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Skill "${skill.name}" berhasil dihapus'),
-                            action: SnackBarAction(
-                              label: 'Kembali',
-                              onPressed: () {
-                                // Menambahkan kembali data jika pengguna menekan Undo
-                                provider.addSkill(
-                                  categoryId: skill.categoryId,
-                                  name: skill.name,
-                                  description: skill.description,
-                                  level: skill.level,
-                                  progress: skill.progress,
-                                );
-                              },
-                            ),
+                // Menggunakan Gesture Swipe-to-Delete dengan Dismissible
+                return Dismissible(
+                  key: Key('skill_${skill.id}'),
+                  direction: DismissDirection.endToStart,
+                  // Visual background merah saat diswipe ke kiri
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Hapus',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
-                        );
-                      },
-                      child: InteractiveProgressCard(
-                        skill: skill,
-                        themeColor: categoryColor,
-                        onProgressChanged: (newLevel, newProgress) {
-                          // Membuat objek skill baru dengan nilai terupdate untuk dikirim ke DB
-                          final updatedSkill = Skill(
-                            id: skill.id,
-                            categoryId: skill.categoryId,
-                            name: skill.name,
-                            description: skill.description,
-                            level: newLevel,
-                            progress: newProgress,
-                            createdAt: skill.createdAt,
-                          );
-                          provider.updateSkill(updatedSkill);
-                        },
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.delete, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                  // Dialog konfirmasi sebelum benar-benar menghapus
+                  confirmDismiss: (direction) async {
+                    return await _showDeleteConfirmDialog(context, skill.name);
+                  },
+                  // Aksi yang dilakukan setelah disetujui untuk dihapus
+                  onDismissed: (direction) {
+                    provider.deleteSkill(skill.id!);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Skill "${skill.name}" berhasil dihapus'),
+                        action: SnackBarAction(
+                          label: 'Kembali',
+                          onPressed: () {
+                            // Menambahkan kembali data jika pengguna menekan Undo
+                            provider.addSkill(
+                              categoryId: skill.categoryId,
+                              name: skill.name,
+                              description: skill.description,
+                              level: skill.level,
+                              progress: skill.progress,
+                            );
+                          },
+                        ),
                       ),
                     );
                   },
-                ),
+                  child: InteractiveProgressCard(
+                    skill: skill,
+                    themeColor: categoryColor,
+                    onProgressChanged: (newLevel, newProgress) {
+                      // Membuat objek skill baru dengan nilai terupdate untuk dikirim ke DB
+                      final updatedSkill = Skill(
+                        id: skill.id,
+                        categoryId: skill.categoryId,
+                        name: skill.name,
+                        description: skill.description,
+                        level: newLevel,
+                        progress: newProgress,
+                        createdAt: skill.createdAt,
+                      );
+                      provider.updateSkill(updatedSkill);
+                    },
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSkillDialog(context, provider),
         backgroundColor: categoryColor,
@@ -152,13 +149,18 @@ class SkillDetailScreen extends StatelessWidget {
   }
 
   /// Dialog konfirmasi penghapusan skill
-  Future<bool?> _showDeleteConfirmDialog(BuildContext context, String skillName) {
+  Future<bool?> _showDeleteConfirmDialog(
+    BuildContext context,
+    String skillName,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Hapus Skill?'),
-          content: Text('Apakah Anda yakin ingin menghapus keterampilan "$skillName" dari pelacakan?'),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus keterampilan "$skillName" dari pelacakan?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -196,7 +198,6 @@ class SkillDetailScreen extends StatelessWidget {
                     hintText: 'misal: Refactoring, UI Design',
                     border: OutlineInputBorder(),
                   ),
-                  autofocus: true,
                 ),
                 const SizedBox(height: 16),
                 TextField(

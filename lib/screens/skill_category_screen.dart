@@ -16,111 +16,114 @@ class SkillCategoryScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Modul Keahlian'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Modul Keahlian'), centerTitle: true),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : categories.isEmpty
-              ? _buildEmptyState(context, theme)
-              : GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 1.1,
-                  ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    final skillsInCategory = provider.getSkillsForCategory(category.id ?? -1);
+          ? _buildEmptyState(context, theme)
+          : GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                childAspectRatio: 1.1,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final skillsInCategory = provider.getSkillsForCategory(
+                  category.id ?? -1,
+                );
 
-                    return GestureDetector(
-                      // Gesture 1: Ketuk sekali untuk menavigasi ke halaman detail skill
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SkillDetailScreen(category: category),
-                          ),
-                        );
-                      },
-                      // Gesture 2: Tekan lama untuk memicu dialog hapus kategori
-                      onLongPress: () {
-                        _showDeleteConfirmDialog(context, provider, category);
-                      },
-                      child: Card(
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: Color(category.colorValue).withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(category.colorValue).withValues(alpha: 0.05),
-                                Color(category.colorValue).withValues(alpha: 0.15),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Bagian Ikon Kategori
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: Color(category.colorValue).withValues(alpha: 0.2),
-                                child: Icon(
-                                  _getIconData(category.icon),
-                                  color: Color(category.colorValue),
-                                  size: 24,
-                                ),
-                              ),
-                              // Bagian Teks & Statistik
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    category.name,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${skillsInCategory.length} Keahlian',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: theme.hintColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                return GestureDetector(
+                  // Gesture 1: Ketuk sekali untuk menavigasi ke halaman detail skill
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SkillDetailScreen(category: category),
                       ),
                     );
                   },
-                ),
-      floatingActionButton: FloatingActionButton.extended(
+                  // Gesture 2: Tekan lama untuk memicu dialog hapus kategori
+                  onLongPress: () {
+                    _showDeleteConfirmDialog(context, provider, category);
+                  },
+                  child: Card(
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: Color(
+                          category.colorValue,
+                        ).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(category.colorValue).withValues(alpha: 0.05),
+                            Color(category.colorValue).withValues(alpha: 0.15),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Bagian Ikon Kategori
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Color(
+                              category.colorValue,
+                            ).withValues(alpha: 0.2),
+                            child: Icon(
+                              _getIconData(category.icon),
+                              color: Color(category.colorValue),
+                              size: 24,
+                            ),
+                          ),
+                          // Bagian Teks & Statistik
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                category.name,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${skillsInCategory.length} Keahlian',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.hintColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context, provider),
-        icon: const Icon(Icons.add),
-        label: const Text('Kategori'),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -133,7 +136,11 @@ class SkillCategoryScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.category_outlined, size: 80, color: theme.hintColor.withValues(alpha: 0.5)),
+            Icon(
+              Icons.category_outlined,
+              size: 80,
+              color: theme.hintColor.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 16),
             const Text(
               'Belum Ada Kategori',
@@ -178,7 +185,11 @@ class SkillCategoryScreen extends StatelessWidget {
   }
 
   /// Dialog konfirmasi penghapusan kategori (dengan relasi cascade delete)
-  void _showDeleteConfirmDialog(BuildContext context, SkillProvider provider, SkillCategory category) {
+  void _showDeleteConfirmDialog(
+    BuildContext context,
+    SkillProvider provider,
+    SkillCategory category,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
@@ -205,7 +216,9 @@ class SkillCategoryScreen extends StatelessWidget {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Kategori "${category.name}" berhasil dihapus!'),
+                    content: Text(
+                      'Kategori "${category.name}" berhasil dihapus!',
+                    ),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -220,12 +233,20 @@ class SkillCategoryScreen extends StatelessWidget {
   }
 
   /// Dialog dengan input kustom warna & ikon untuk menambahkan Kategori baru
-  void _showAddCategoryDialog(BuildContext context, SkillProvider provider) {
+  void _showAddCategoryDialog(BuildContext parentContext, SkillProvider provider) {
     final nameController = TextEditingController();
     String selectedIcon = 'code';
     int selectedColor = 0xFF2196F3;
 
-    final iconsList = ['code', 'fitness_center', 'translate', 'music_note', 'book', 'brush', 'sports_basketball'];
+    final iconsList = [
+      'code',
+      'fitness_center',
+      'translate',
+      'music_note',
+      'book',
+      'brush',
+      'sports_basketball',
+    ];
     final colorsList = [
       {'name': 'Biru', 'value': 0xFF2196F3},
       {'name': 'Hijau', 'value': 0xFF4CAF50},
@@ -237,10 +258,10 @@ class SkillCategoryScreen extends StatelessWidget {
     ];
 
     showDialog(
-      context: context,
-      builder: (context) {
+      context: parentContext,
+      builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (builderContext, setDialogState) {
             return AlertDialog(
               title: const Text('Tambah Kategori Baru'),
               content: SingleChildScrollView(
@@ -255,43 +276,63 @@ class SkillCategoryScreen extends StatelessWidget {
                         hintText: 'misal: Memasak, Menulis',
                         border: OutlineInputBorder(),
                       ),
-                      autofocus: true,
                     ),
                     const SizedBox(height: 16),
                     // Pilihan Ikon
-                    const Text('Pilih Ikon:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Pilih Ikon:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 48,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: iconsList.length,
-                        itemBuilder: (context, idx) {
-                          final icon = iconsList[idx];
-                          final isSelected = selectedIcon == icon;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: ChoiceChip(
-                              label: Icon(
-                                _getIconData(icon),
-                                size: 20,
-                                color: isSelected ? Colors.white : Colors.grey,
-                              ),
-                              selected: isSelected,
-                              selectedColor: Color(selectedColor),
-                              onSelected: (_) {
-                                setState(() {
-                                  selectedIcon = icon;
-                                });
-                              },
-                            ),
-                          );
-                        },
+                      child: ExcludeSemantics(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: iconsList.map((icon) {
+                              final isSelected = selectedIcon == icon;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setDialogState(() {
+                                      selectedIcon = icon;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Color(selectedColor)
+                                          : Theme.of(builderContext).colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Color(selectedColor)
+                                            : Theme.of(builderContext).dividerColor.withValues(alpha: 0.2),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      _getIconData(icon),
+                                      size: 20,
+                                      color: isSelected ? Colors.white : Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Pilihan Warna
-                    const Text('Pilih Warna:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Pilih Warna:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -301,7 +342,7 @@ class SkillCategoryScreen extends StatelessWidget {
                         final isSelected = selectedColor == colorVal;
                         return GestureDetector(
                           onTap: () {
-                            setState(() {
+                            setDialogState(() {
                               selectedColor = colorVal;
                             });
                           },
@@ -312,7 +353,9 @@ class SkillCategoryScreen extends StatelessWidget {
                               color: Color(colorVal),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected ? Colors.black : Colors.transparent,
+                                color: isSelected
+                                    ? (Theme.of(builderContext).brightness == Brightness.dark ? Colors.white : Colors.black)
+                                    : Colors.transparent,
                                 width: 2.5,
                               ),
                               boxShadow: [
@@ -320,7 +363,7 @@ class SkillCategoryScreen extends StatelessWidget {
                                   color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 2,
                                   offset: const Offset(0, 1),
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -332,7 +375,7 @@ class SkillCategoryScreen extends StatelessWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(dialogContext),
                   child: const Text('Batal'),
                 ),
                 ElevatedButton(
@@ -340,10 +383,12 @@ class SkillCategoryScreen extends StatelessWidget {
                     final text = nameController.text.trim();
                     if (text.isNotEmpty) {
                       provider.addCategory(text, selectedIcon, selectedColor);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      Navigator.pop(dialogContext);
+                      ScaffoldMessenger.of(parentContext).showSnackBar(
                         SnackBar(
-                          content: Text('Kategori "$text" berhasil ditambahkan!'),
+                          content: Text(
+                            'Kategori "$text" berhasil ditambahkan!',
+                          ),
                         ),
                       );
                     }

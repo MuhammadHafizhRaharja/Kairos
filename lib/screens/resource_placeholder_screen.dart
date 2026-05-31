@@ -14,7 +14,7 @@ class ResourcePlaceholderScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Modul Resource'),
+        title: const Text('Referensi Belajar'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -43,13 +43,13 @@ class ResourcePlaceholderScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Materi & Referensi Pertumbuhan',
+              'Referensi & Sumber Belajar',
               style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Modul ini dirancang untuk mencatat referensi bacaan, artikel, dan video tutorial yang menunjang perkembangan keahlian Anda.',
+              'Fitur ini dirancang untuk mencatat referensi bacaan, artikel, dan video tutorial yang menunjang perkembangan keahlian Anda.',
               style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
               textAlign: TextAlign.center,
             ),
@@ -57,7 +57,7 @@ class ResourcePlaceholderScreen extends StatelessWidget {
 
             // Bagian Integrasi Shared Preferences
             Text(
-              'Shared Preferences (Modul Resource)',
+              'Preferensi Referensi',
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -128,7 +128,7 @@ class ResourcePlaceholderScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'Modul ini siap dikembangkan lebih lanjut dengan CRUD SQLite Materi oleh Anggota Tim yang bertanggung jawab.',
+                      'Fitur ini siap dikembangkan lebih lanjut dengan sinkronisasi database lokal untuk materi referensi Anda.',
                       style: TextStyle(fontSize: 12),
                     ),
                   ),

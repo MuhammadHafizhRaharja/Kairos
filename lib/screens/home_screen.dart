@@ -14,25 +14,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  bool _isEditingName = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
     final theme = Theme.of(context);
     final isDark = provider.isDarkMode;
-
-    // Sinkronisasi input field dengan state name di shared preferences
-    if (!_isEditingName && _nameController.text != provider.userName) {
-      _nameController.text = provider.userName;
-    }
 
     return Scaffold(
       body: SafeArea(
@@ -80,16 +66,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  // Button Toggle Dark Mode (Shared Pref: appTheme)
-                  IconButton(
-                    icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
-                    style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surfaceContainer,
-                      padding: const EdgeInsets.all(12),
-                    ),
-                    onPressed: () {
-                      provider.toggleTheme(!provider.isDarkMode);
-                    },
+                  Row(
+                    children: [
+                      // Button Toggle Dark Mode (Shared Pref: appTheme)
+                      IconButton(
+                        icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+                        style: IconButton.styleFrom(
+                          backgroundColor: theme.colorScheme.surfaceContainer,
+                          padding: const EdgeInsets.all(12),
+                        ),
+                        onPressed: () {
+                          provider.toggleTheme(!provider.isDarkMode);
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      // Tappable Avatar
+                      GestureDetector(
+                        onTap: () => _showEditProfileBottomSheet(context, provider),
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                          child: Text(
+                            provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -103,108 +110,49 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildStatsCard(context, provider),
               const SizedBox(height: 32),
 
-              // NAVIGASI MODUL (3 MODUL)
+              // AKSES FITUR (HORIZONTAL BAR)
               Text(
-                'Modul Pertumbuhan',
+                'Fitur Pelacakan',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-              _buildModuleCard(
-                context: context,
-                title: 'Modul Skill (Milik Saya)',
-                subtitle: 'CRUD Kategori & Keahlian',
-                description: 'Lacak keterampilan pemrograman, bahasa, olahraga, dll.',
-                icon: Icons.emoji_events_rounded,
-                color: theme.colorScheme.primary,
-                onTap: () {
-                  widget.onNavigate?.call(1);
-                },
-              ),
-              const SizedBox(height: 14),
-              _buildModuleCard(
-                context: context,
-                title: 'Modul Resource (Rekan Tim)',
-                subtitle: 'CRUD Materi & Referensi',
-                description: 'Simpan artikel, tutorial, dan video penunjang.',
-                icon: Icons.auto_stories_rounded,
-                color: const Color(0xFF4CAF50),
-                onTap: () {
-                  widget.onNavigate?.call(2);
-                },
-              ),
-              const SizedBox(height: 14),
-              _buildModuleCard(
-                context: context,
-                title: 'Modul Progress (Rekan Tim)',
-                subtitle: 'CRUD Log & Tantangan',
-                description: 'Catat progres latihan harian dan rintangan belajar.',
-                icon: Icons.trending_up_rounded,
-                color: const Color(0xFFFF9800),
-                onTap: () {
-                  widget.onNavigate?.call(3);
-                },
-              ),
-              const SizedBox(height: 32),
-
-              // PENGATURAN PROFIL CEPAT (SHARED PREFERENCES)
-              Text(
-                'Pengaturan Profil',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                elevation: 0,
-                color: theme.colorScheme.surfaceContainer,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person_outline_rounded),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _isEditingName
-                            ? TextField(
-                                controller: _nameController,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: 'Masukkan nama...',
-                                  isDense: true,
-                                ),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                                autofocus: true,
-                                onSubmitted: (val) {
-                                  _saveName(provider);
-                                },
-                              )
-                            : Text(
-                                provider.userName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                      ),
-                      IconButton(
-                        icon: Icon(_isEditingName ? Icons.check_circle : Icons.edit),
-                        color: _isEditingName ? Colors.green : theme.colorScheme.primary,
-                        onPressed: () {
-                          if (_isEditingName) {
-                            _saveName(provider);
-                          } else {
-                            setState(() {
-                              _isEditingName = true;
-                            });
-                          }
-                        },
-                      ),
-                    ],
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFeatureBarItem(
+                      context: context,
+                      title: 'Keahlian',
+                      subtitle: '${provider.skills.length} Keahlian',
+                      icon: Icons.emoji_events_rounded,
+                      color: theme.colorScheme.primary,
+                      onTap: () => widget.onNavigate?.call(1),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFeatureBarItem(
+                      context: context,
+                      title: 'Referensi',
+                      subtitle: provider.isNotificationEnabled ? 'Notifikasi Aktif' : 'Notifikasi Mati',
+                      icon: Icons.auto_stories_rounded,
+                      color: const Color(0xFF4CAF50),
+                      onTap: () => widget.onNavigate?.call(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFeatureBarItem(
+                      context: context,
+                      title: 'Jurnal',
+                      subtitle: 'Font ${provider.fontSize.toInt()} pt',
+                      icon: Icons.trending_up_rounded,
+                      color: const Color(0xFFFF9800),
+                      onTap: () => widget.onNavigate?.call(3),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -213,19 +161,105 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _saveName(SkillProvider provider) {
-    final text = _nameController.text.trim();
-    if (text.isNotEmpty) {
-      provider.updateUserName(text);
-    }
-    setState(() {
-      _isEditingName = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Nama profil disimpan secara persisten!'),
-        duration: Duration(seconds: 1),
+  void _showEditProfileBottomSheet(BuildContext context, SkillProvider provider) {
+    final nameController = TextEditingController(text: provider.userName);
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (modalContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Pengaturan Profil',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(modalContext),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Ubah nama panggilan Anda untuk personalisasi dashboard.',
+                style: TextStyle(color: theme.hintColor, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: CircleAvatar(
+                  radius: 36,
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                  child: Text(
+                    provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Panggilan',
+                  prefixIcon: Icon(Icons.person_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                  ),
+                ),
+                textCapitalization: TextCapitalization.words,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  final text = nameController.text.trim();
+                  if (text.isNotEmpty) {
+                    provider.updateUserName(text);
+                    Navigator.pop(modalContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Nama profil berhasil disimpan secara persisten!'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text('Simpan Perubahan'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -429,11 +463,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildModuleCard({
+  Widget _buildFeatureBarItem({
     required BuildContext context,
     required String title,
     required String subtitle,
-    required String description,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
@@ -442,69 +475,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Card(
       elevation: 0,
+      color: theme.colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.1),
+          color: theme.dividerColor.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+          child: Column(
             children: [
-              // Ikon Modul
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: color, size: 24),
               ),
-              const SizedBox(width: 18),
-              // Deskripsi & Teks
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: theme.hintColor.withValues(alpha: 0.5),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: theme.hintColor,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

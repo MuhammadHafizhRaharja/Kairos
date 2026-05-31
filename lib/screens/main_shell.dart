@@ -77,17 +77,17 @@ class _MainShellState extends State<MainShell> {
             BottomNavigationBarItem(
               icon: Icon(Icons.emoji_events_outlined),
               activeIcon: Icon(Icons.emoji_events_rounded),
-              label: 'Skill',
+              label: 'Keahlian',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.auto_stories_outlined),
               activeIcon: Icon(Icons.auto_stories_rounded),
-              label: 'Resource',
+              label: 'Referensi',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.trending_up_outlined),
               activeIcon: Icon(Icons.trending_up_rounded),
-              label: 'Progress',
+              label: 'Jurnal',
             ),
           ],
         ),

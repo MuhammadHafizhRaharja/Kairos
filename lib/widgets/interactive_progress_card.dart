@@ -212,24 +212,13 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                           },
                         ),
                         const SizedBox(width: 12),
-                        // Tombol Edit Kustom (Explicit CRUD Update)
                         IconButton(
-                          icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.blue),
+                          icon: Icon(Icons.more_vert_rounded, size: 20, color: theme.hintColor),
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          tooltip: 'Ubah Skill',
-                          onPressed: widget.onEdit,
-                        ),
-                        const SizedBox(width: 10),
-                        // Tombol Hapus Kustom (Explicit CRUD Delete)
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: 'Hapus Skill',
-                          onPressed: widget.onDelete,
+                          tooltip: 'Opsi Keahlian',
+                          onPressed: () => _showSkillOptionsBottomSheet(context),
                         ),
                       ],
                     ),
@@ -338,6 +327,40 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
               ],
             ),
           ),),
+        );
+      },
+    );
+  }
+
+  void _showSkillOptionsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit_rounded, color: Colors.blue),
+                title: const Text('Ubah Keahlian'),
+                onTap: () {
+                  Navigator.pop(modalContext);
+                  widget.onEdit();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                title: const Text('Hapus Keahlian'),
+                onTap: () {
+                  Navigator.pop(modalContext);
+                  widget.onDelete();
+                },
+              ),
+            ],
+          ),
         );
       },
     );

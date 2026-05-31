@@ -14,7 +14,7 @@ class ProgressPlaceholderScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Modul Progress'),
+        title: const Text('Jurnal Progres'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -43,13 +43,13 @@ class ProgressPlaceholderScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Log Progress & Tantangan',
+              'Jurnal Progres Harian',
               style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Modul ini mencatat perjalanan harian Anda dalam melatih keterampilan, merekam kendala, serta memetakan milestone.',
+              'Fitur ini mencatat perjalanan harian Anda dalam melatih keterampilan, merekam kendala, serta memetakan milestone.',
               style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
               textAlign: TextAlign.center,
             ),
@@ -57,7 +57,7 @@ class ProgressPlaceholderScreen extends StatelessWidget {
 
             // Bagian Integrasi Shared Preferences
             Text(
-              'Shared Preferences (Modul Progress)',
+              'Pengaturan Jurnal',
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -141,7 +141,7 @@ class ProgressPlaceholderScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'Modul ini siap dikembangkan lebih lanjut dengan CRUD SQLite Log Progress oleh Anggota Tim yang bertanggung jawab.',
+                      'Fitur ini siap dikembangkan lebih lanjut dengan log harian yang sinkron dengan database SQLite.',
                       style: TextStyle(fontSize: 12),
                     ),
                   ),

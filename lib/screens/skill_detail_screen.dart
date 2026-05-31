@@ -688,90 +688,92 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
     }
   }
 
-  /// Dialog konfirmasi penghapusan skill (UI dipercantik dengan header warning merah)
+  /// Dialog konfirmasi penghapusan skill (UI dipercantik dengan Bottom Sheet)
   Future<bool?> _showDeleteConfirmDialog(
     BuildContext parentContext,
     String skillName,
     Color accentColor,
   ) {
-    return showDialog<bool>(
+    final theme = Theme.of(parentContext);
+    return showModalBottomSheet<bool>(
       context: parentContext,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: const BoxDecoration(
-              color: Colors.redAccent,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
             ),
-            child: const Column(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.white,
-                  size: 48,
+                // Drag Handle Pill
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Hapus Keahlian?',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(modalContext, false),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  'Hapus Keahlian?',
+                  'Apakah Anda yakin ingin menghapus keterampilan "$skillName" dari pelacakan?',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    color: theme.hintColor,
+                    fontSize: 13.5,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(modalContext, true),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  label: const Text('Hapus Keahlian'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 1,
                   ),
                 ),
               ],
             ),
           ),
-          content: Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Text(
-              'Apakah Anda yakin ingin menghapus keterampilan "$skillName" dari pelacakan?',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actions: [
-            OutlinedButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
-              child: const Text('Hapus'),
-            ),
-          ],
         );
       },
     );
   }
 
-  /// Dialog input untuk menambahkan keahlian baru (UI dipercantik dengan kustomisasi input & button gradien)
+  /// Dialog input untuk menambahkan keahlian baru (UI dipercantik dengan Bottom Sheet)
   void _showAddSkillDialog(
     BuildContext parentContext,
     SkillProvider provider,
@@ -779,202 +781,61 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
   ) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
+    final theme = Theme.of(parentContext);
 
-    showDialog(
+    showModalBottomSheet(
       context: parentContext,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Drag Handle Pill
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-                child: Column(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: Colors.white.withValues(alpha: 0.25),
-                      child: const Icon(
-                        Icons.add_task_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Tambah Keahlian',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              content: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Nama Keahlian',
-                        hintText: 'misal: Refactoring, UI Design',
-                        prefixIcon: Icon(
-                          Icons.book_rounded,
-                          color: accentColor,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: accentColor, width: 2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: descController,
-                      decoration: InputDecoration(
-                        labelText: 'Deskripsi (Opsional)',
-                        hintText: 'misal: Belajar pola Clean Architecture',
-                        prefixIcon: Icon(
-                          Icons.edit_note_rounded,
-                          color: accentColor,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: accentColor, width: 2),
-                        ),
-                      ),
-                      maxLines: 2,
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(modalContext),
                     ),
                   ],
                 ),
-              ),
-              actionsPadding: const EdgeInsets.only(
-                bottom: 16,
-                right: 16,
-                left: 16,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
-                  child: const Text('Batal'),
+                const SizedBox(height: 6),
+                Text(
+                  'Tambahkan keterampilan baru yang ingin Anda lacak perkembangannya.',
+                  style: TextStyle(color: theme.hintColor, fontSize: 13),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final name = nameController.text.trim();
-                    final desc = descController.text.trim();
-
-                    if (name.isNotEmpty) {
-                      provider.addSkill(
-                        categoryId: widget.category.id!,
-                        name: name,
-                        description: desc,
-                      );
-                      Navigator.pop(dialogContext);
-                      ScaffoldMessenger.of(parentContext).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Keahlian "$name" berhasil ditambahkan!',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.save_rounded, size: 18),
-                  label: const Text('Simpan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accentColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// Dialog input untuk mengedit keahlian (UI dipercantik dengan lencana edit atas & tombol dinamis)
-  void _showEditSkillDialog(
-    BuildContext parentContext,
-    SkillProvider provider,
-    Skill skill,
-    Color accentColor,
-  ) {
-    final nameController = TextEditingController(text: skill.name);
-    final descController = TextEditingController(text: skill.description);
-
-    showDialog(
-      context: parentContext,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: BoxDecoration(
-              color: accentColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Colors.white.withValues(alpha: 0.25),
-                  child: const Icon(
-                    Icons.mode_edit_outline_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Ubah Keahlian',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          content: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+                const SizedBox(height: 20),
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
@@ -982,13 +843,14 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                     hintText: 'misal: Refactoring, UI Design',
                     prefixIcon: Icon(Icons.book_rounded, color: accentColor),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(color: accentColor, width: 2),
                     ),
                   ),
+                  textCapitalization: TextCapitalization.sentences,
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -1001,69 +863,202 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                       color: accentColor,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(color: accentColor, width: 2),
                     ),
                   ),
                   maxLines: 2,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    final desc = descController.text.trim();
+
+                    if (name.isNotEmpty) {
+                      provider.addSkill(
+                        categoryId: widget.category.id!,
+                        name: name,
+                        description: desc,
+                      );
+                      Navigator.pop(modalContext);
+                      ScaffoldMessenger.of(parentContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Keahlian "$name" berhasil ditambahkan!',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.save_rounded, size: 18),
+                  label: const Text('Simpan'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 1,
+                  ),
                 ),
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.only(
-            bottom: 16,
-            right: 16,
-            left: 16,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              style: TextButton.styleFrom(foregroundColor: Colors.grey),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                final name = nameController.text.trim();
-                final desc = descController.text.trim();
+        );
+      },
+    );
+  }
 
-                if (name.isNotEmpty) {
-                  provider.updateSkill(
-                    Skill(
-                      id: skill.id,
-                      categoryId: skill.categoryId,
-                      name: name,
-                      description: desc,
-                      level: skill.level,
-                      progress: skill.progress,
-                      createdAt: skill.createdAt,
-                    ),
-                  );
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(parentContext).showSnackBar(
-                    SnackBar(
-                      content: Text('Keahlian "$name" berhasil diperbarui!'),
-                    ),
-                  );
-                }
-              },
-              icon: const Icon(Icons.save_rounded, size: 18),
-              label: const Text('Simpan'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accentColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
+  /// Dialog input untuk mengedit keahlian (UI dipercantik dengan Bottom Sheet)
+  void _showEditSkillDialog(
+    BuildContext parentContext,
+    SkillProvider provider,
+    Skill skill,
+    Color accentColor,
+  ) {
+    final nameController = TextEditingController(text: skill.name);
+    final descController = TextEditingController(text: skill.description);
+    final theme = Theme.of(parentContext);
+
+    showModalBottomSheet(
+      context: parentContext,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Drag Handle Pill
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ubah Keahlian',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(modalContext),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Ubah nama atau deskripsi dari keahlian ini.',
+                  style: TextStyle(color: theme.hintColor, fontSize: 13),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Keahlian',
+                    hintText: 'misal: Refactoring, UI Design',
+                    prefixIcon: Icon(Icons.book_rounded, color: accentColor),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: accentColor, width: 2),
+                    ),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descController,
+                  decoration: InputDecoration(
+                    labelText: 'Deskripsi (Opsional)',
+                    hintText: 'misal: Belajar pola Clean Architecture',
+                    prefixIcon: Icon(
+                      Icons.edit_note_rounded,
+                      color: accentColor,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: accentColor, width: 2),
+                    ),
+                  ),
+                  maxLines: 2,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    final desc = descController.text.trim();
+
+                    if (name.isNotEmpty) {
+                      provider.updateSkill(
+                        Skill(
+                          id: skill.id,
+                          categoryId: skill.categoryId,
+                          name: name,
+                          description: desc,
+                          level: skill.level,
+                          progress: skill.progress,
+                          createdAt: skill.createdAt,
+                        ),
+                      );
+                      Navigator.pop(modalContext);
+                      ScaffoldMessenger.of(parentContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Keahlian "$name" berhasil diperbarui!',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.save_rounded, size: 18),
+                  label: const Text('Simpan'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

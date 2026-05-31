@@ -864,102 +864,101 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     );
   }
 
-  /// Dialog konfirmasi penghapusan kategori (UI dipercantik dengan ikon warning mencolok)
+  /// Dialog konfirmasi penghapusan kategori (UI dipercantik dengan Bottom Sheet bertema warning)
   void _showDeleteConfirmDialog(
     BuildContext parentContext,
     SkillProvider provider,
     SkillCategory category,
   ) {
-    showDialog(
+    final theme = Theme.of(parentContext);
+
+    showModalBottomSheet(
       context: parentContext,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: const BoxDecoration(
-              color: Colors.redAccent,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
             ),
-            child: const Column(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.white,
-                  size: 48,
+                // Drag Handle Pill
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Hapus Kategori?',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(modalContext),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  'Hapus Kategori?',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  'Apakah Anda yakin ingin menghapus kategori "${category.name}"?\n\n'
+                  'Seluruh keahlian di dalamnya akan terhapus secara permanen dari sistem.',
+                  style: const TextStyle(fontSize: 13.5, height: 1.4),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    provider.deleteCategory(category.id!);
+                    Navigator.pop(modalContext);
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Kategori "${category.name}" berhasil dihapus!',
+                        ),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  label: const Text('Hapus Kategori'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 1,
                   ),
                 ),
               ],
             ),
           ),
-          content: Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Text(
-              'Apakah Anda yakin ingin menghapus kategori "${category.name}"?\n\n'
-              'Seluruh keahlian di dalamnya akan terhapus secara permanen dari sistem.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actions: [
-            OutlinedButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                provider.deleteCategory(category.id!);
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(parentContext).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Kategori "${category.name}" berhasil dihapus!',
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
-              child: const Text('Hapus'),
-            ),
-          ],
         );
       },
     );
   }
 
-  /// Dialog dengan input kustom untuk mengedit Kategori yang ada (UI dipercantik)
+  /// Dialog dengan input kustom untuk mengedit Kategori yang ada (UI Bottom Sheet)
   void _showEditCategoryDialog(
     BuildContext parentContext,
     SkillProvider provider,
@@ -968,6 +967,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     final nameController = TextEditingController(text: category.name);
     String selectedIcon = category.icon;
     int selectedColor = category.colorValue;
+    final theme = Theme.of(parentContext);
 
     final iconsList = [
       'code',
@@ -988,73 +988,83 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       {'name': 'Indigo', 'value': 0xFF3F51B5},
     ];
 
-    showDialog(
+    showModalBottomSheet(
       context: parentContext,
-      builder: (dialogContext) {
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
         return StatefulBuilder(
           builder: (builderContext, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.deepPurple,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 12,
+                  bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
                 ),
-                child: const Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: Colors.white24,
-                      child: Icon(
-                        Icons.mode_edit_outline_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Ubah Kategori',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              content: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 16.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Drag Handle Pill
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[400],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Ubah Kategori',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(modalContext),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Ubah nama, ikon, atau warna kategori untuk menyelaraskan tracker.',
+                      style: TextStyle(color: theme.hintColor, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
                     TextField(
                       controller: nameController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Nama Kategori',
-                        hintText: 'misal: Memasak, Menulis',
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.category_rounded,
                           color: Colors.deepPurple,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.all(Radius.circular(16)),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
+                          borderRadius: BorderRadius.all(Radius.circular(16)),
+                          borderSide: BorderSide(
                             color: Colors.deepPurple,
                             width: 2,
                           ),
                         ),
                       ),
+                      textCapitalization: TextCapitalization.words,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
                     // Pilihan Ikon
                     const Text(
@@ -1064,10 +1074,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 10,
+                      runSpacing: 10,
                       children: iconsList.map((icon) {
                         final isSelected = selectedIcon == icon;
                         return GestureDetector(
@@ -1077,29 +1087,29 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                             });
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? Color(selectedColor)
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
                                     ? Color(selectedColor)
-                                    : Colors.grey.withValues(alpha: 0.5),
+                                    : Colors.grey.withValues(alpha: 0.4),
                                 width: 1.5,
                               ),
                             ),
                             child: Icon(
                               _getIconData(icon),
-                              size: 20,
+                              size: 22,
                               color: isSelected ? Colors.white : Colors.grey,
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
                     // Pilihan Warna
                     const Text(
@@ -1109,10 +1119,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 10,
+                      runSpacing: 10,
                       children: colorsList.map((colorMap) {
                         final colorVal = colorMap['value'] as int;
                         final isSelected = selectedColor == colorVal;
@@ -1123,15 +1133,14 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                             });
                           },
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: Color(colorVal),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? (Theme.of(builderContext).brightness ==
-                                              Brightness.dark
+                                    ? (theme.brightness == Brightness.dark
                                           ? Colors.white
                                           : Colors.black)
                                     : Colors.transparent,
@@ -1142,64 +1151,51 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                                 ? const Icon(
                                     Icons.check_rounded,
                                     color: Colors.white,
-                                    size: 16,
+                                    size: 18,
                                   )
                                 : null,
                           ),
                         );
                       }).toList(),
                     ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        final text = nameController.text.trim();
+                        if (text.isNotEmpty) {
+                          provider.updateCategory(
+                            SkillCategory(
+                              id: category.id,
+                              name: text,
+                              icon: selectedIcon,
+                              colorValue: selectedColor,
+                            ),
+                          );
+                          Navigator.pop(modalContext);
+                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Kategori "$text" berhasil diperbarui!',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.save_rounded, size: 18),
+                      label: const Text('Simpan Perubahan'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 1,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              actionsPadding: const EdgeInsets.only(
-                bottom: 16,
-                right: 16,
-                left: 16,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
-                  child: const Text('Batal'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final text = nameController.text.trim();
-                    if (text.isNotEmpty) {
-                      provider.updateCategory(
-                        SkillCategory(
-                          id: category.id,
-                          name: text,
-                          icon: selectedIcon,
-                          colorValue: selectedColor,
-                        ),
-                      );
-                      Navigator.pop(dialogContext);
-                      ScaffoldMessenger.of(parentContext).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Kategori "$text" berhasil diperbarui!',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.save_rounded, size: 18),
-                  label: const Text('Simpan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ],
             );
           },
         );
@@ -1207,7 +1203,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     );
   }
 
-  /// Dialog input untuk menambahkan Kategori baru (UI dipercantik)
+  /// Dialog input untuk menambahkan Kategori baru (UI Bottom Sheet)
   void _showAddCategoryDialog(
     BuildContext parentContext,
     SkillProvider provider,
@@ -1215,6 +1211,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     final nameController = TextEditingController();
     String selectedIcon = 'code';
     int selectedColor = 0xFF2196F3;
+    final theme = Theme.of(parentContext);
 
     final iconsList = [
       'code',
@@ -1235,73 +1232,83 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       {'name': 'Indigo', 'value': 0xFF3F51B5},
     ];
 
-    showDialog(
+    showModalBottomSheet(
       context: parentContext,
-      builder: (dialogContext) {
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
         return StatefulBuilder(
           builder: (builderContext, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.deepPurple,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 12,
+                  bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
                 ),
-                child: const Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: Colors.white24,
-                      child: Icon(
-                        Icons.category_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Tambah Kategori',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              content: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 16.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Drag Handle Pill
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[400],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Tambah Kategori Baru',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(modalContext),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Kelompokkan keahlian baru dengan ikon dan warna pilihan Anda.',
+                      style: TextStyle(color: theme.hintColor, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
                     TextField(
                       controller: nameController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Nama Kategori',
-                        hintText: 'misal: Memasak, Menulis',
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.category_outlined,
                           color: Colors.deepPurple,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.all(Radius.circular(16)),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
+                          borderRadius: BorderRadius.all(Radius.circular(16)),
+                          borderSide: BorderSide(
                             color: Colors.deepPurple,
                             width: 2,
                           ),
                         ),
                       ),
+                      textCapitalization: TextCapitalization.words,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
                     // Pilihan Ikon
                     const Text(
@@ -1311,10 +1318,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 10,
+                      runSpacing: 10,
                       children: iconsList.map((icon) {
                         final isSelected = selectedIcon == icon;
                         return GestureDetector(
@@ -1324,29 +1331,29 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                             });
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? Color(selectedColor)
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
                                     ? Color(selectedColor)
-                                    : Colors.grey.withValues(alpha: 0.5),
+                                    : Colors.grey.withValues(alpha: 0.4),
                                 width: 1.5,
                               ),
                             ),
                             child: Icon(
                               _getIconData(icon),
-                              size: 20,
+                              size: 22,
                               color: isSelected ? Colors.white : Colors.grey,
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
                     // Pilihan Warna
                     const Text(
@@ -1356,10 +1363,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 10,
+                      runSpacing: 10,
                       children: colorsList.map((colorMap) {
                         final colorVal = colorMap['value'] as int;
                         final isSelected = selectedColor == colorVal;
@@ -1370,15 +1377,14 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                             });
                           },
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: Color(colorVal),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? (Theme.of(builderContext).brightness ==
-                                              Brightness.dark
+                                    ? (theme.brightness == Brightness.dark
                                           ? Colors.white
                                           : Colors.black)
                                     : Colors.transparent,
@@ -1389,57 +1395,48 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                                 ? const Icon(
                                     Icons.check_rounded,
                                     color: Colors.white,
-                                    size: 16,
+                                    size: 18,
                                   )
                                 : null,
                           ),
                         );
                       }).toList(),
                     ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        final text = nameController.text.trim();
+                        if (text.isNotEmpty) {
+                          provider.addCategory(
+                            text,
+                            selectedIcon,
+                            selectedColor,
+                          );
+                          Navigator.pop(modalContext);
+                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Kategori "$text" berhasil ditambahkan!',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.save_rounded, size: 18),
+                      label: const Text('Simpan Kategori'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 1,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              actionsPadding: const EdgeInsets.only(
-                bottom: 16,
-                right: 16,
-                left: 16,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
-                  child: const Text('Batal'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final text = nameController.text.trim();
-                    if (text.isNotEmpty) {
-                      provider.addCategory(text, selectedIcon, selectedColor);
-                      Navigator.pop(dialogContext);
-                      ScaffoldMessenger.of(parentContext).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Kategori "$text" berhasil ditambahkan!',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.save_rounded, size: 18),
-                  label: const Text('Simpan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ],
             );
           },
         );
@@ -1447,7 +1444,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
     );
   }
 
-  /// Dialog input cepat untuk menambahkan keahlian baru (UI dipercantik)
+  /// Dialog input cepat untuk menambahkan keahlian baru (UI Bottom Sheet)
   void _showQuickAddSkillDialog(
     BuildContext parentContext,
     SkillProvider provider,
@@ -1455,137 +1452,135 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   ) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
+    final theme = Theme.of(parentContext);
     final accentColor = Color(category.colorValue);
 
-    showDialog(
+    showModalBottomSheet(
       context: parentContext,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            decoration: BoxDecoration(
-              color: accentColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
             ),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Colors.white24,
-                  child: const Icon(
-                    Icons.bolt_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tambah Cepat (${category.name})',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          content: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Drag Handle Pill
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Tambah Cepat Keahlian',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(modalContext),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Menambahkan keahlian baru secara instan di bawah kategori "${category.name}".',
+                  style: TextStyle(color: theme.hintColor, fontSize: 13),
+                ),
+                const SizedBox(height: 20),
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
                     labelText: 'Nama Keahlian',
-                    hintText: 'misal: Refactoring, UI Design',
                     prefixIcon: Icon(Icons.book_rounded, color: accentColor),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       borderSide: BorderSide(color: accentColor, width: 2),
                     ),
                   ),
+                  textCapitalization: TextCapitalization.sentences,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 TextField(
                   controller: descController,
                   decoration: InputDecoration(
-                    labelText: 'Deskripsi (Opsional)',
-                    hintText: 'misal: Belajar pola Clean Architecture',
+                    labelText: 'Deskripsi Keahlian (Opsional)',
                     prefixIcon: Icon(
                       Icons.edit_note_rounded,
                       color: accentColor,
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       borderSide: BorderSide(color: accentColor, width: 2),
                     ),
                   ),
                   maxLines: 2,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    final desc = descController.text.trim();
+
+                    if (name.isNotEmpty) {
+                      provider.addSkill(
+                        categoryId: category.id!,
+                        name: name,
+                        description: desc,
+                      );
+                      Navigator.pop(modalContext);
+                      ScaffoldMessenger.of(parentContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Keahlian "$name" berhasil ditambahkan ke "${category.name}"!',
+                          ),
+                          backgroundColor: accentColor,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.save_rounded, size: 18),
+                  label: const Text('Simpan Keahlian'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 1,
+                  ),
                 ),
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.only(
-            bottom: 16,
-            right: 16,
-            left: 16,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              style: TextButton.styleFrom(foregroundColor: Colors.grey),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                final name = nameController.text.trim();
-                final desc = descController.text.trim();
-
-                if (name.isNotEmpty) {
-                  provider.addSkill(
-                    categoryId: category.id!,
-                    name: name,
-                    description: desc,
-                  );
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(parentContext).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Keahlian "$name" berhasil ditambahkan ke "${category.name}"!',
-                      ),
-                    ),
-                  );
-                }
-              },
-              icon: const Icon(Icons.save_rounded, size: 18),
-              label: const Text('Simpan'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accentColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
-            ),
-          ],
         );
       },
     );

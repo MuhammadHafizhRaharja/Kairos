@@ -28,9 +28,9 @@ Aplikasi ini dikembangkan untuk memenuhi tugas besar mata kuliah PPBL dengan fok
 ## 👥 Tim Pengembang
 | Anggota | Modul Utama |
 | :--- | :--- |
-| **Muhammad Hafizh Raharja** | [Isi Modul Anda] |
-| **Afrisya Dwiky Mauliddinka** | [Isi Modul Anggota 2] |
-| **Johanes Darren Yehuda** | [Isi Modul Anggota 3] |
+| **Muhammad Hafizh Raharja** | Skill |
+| **Afrisya Dwiky Mauliddinka** | Resource |
+| **Johanes Darren Yehuda** | Progress |
 
 ---
 

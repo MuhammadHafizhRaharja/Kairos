@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/skill_provider.dart';
+import '../models/skill.dart';
+import '../models/skill_category.dart';
 import '../widgets/activity_rings_chart.dart';
 import '../widgets/weekly_activity_chart.dart';
+import 'skill_detail_screen.dart';
 
 /// Dashboard Utama aplikasi Kairos.
 /// Menjadi pintu masuk navigasi ke semua modul dan mengelola data profil serta tema utama.
@@ -15,6 +18,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Method untuk memformat tanggal ke bahasa Indonesia secara manual tanpa konfigurasi locale eksternal
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    final months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final dayName = days[now.weekday % 7];
+    final monthName = months[now.month - 1];
+    return '$dayName, ${now.day} $monthName ${now.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
@@ -24,11 +40,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 24.0, bottom: 120.0),
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0, bottom: 120.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // HEADER & TEMA TOGGLE
+              // 1. HEADER UTAMA (Greeting, Hari & Tanggal, Toggle Mode Gelap, Avatar Profil)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -37,14 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'KAIROS',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            letterSpacing: 3.0,
+                          _getFormattedDate().toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            letterSpacing: 1.5,
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
                             Text(
@@ -75,24 +91,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: IconButton.styleFrom(
                           backgroundColor: theme.colorScheme.surfaceContainer,
                           padding: const EdgeInsets.all(12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         onPressed: () {
                           provider.toggleTheme(!provider.isDarkMode);
                         },
                       ),
-                      const SizedBox(width: 8),
-                      // Tappable Avatar
+                      const SizedBox(width: 10),
+                      // Tappable Avatar dengan outline bercahaya
                       GestureDetector(
                         onTap: () => _showEditProfileBottomSheet(context, provider),
-                        child: CircleAvatar(
-                          radius: 22,
-                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-                          child: Text(
-                            provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                              width: 2.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                blurRadius: 6,
+                              )
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            child: Text(
+                              provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                           ),
                         ),
@@ -101,28 +133,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // GRAFIK RING KEMAJUAN KUSTOM
+              // 2. MOTIVATIONAL BANNER DENGAN DESAIN PREMIUM GRADIENT
+              _buildMotivationalBanner(theme),
+              const SizedBox(height: 20),
+
+              // 3. GRAFIK RING KEMAJUAN KUSTOM
               _buildActivityRingsCard(context, provider),
               const SizedBox(height: 20),
 
-              // KARTU STATISTIK PROGRESS
+              // 4. KARTU STATISTIK PROGRESS CEPAT
               _buildStatsCard(context, provider),
               const SizedBox(height: 20),
 
-              // DIAGRAM BATANG AKTIVITAS MINGGUAN
+              // 5. DIAGRAM BATANG AKTIVITAS MINGGUAN
               const WeeklyActivityChart(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // AKSES FITUR (HORIZONTAL BAR)
+              // 6. AKTIVITAS KEAHLIAN TERKINI (Resume belajar dengan navigasi cepat)
+              _buildRecentSkillsSection(context, provider, theme),
+              const SizedBox(height: 24),
+
+              // 7. AKSES FITUR UTAMA (HORIZONTAL GRID DENGAN PREMIUM GRADIENT CARD)
               Text(
-                'Fitur Pelacakan',
+                'Menu Navigasi Fitur',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -131,29 +171,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Keahlian',
                       subtitle: '${provider.skills.length} Keahlian',
                       icon: Icons.emoji_events_rounded,
-                      color: theme.colorScheme.primary,
+                      startColor: theme.colorScheme.primary,
+                      endColor: theme.colorScheme.primary.withValues(alpha: 0.7),
                       onTap: () => widget.onNavigate?.call(1),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _buildFeatureBarItem(
                       context: context,
                       title: 'Referensi',
                       subtitle: provider.isNotificationEnabled ? 'Notifikasi Aktif' : 'Notifikasi Mati',
                       icon: Icons.auto_stories_rounded,
-                      color: const Color(0xFF4CAF50),
+                      startColor: const Color(0xFF4CAF50),
+                      endColor: const Color(0xFF81C784),
                       onTap: () => widget.onNavigate?.call(2),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _buildFeatureBarItem(
                       context: context,
                       title: 'Jurnal',
                       subtitle: 'Font ${provider.fontSize.toInt()} pt',
                       icon: Icons.trending_up_rounded,
-                      color: const Color(0xFFFF9800),
+                      startColor: const Color(0xFFFF9800),
+                      endColor: const Color(0xFFFFB74D),
                       onTap: () => widget.onNavigate?.call(3),
                     ),
                   ),
@@ -163,6 +206,190 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Banner motivasi premium
+  Widget _buildMotivationalBanner(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.85),
+            theme.colorScheme.primary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.white24,
+            child: Icon(Icons.bolt_rounded, color: Colors.amber[300], size: 28),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Fokus & Konsisten',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Langkah kecil setiap hari akan mengakumulasi perubahan besar. Keahlian apa yang ingin kamu asah hari ini?',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 11.5,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Bagian Aktivitas Keahlian Terkini
+  Widget _buildRecentSkillsSection(BuildContext context, SkillProvider provider, ThemeData theme) {
+    final List<Skill> recentSkills = provider.skills.take(3).toList();
+    if (recentSkills.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Aktivitas Keahlian Terkini',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Icon(Icons.history_rounded, color: theme.hintColor, size: 18),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Column(
+          children: recentSkills.map((Skill skill) {
+            // Cari kategori skill untuk warna dan ikon
+            SkillCategory? parentCat;
+            try {
+              parentCat = provider.categories.firstWhere((c) => c.id == skill.categoryId);
+            } catch (_) {
+              // Jika kategori tidak ditemukan, buat placeholder
+              parentCat = SkillCategory(name: 'Lainnya', icon: 'star', colorValue: 0xFF9C27B0);
+            }
+            final catColor = Color(parentCat.colorValue);
+
+            return Card(
+              elevation: 0.5,
+              margin: const EdgeInsets.only(bottom: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  if (parentCat != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SkillDetailScreen(category: parentCat!),
+                      ),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: catColor.withValues(alpha: 0.15),
+                        child: Icon(_getIconData(parentCat.icon), color: catColor, size: 16),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              skill.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              parentCat.name,
+                              style: TextStyle(color: theme.hintColor, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: catColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'Lvl ${skill.level}',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: catColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            width: 60,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                value: skill.progress,
+                                backgroundColor: catColor.withValues(alpha: 0.1),
+                                color: catColor,
+                                minHeight: 4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -178,90 +405,108 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (modalContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 24,
-            bottom: MediaQuery.of(modalContext).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Pengaturan Profil',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(modalContext),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Ubah nama panggilan Anda untuk personalisasi dashboard.',
-                style: TextStyle(color: theme.hintColor, fontSize: 13),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: CircleAvatar(
-                  radius: 36,
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-                  child: Text(
-                    provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 28,
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Drag Handle Pill
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Panggilan',
-                  prefixIcon: Icon(Icons.person_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
-                ),
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  final text = nameController.text.trim();
-                  if (text.isNotEmpty) {
-                    provider.updateUserName(text);
-                    Navigator.pop(modalContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Nama profil berhasil disimpan secara persisten!'),
-                        duration: Duration(seconds: 1),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Pengaturan Profil',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(modalContext),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Ubah nama panggilan Anda untuk personalisasi dashboard.',
+                  style: TextStyle(color: theme.hintColor, fontSize: 13),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: CircleAvatar(
+                    radius: 36,
+                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    child: Text(
+                      provider.userName.isNotEmpty ? provider.userName[0].toUpperCase() : 'K',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                    ),
                   ),
                 ),
-                child: const Text('Simpan Perubahan'),
-              ),
-            ],
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Panggilan',
+                    prefixIcon: const Icon(Icons.person_rounded, color: Colors.deepPurple),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                    ),
+                  ),
+                  textCapitalization: TextCapitalization.words,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final text = nameController.text.trim();
+                    if (text.isNotEmpty) {
+                      provider.updateUserName(text);
+                      Navigator.pop(modalContext);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Nama profil berhasil disimpan secara persisten!'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.save_rounded, size: 18),
+                  label: const Text('Simpan Perubahan'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 1,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -309,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Icon(
-                  Icons.analytics_outlined,
+                  Icons.donut_large_rounded,
                   color: theme.colorScheme.primary,
                   size: 20,
                 ),
@@ -386,7 +631,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildStatsCard(BuildContext context, SkillProvider provider) {
     final theme = Theme.of(context);
     final totalCategories = provider.categories.length;
@@ -403,7 +647,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: theme.colorScheme.primary,
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
           child: _buildMiniStatCard(
             context: context,
@@ -436,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(14.0),
         child: Row(
           children: [
             Container(
@@ -466,7 +710,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     value,
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -484,60 +728,95 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required String subtitle,
     required IconData icon,
-    required Color color,
+    required Color startColor,
+    required Color endColor,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainer,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.05),
-          width: 1,
+          color: startColor.withValues(alpha: 0.2),
+          width: 1.5,
         ),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: theme.hintColor,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [
+              startColor.withValues(alpha: isDark ? 0.05 : 0.02),
+              endColor.withValues(alpha: isDark ? 0.18 : 0.08),
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: startColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: startColor, size: 24),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: theme.hintColor,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'code':
+        return Icons.code;
+      case 'fitness_center':
+        return Icons.fitness_center;
+      case 'translate':
+        return Icons.translate;
+      case 'music_note':
+        return Icons.music_note;
+      case 'book':
+        return Icons.book;
+      case 'brush':
+        return Icons.brush;
+      case 'sports_basketball':
+        return Icons.sports_basketball;
+      default:
+        return Icons.star;
+    }
   }
 }

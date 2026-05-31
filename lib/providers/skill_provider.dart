@@ -17,12 +17,24 @@ class SkillProvider extends ChangeNotifier {
   bool _isDarkMode = false;
   bool _isLoading = false;
 
+  // State tambahan untuk Modul Resource & Progress rekan tim
+  String _defaultLang = 'id';
+  bool _isNotificationEnabled = true;
+  double _fontSize = 14.0;
+  String _viewMode = 'List';
+
   // Getter untuk mengakses state dari UI
   List<SkillCategory> get categories => _categories;
   List<Skill> get skills => _skills;
   String get userName => _userName;
   bool get isDarkMode => _isDarkMode;
   bool get isLoading => _isLoading;
+
+  // Getter tambahan
+  String get defaultLang => _defaultLang;
+  bool get isNotificationEnabled => _isNotificationEnabled;
+  double get fontSize => _fontSize;
+  String get viewMode => _viewMode;
 
   /// Memuat seluruh data awal (kategori, skill, dan preferensi pengguna)
   /// Method ini wajib dipanggil saat inisiasi aplikasi di [main.dart].
@@ -32,6 +44,12 @@ class SkillProvider extends ChangeNotifier {
       // 1. Mengambil preferensi pengguna
       _userName = await _prefsHelper.getUserName();
       _isDarkMode = await _prefsHelper.getIsDarkMode();
+
+      // Memuat preferensi tambahan
+      _defaultLang = await _prefsHelper.getDefaultLang();
+      _isNotificationEnabled = await _prefsHelper.getIsNotificationEnabled();
+      _fontSize = await _prefsHelper.getFontSize();
+      _viewMode = await _prefsHelper.getViewMode();
 
       // 2. Mengambil data dari database
       await refreshCategories();
@@ -65,6 +83,34 @@ class SkillProvider extends ChangeNotifier {
     _isDarkMode = isDark;
     notifyListeners(); // Update UI langsung
     await _prefsHelper.setIsDarkMode(isDark); // Simpan ke Shared Preferences di background
+  }
+
+  /// Mengatur bahasa default untuk Modul Resource.
+  Future<void> updateDefaultLang(String lang) async {
+    _defaultLang = lang;
+    notifyListeners();
+    await _prefsHelper.setDefaultLang(lang);
+  }
+
+  /// Mengatur preferensi notifikasi untuk Modul Resource.
+  Future<void> toggleNotification(bool enabled) async {
+    _isNotificationEnabled = enabled;
+    notifyListeners();
+    await _prefsHelper.setIsNotificationEnabled(enabled);
+  }
+
+  /// Mengatur ukuran font teks untuk Modul Progress.
+  Future<void> updateFontSize(double size) async {
+    _fontSize = size;
+    notifyListeners();
+    await _prefsHelper.setFontSize(size);
+  }
+
+  /// Mengatur mode tampilan untuk Modul Progress.
+  Future<void> updateViewMode(String mode) async {
+    _viewMode = mode;
+    notifyListeners();
+    await _prefsHelper.setViewMode(mode);
   }
 
   // ==========================================

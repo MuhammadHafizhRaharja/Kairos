@@ -25,125 +25,153 @@ class SkillCategoryScreen extends StatelessWidget {
           ? const Center(child: CircularProgressIndicator())
           : categories.isEmpty
           ? _buildEmptyState(context, theme)
-          : GridView.builder(
+          : SingleChildScrollView(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                childAspectRatio: 1.1,
-              ),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final skillsInCategory = provider.getSkillsForCategory(
-                  category.id ?? -1,
-                );
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // DIAGRAM DISTRIBUSI KOMPETENSI KUSTOM
+                  _buildCategoryMasteryCard(context, categories, provider),
+                  const SizedBox(height: 24),
 
-                return GestureDetector(
-                  // Gesture 1: Ketuk sekali untuk menavigasi ke halaman detail skill
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SkillDetailScreen(category: category),
-                      ),
-                    );
-                  },
-                  // Gesture 2: Tekan lama untuk memicu opsi Kategori (Ubah/Hapus)
-                  onLongPress: () {
-                    _showCategoryOptionsBottomSheet(context, provider, category);
-                  },
-                  // Gesture 3: Ketuk dua kali untuk pintasan tambah keahlian baru
-                  onDoubleTap: () {
-                    _showQuickAddSkillDialog(context, provider, category);
-                  },
-                  child: Card(
-                    elevation: 1,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: Color(
-                          category.colorValue,
-                        ).withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(category.colorValue).withValues(alpha: 0.05),
-                            Color(category.colorValue).withValues(alpha: 0.15),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                           // Bagian Ikon Kategori & Aksi Cepat (Explicit CRUD Update & Delete)
-                           Row(
-                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                             children: [
-                               CircleAvatar(
-                                 radius: 20,
-                                 backgroundColor: Color(category.colorValue).withValues(alpha: 0.2),
-                                 child: Icon(
-                                   _getIconData(category.icon),
-                                   color: Color(category.colorValue),
-                                   size: 20,
-                                 ),
-                               ),
-                               IconButton(
-                                 icon: const Icon(Icons.more_vert_rounded, size: 20),
-                                 color: Color(category.colorValue),
-                                 padding: EdgeInsets.zero,
-                                 constraints: const BoxConstraints(),
-                                 visualDensity: VisualDensity.compact,
-                                 tooltip: 'Opsi Kategori',
-                                 onPressed: () => _showCategoryOptionsBottomSheet(context, provider, category),
-                               ),
-                             ],
-                           ),
-                          // Bagian Teks & Statistik
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                category.name,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${skillsInCategory.length} Keahlian',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: theme.hintColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                  // JUDUL GRID
+                  const Text(
+                    'Kategori Pembelajaran',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
+                  const SizedBox(height: 14),
+
+                  // GRID KATEGORI
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 1.1,
+                    ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      final skillsInCategory = provider.getSkillsForCategory(
+                        category.id ?? -1,
+                      );
+
+                      return GestureDetector(
+                        // Gesture 1: Ketuk sekali untuk menavigasi ke halaman detail skill
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SkillDetailScreen(category: category),
+                            ),
+                          );
+                        },
+                        // Gesture 2: Tekan lama untuk memicu opsi Kategori (Ubah/Hapus)
+                        onLongPress: () {
+                          _showCategoryOptionsBottomSheet(context, provider, category);
+                        },
+                        // Gesture 3: Ketuk dua kali untuk pintasan tambah keahlian baru
+                        onDoubleTap: () {
+                          _showQuickAddSkillDialog(context, provider, category);
+                        },
+                        child: Card(
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: Color(
+                                category.colorValue,
+                              ).withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(category.colorValue).withValues(alpha: 0.05),
+                                  Color(category.colorValue).withValues(alpha: 0.15),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                 // Bagian Ikon Kategori & Aksi Cepat (Explicit CRUD Update & Delete)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Color(category.colorValue).withValues(alpha: 0.2),
+                                        child: Icon(
+                                          _getIconData(category.icon),
+                                          color: Color(category.colorValue),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.more_vert_rounded, size: 20),
+                                        color: Color(category.colorValue),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        visualDensity: VisualDensity.compact,
+                                        tooltip: 'Opsi Kategori',
+                                        onPressed: () => _showCategoryOptionsBottomSheet(context, provider, category),
+                                      ),
+                                    ],
+                                  ),
+                                // Bagian Teks & Statistik
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      category.name,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${skillsInCategory.length} Keahlian',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: theme.hintColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddCategoryDialog(context, provider),
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0), // Menghindari tabrakan dengan navbar
+        child: FloatingActionButton(
+          onPressed: () => _showAddCategoryDialog(context, provider),
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -688,6 +716,99 @@ class SkillCategoryScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  /// Widget kustom untuk memvisualisasikan proporsi distribusi keahlian per kategori
+  Widget _buildCategoryMasteryCard(
+    BuildContext context,
+    List<SkillCategory> categories,
+    SkillProvider provider,
+  ) {
+    final theme = Theme.of(context);
+    final totalSkillsCount = provider.skills.length;
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: theme.dividerColor.withValues(alpha: 0.05),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Distribusi Kompetensi',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(
+                  Icons.donut_large_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (categories.isEmpty)
+              Text(
+                'Belum ada data kompetensi.',
+                style: TextStyle(color: theme.hintColor, fontSize: 13),
+              )
+            else
+              Column(
+                children: categories.take(3).map((category) {
+                  final skills = provider.getSkillsForCategory(category.id ?? -1);
+                  final double ratio = totalSkillsCount > 0 ? skills.length / totalSkillsCount : 0.0;
+                  final color = Color(category.colorValue);
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              category.name,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                            Text(
+                              '${(ratio * 100).toInt()}% (${skills.length} Skill)',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: ratio,
+                            backgroundColor: color.withValues(alpha: 0.1),
+                            color: color,
+                            minHeight: 8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

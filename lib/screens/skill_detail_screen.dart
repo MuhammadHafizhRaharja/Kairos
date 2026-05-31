@@ -130,11 +130,14 @@ class SkillDetailScreen extends StatelessWidget {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddSkillDialog(context, provider),
-        backgroundColor: categoryColor,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0), // Menghindari tabrakan dengan navbar
+        child: FloatingActionButton(
+          onPressed: () => _showAddSkillDialog(context, provider),
+          backgroundColor: categoryColor,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

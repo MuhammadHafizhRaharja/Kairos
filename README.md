@@ -1,2 +1,16 @@
 # Kairos
-Kairos adalah aplikasi manajemen pengembangan diri berbasis Flutter yang dirancang untuk membantu pengguna memantau progres skill baru, mengelola materi pembelajaran, dan mengejar target penguasaan keahlian secara sistematis. Aplikasi ini dikembangkan sebagai solusi untuk mendokumentasikan perjalanan belajar agar lebih terukur dan produktif.
+
+Kairos adalah proyek Flutter untuk manajemen pengembangan diri, membantu pengguna memantau progres skill, mengelola materi pembelajaran, dan mengejar target penguasaan keahlian.
+
+## Menjalankan Proyek
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Menjalankan Test
+
+```bash
+flutter test
+```

@@ -18,37 +18,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Method untuk memformat tanggal ke bahasa Indonesia secara manual tanpa konfigurasi locale eksternal
-  String _getFormattedDate() {
-    final now = DateTime.now();
-    final days = [
-      'Minggu',
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-    ];
-    final months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    final dayName = days[now.weekday % 7];
-    final monthName = months[now.month - 1];
-    return '$dayName, ${now.day} $monthName ${now.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
@@ -75,15 +44,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Logo KAIROS
                         Text(
-                          _getFormattedDate().toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.bold,
+                          'KAIROS',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 4.0,
                             color: theme.colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Text(

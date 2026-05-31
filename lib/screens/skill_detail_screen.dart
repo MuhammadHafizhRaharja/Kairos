@@ -31,7 +31,7 @@ class SkillDetailScreen extends StatelessWidget {
           : skills.isEmpty
           ? _buildEmptyState(context, theme, categoryColor)
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 120),
               itemCount: skills.length,
               itemBuilder: (context, index) {
                 final skill = skills[index];
@@ -90,39 +90,42 @@ class SkillDetailScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: InteractiveProgressCard(
-                    skill: skill,
-                    themeColor: categoryColor,
-                    onProgressChanged: (newLevel, newProgress) {
-                      // Membuat objek skill baru dengan nilai terupdate untuk dikirim ke DB
-                      final updatedSkill = Skill(
-                        id: skill.id,
-                        categoryId: skill.categoryId,
-                        name: skill.name,
-                        description: skill.description,
-                        level: newLevel,
-                        progress: newProgress,
-                        createdAt: skill.createdAt,
-                      );
-                      provider.updateSkill(updatedSkill);
-                    },
-                    onLongPress: () {
-                      _showEditSkillDialog(context, provider, skill);
-                    },
-                    onEdit: () {
-                      _showEditSkillDialog(context, provider, skill);
-                    },
-                    onDelete: () async {
-                      final confirmed = await _showDeleteConfirmDialog(context, skill.name);
-                      if (confirmed == true && context.mounted) {
-                        provider.deleteSkill(skill.id!);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Skill "${skill.name}" berhasil dihapus!'),
-                          ),
+                  child: GestureDetector(
+                    onDoubleTap: () => _showEditSkillDialog(context, provider, skill),
+                    child: InteractiveProgressCard(
+                      skill: skill,
+                      themeColor: categoryColor,
+                      onProgressChanged: (newLevel, newProgress) {
+                        // Membuat objek skill baru dengan nilai terupdate untuk dikirim ke DB
+                        final updatedSkill = Skill(
+                          id: skill.id,
+                          categoryId: skill.categoryId,
+                          name: skill.name,
+                          description: skill.description,
+                          level: newLevel,
+                          progress: newProgress,
+                          createdAt: skill.createdAt,
                         );
-                      }
-                    },
+                        provider.updateSkill(updatedSkill);
+                      },
+                      onLongPress: () {
+                        _showEditSkillDialog(context, provider, skill);
+                      },
+                      onEdit: () {
+                        _showEditSkillDialog(context, provider, skill);
+                      },
+                      onDelete: () async {
+                        final confirmed = await _showDeleteConfirmDialog(context, skill.name);
+                        if (confirmed == true && context.mounted) {
+                          provider.deleteSkill(skill.id!);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Skill "${skill.name}" berhasil dihapus!'),
+                            ),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 );
               },

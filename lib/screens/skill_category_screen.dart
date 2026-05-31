@@ -26,7 +26,7 @@ class SkillCategoryScreen extends StatelessWidget {
           : categories.isEmpty
           ? _buildEmptyState(context, theme)
           : GridView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 14,
@@ -54,6 +54,10 @@ class SkillCategoryScreen extends StatelessWidget {
                   // Gesture 2: Tekan lama untuk memicu opsi Kategori (Ubah/Hapus)
                   onLongPress: () {
                     _showCategoryOptionsBottomSheet(context, provider, category);
+                  },
+                  // Gesture 3: Ketuk dua kali untuk pintasan tambah keahlian baru
+                  onDoubleTap: () {
+                    _showQuickAddSkillDialog(context, provider, category);
                   },
                   child: Card(
                     elevation: 1,
@@ -609,6 +613,79 @@ class SkillCategoryScreen extends StatelessWidget {
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  /// Dialog input cepat untuk menambahkan keahlian baru via double-tap
+  void _showQuickAddSkillDialog(
+    BuildContext parentContext,
+    SkillProvider provider,
+    SkillCategory category,
+  ) {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+
+    showDialog(
+      context: parentContext,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Tambah Keahlian Baru (${category.name})'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Keahlian',
+                    hintText: 'misal: Refactoring, UI Design',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(
+                    labelText: 'Deskripsi (Opsional)',
+                    hintText: 'misal: Belajar pola Clean Architecture',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                final desc = descController.text.trim();
+
+                if (name.isNotEmpty) {
+                  provider.addSkill(
+                    categoryId: category.id!,
+                    name: name,
+                    description: desc,
+                  );
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(parentContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Keahlian "$name" berhasil ditambahkan ke "${category.name}"!',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
         );
       },
     );

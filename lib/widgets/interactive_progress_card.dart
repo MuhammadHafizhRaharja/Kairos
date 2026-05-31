@@ -103,8 +103,20 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
           child: InkWell(
             onLongPress: widget.onLongPress,
             borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  colors: [
+                    widget.themeColor.withValues(alpha: isDark ? 0.04 : 0.02),
+                    widget.themeColor.withValues(alpha: isDark ? 0.12 : 0.06),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -326,7 +338,7 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                 ),
               ],
             ),
-          ),),
+          ),),),
         );
       },
     );

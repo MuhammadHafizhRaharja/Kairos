@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/skill_provider.dart';
 import '../widgets/activity_rings_chart.dart';
+import '../widgets/weekly_activity_chart.dart';
 
 /// Dashboard Utama aplikasi Kairos.
 /// Menjadi pintu masuk navigasi ke semua modul dan mengelola data profil serta tema utama.
@@ -23,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 24.0, bottom: 120.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -108,6 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // KARTU STATISTIK PROGRESS
               _buildStatsCard(context, provider),
+              const SizedBox(height: 20),
+
+              // DIAGRAM BATANG AKTIVITAS MINGGUAN
+              const WeeklyActivityChart(),
               const SizedBox(height: 32),
 
               // AKSES FITUR (HORIZONTAL BAR)
@@ -387,79 +392,90 @@ class _HomeScreenState extends State<HomeScreen> {
     final totalCategories = provider.categories.length;
     final totalSkills = provider.skills.length;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          )
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hari ini adalah kesempatan untuk tumbuh.',
-            style: TextStyle(
-              color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Lanjutkan Pelatihan Anda!',
-            style: TextStyle(
-              color: theme.colorScheme.onPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Divider(color: Colors.white24),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(totalCategories.toString(), 'Kategori', theme.colorScheme.onPrimary),
-              Container(width: 1, height: 32, color: Colors.white24),
-              _buildStatItem(totalSkills.toString(), 'Skill Aktif', theme.colorScheme.onPrimary),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String val, String label, Color fontColor) {
-    return Column(
+    return Row(
       children: [
-        Text(
-          val,
-          style: TextStyle(
-            color: fontColor,
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
+        Expanded(
+          child: _buildMiniStatCard(
+            context: context,
+            title: 'Kategori',
+            value: totalCategories.toString(),
+            icon: Icons.category_rounded,
+            color: theme.colorScheme.primary,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: fontColor.withValues(alpha: 0.7),
-            fontSize: 12,
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildMiniStatCard(
+            context: context,
+            title: 'Keahlian Aktif',
+            value: totalSkills.toString(),
+            icon: Icons.bolt_rounded,
+            color: theme.colorScheme.secondary,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMiniStatCard({
+    required BuildContext context,
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: theme.dividerColor.withValues(alpha: 0.05),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.hintColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -18,7 +18,6 @@ class ResourceScreen extends StatefulWidget {
 
 class _ResourceScreenState extends State<ResourceScreen> {
   String _selectedFilter = 'Semua'; // Filter tab: Semua, Belum Dibaca, Sedang Dibaca, Selesai
-  bool _isPrefExpanded = false; // Status expand/collapse setelan preferensi
 
   // Kategori materi yang didukung
   final List<String> _categories = ['Video', 'Artikel', 'Buku', 'Dokumentasi', 'Lainnya'];
@@ -69,10 +68,6 @@ class _ResourceScreenState extends State<ResourceScreen> {
                   // 1. STATS BANNER
                   _buildStatsBanner(theme, totalCount, completedCount, readingCount, unreadCount, resourceProgress),
                   const SizedBox(height: 16),
-
-                  // 2. SETELAN PREFERENSI (COLLAPSIBLE CARD)
-                  _buildCollapsiblePrefsCard(context, provider, theme),
-                  const SizedBox(height: 24),
 
                   // 3. FILTER TAB CHIPS
                   _buildFilterChips(theme),
@@ -203,99 +198,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
     );
   }
 
-  /// Dropdown preferensi pengaturan collapsible
-  Widget _buildCollapsiblePrefsCard(BuildContext context, SkillProvider provider, ThemeData theme) {
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        children: [
-          // Header Tappable
-          ListTile(
-            onTap: () {
-              setState(() {
-                _isPrefExpanded = !_isPrefExpanded;
-              });
-            },
-            leading: Icon(Icons.settings_suggest_rounded, color: theme.colorScheme.primary),
-            title: const Text(
-              'Preferensi & Setelan Referensi',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-            ),
-            subtitle: Text(
-              _isPrefExpanded ? 'Sembunyikan pengaturan cepat' : 'Tampilkan pengaturan notifikasi & bahasa',
-              style: TextStyle(fontSize: 10.5, color: theme.hintColor),
-            ),
-            trailing: Icon(
-              _isPrefExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          // Content
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-              child: Column(
-                children: [
-                  const Divider(height: 1),
-                  // Switch Notifikasi
-                  SwitchListTile(
-                    title: const Text('Notifikasi Belajar Harian', style: TextStyle(fontSize: 12.5)),
-                    subtitle: const Text('Kirim pengingat belajar berkala', style: TextStyle(fontSize: 10)),
-                    value: provider.isNotificationEnabled,
-                    onChanged: (val) {
-                      provider.toggleNotification(val);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(val ? 'Notifikasi belajar aktif! 🔔' : 'Notifikasi belajar nonaktif! 🔕'),
-                          duration: const Duration(seconds: 1),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  // Bahasa utama
-                  ListTile(
-                    title: const Text('Bahasa Utama Konten', style: TextStyle(fontSize: 12.5)),
-                    subtitle: const Text('Bahasa rujukan untuk artikel/materi', style: TextStyle(fontSize: 10)),
-                    trailing: DropdownButton<String>(
-                      value: provider.defaultLang,
-                      underline: const SizedBox(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          provider.updateDefaultLang(newValue);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Bahasa rujukan diubah ke: ${newValue.toUpperCase()} 🌐'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                      items: const [
-                        DropdownMenuItem(value: 'id', child: Text('Indonesia (ID)', style: TextStyle(fontSize: 12))),
-                        DropdownMenuItem(value: 'en', child: Text('English (EN)', style: TextStyle(fontSize: 12))),
-                        DropdownMenuItem(value: 'jp', child: Text('日本語 (JP)', style: TextStyle(fontSize: 12))),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            crossFadeState: _isPrefExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 250),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   /// Chips untuk filter status resources
   Widget _buildFilterChips(ThemeData theme) {

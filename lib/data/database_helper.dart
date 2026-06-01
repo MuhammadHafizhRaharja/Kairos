@@ -71,6 +71,30 @@ class DatabaseHelper {
         final List decoded = json.decode(userStr);
         _webUsers.clear();
         _webUsers.addAll(decoded.map((json) => User.fromMap(Map<String, dynamic>.from(json))).toList());
+
+        // Self-healing: if any stored user photoPath is too large (> 500,000 characters),
+        // we reset it to null to prevent QuotaExceededErrors on subsequent saves or loading.
+        bool cleaned = false;
+        for (int i = 0; i < _webUsers.length; i++) {
+          final u = _webUsers[i];
+          if (u.photoPath != null && u.photoPath!.length > 500000) {
+            _webUsers[i] = User(
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              password: u.password,
+              createdAt: u.createdAt,
+              photoPath: null,
+              phone: u.phone,
+            );
+            cleaned = true;
+          }
+        }
+        if (cleaned) {
+          final usersJson = _webUsers.map((u) => u.toMap()).toList();
+          await prefs.setString('web_users', json.encode(usersJson));
+          debugPrint('Self-healed: Removed exceptionally large base64 avatars from SharedPreferences.');
+        }
       }
       
       final logStr = prefs.getString('web_progress_logs');
@@ -100,6 +124,22 @@ class DatabaseHelper {
     try {
       final prefs = await SharedPreferences.getInstance();
       
+      // Self-healing: ensure any large custom profile pictures are cleaned before saving to prevent QuotaExceededError
+      for (int i = 0; i < _webUsers.length; i++) {
+        final u = _webUsers[i];
+        if (u.photoPath != null && u.photoPath!.length > 500000) {
+          _webUsers[i] = User(
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            password: u.password,
+            createdAt: u.createdAt,
+            photoPath: null,
+            phone: u.phone,
+          );
+        }
+      }
+
       final categoriesJson = _webCategories.map((c) => c.toMap()).toList();
       final skillsJson = _webSkills.map((s) => s.toMap()).toList();
       final resourcesJson = _webResources.map((r) => r.toMap()).toList();

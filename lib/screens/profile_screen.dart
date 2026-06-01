@@ -203,6 +203,18 @@ class ProfileScreen extends StatelessWidget {
                   }
                   
                   if (bytes != null) {
+                    if (kIsWeb && bytes.length > 500 * 1024) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Ukuran gambar terlalu besar! Maksimal 500 KB untuk versi Web. ⚠️'),
+                            backgroundColor: Colors.orange,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                      return;
+                    }
                     final base64String = base64Encode(bytes);
                     setSheetState(() {
                       tempSelectedAvatar = base64String;
@@ -799,8 +811,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
-                  Card(
+                               Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 0,
                     color: theme.colorScheme.surfaceContainerLow,
@@ -811,11 +822,21 @@ class ProfileScreen extends StatelessWidget {
                           // 1. Switch Notifikasi
                           ListTile(
                             leading: Icon(Icons.notifications_active_outlined, color: theme.colorScheme.primary),
-                            title: const Text('Notifikasi Reaktif', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: const Text('Aktifkan pengingat belajar reaktif', style: TextStyle(fontSize: 11)),
+                            title: const Text('Notifikasi Belajar Harian', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            subtitle: const Text('Kirim pengingat belajar berkala', style: TextStyle(fontSize: 11)),
                             trailing: Switch(
                               value: skillProvider.isNotificationEnabled,
-                              onChanged: (val) => skillProvider.toggleNotification(val),
+                              onChanged: (val) {
+                                skillProvider.toggleNotification(val);
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(val ? 'Notifikasi belajar aktif! 🔔' : 'Notifikasi belajar nonaktif! 🔕'),
+                                    duration: const Duration(seconds: 1),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
@@ -841,8 +862,8 @@ class ProfileScreen extends StatelessWidget {
                           // 3. Dropdown Bahasa Default
                           ListTile(
                             leading: const Icon(Icons.language_rounded, color: Colors.blue),
-                            title: const Text('Bahasa Utama', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: const Text('Bahasa sistem referensi materi', style: TextStyle(fontSize: 11)),
+                            title: const Text('Bahasa Utama Konten', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            subtitle: const Text('Bahasa rujukan untuk artikel/materi', style: TextStyle(fontSize: 11)),
                             trailing: DropdownButton<String>(
                               value: skillProvider.defaultLang,
                               underline: const SizedBox(),
@@ -850,10 +871,19 @@ class ProfileScreen extends StatelessWidget {
                               items: const [
                                 DropdownMenuItem(value: 'id', child: Text('Indonesia (ID)', style: TextStyle(fontSize: 12))),
                                 DropdownMenuItem(value: 'en', child: Text('English (EN)', style: TextStyle(fontSize: 12))),
+                                DropdownMenuItem(value: 'jp', child: Text('日本語 (JP)', style: TextStyle(fontSize: 12))),
                               ],
                               onChanged: (val) {
                                 if (val != null) {
                                   skillProvider.updateDefaultLang(val);
+                                  ScaffoldMessenger.of(context).clearSnackBars();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Bahasa rujukan diubah ke: ${val.toUpperCase()} 🌐'),
+                                      duration: const Duration(seconds: 1),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
                                 }
                               },
                             ),

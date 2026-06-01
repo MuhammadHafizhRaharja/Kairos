@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/skill_provider.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
@@ -103,7 +104,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
         child: FloatingActionButton.extended(
           onPressed: () => _showAddEditResourceBottomSheet(context, provider),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Tambah Materi / Referensi'),
+          label: const Text('Tambah Materi'),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
         ),
@@ -429,6 +430,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
           final nextStatus = (resource.status + 1) % 3;
           final updatedResource = Resource(
             id: resource.id,
+            userId: resource.userId,
             skillId: resource.skillId,
             title: resource.title,
             url: resource.url,
@@ -593,37 +595,30 @@ class _ResourceScreenState extends State<ResourceScreen> {
                     // Aksi URL
                     Row(
                       children: [
-                        // Salin Link
-                        IconButton(
-                          icon: const Icon(Icons.copy_rounded, size: 16),
-                          tooltip: 'Salin Tautan',
-                          style: IconButton.styleFrom(
-                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                            padding: const EdgeInsets.all(8),
-                          ),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: resource.url));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tautan disalin ke papan klip! 📋'),
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 8),
                         // Launch link
                         TextButton.icon(
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: resource.url));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Membuka tautan: ${resource.url} (Tautan disalin) 🌐'),
-                                behavior: SnackBarBehavior.floating,
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
+                          onPressed: () async {
+                            final rawUrl = resource.url.trim();
+                            // Tambahkan prefix http:// jika tidak ada skema lengkap
+                            String validUrl = rawUrl;
+                            if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+                              validUrl = 'https://$rawUrl';
+                            }
+                            final Uri uri = Uri.parse(validUrl);
+                            try {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            } catch (e) {
+                              // Fallback jika gagal membuka link
+                              await Clipboard.setData(ClipboardData(text: resource.url));
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Tautan disalin ke papan klip! 📋'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
                           },
                           icon: const Icon(Icons.open_in_new_rounded, size: 14),
                           label: const Text('Buka', style: TextStyle(fontSize: 11)),
@@ -697,6 +692,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
       onTap: () {
         final updated = Resource(
           id: resource.id,
+          userId: resource.userId,
           skillId: resource.skillId,
           title: resource.title,
           url: resource.url,
@@ -994,6 +990,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
                               } else {
                                 final updated = Resource(
                                   id: resource.id,
+                                  userId: resource.userId,
                                   skillId: currentSkillId,
                                   title: title,
                                   url: url,

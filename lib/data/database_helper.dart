@@ -175,7 +175,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onConfigure: _configureDB,
       onUpgrade: _upgradeDB,
@@ -241,6 +241,7 @@ class DatabaseHelper {
         description TEXT NOT NULL DEFAULT '',
         category TEXT NOT NULL DEFAULT 'Lainnya',
         status INTEGER NOT NULL DEFAULT 0,
+        resourceType TEXT NOT NULL DEFAULT 'materi',
         createdAt TEXT NOT NULL,
         FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE CASCADE
       )
@@ -360,8 +361,14 @@ class DatabaseHelper {
           targetDate TEXT NOT NULL,
           isCompleted INTEGER NOT NULL DEFAULT 0,
           FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
-        )
       ''');
+    }
+    if (oldVersion < 8) {
+      try {
+        await db.execute("ALTER TABLE resources ADD COLUMN resourceType TEXT NOT NULL DEFAULT 'materi'");
+      } catch (e) {
+        debugPrint('Migration: resourceType already exists in resources: $e');
+      }
     }
   }
 
@@ -696,6 +703,7 @@ class DatabaseHelper {
         description: resource.description,
         category: resource.category,
         status: resource.status,
+        resourceType: resource.resourceType,
         createdAt: resource.createdAt,
       );
       _webResources.add(newRes);

@@ -245,6 +245,7 @@ class SkillProvider extends ChangeNotifier {
     String description = '',
     String category = 'Lainnya',
     int status = 0,
+    String resourceType = 'materi',
   }) async {
     final newResource = Resource(
       userId: _currentUserId,
@@ -254,6 +255,7 @@ class SkillProvider extends ChangeNotifier {
       description: description,
       category: category,
       status: status,
+      resourceType: resourceType,
       createdAt: DateTime.now(),
     );
     await _dbHelper.insertResource(newResource);

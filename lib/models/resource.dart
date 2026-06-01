@@ -9,6 +9,7 @@ class Resource {
   final String description; // Deskripsi singkat atau catatan belajar
   final String category; // Kategori materi (misal: Video, Artikel, Buku, Dokumentasi, Lainnya)
   final int status; // Status membaca (0 = Belum Dibaca, 1 = Sedang Dibaca, 2 = Selesai)
+  final String resourceType; // Jenis resource ('materi' atau 'referensi')
   final DateTime createdAt; // Tanggal ditambahkan
 
   Resource({
@@ -20,6 +21,7 @@ class Resource {
     this.description = '',
     this.category = 'Lainnya',
     this.status = 0,
+    this.resourceType = 'materi',
     required this.createdAt,
   });
 
@@ -33,6 +35,7 @@ class Resource {
     String? description,
     String? category,
     int? status,
+    String? resourceType,
     DateTime? createdAt,
   }) {
     return Resource(
@@ -44,6 +47,7 @@ class Resource {
       description: description ?? this.description,
       category: category ?? this.category,
       status: status ?? this.status,
+      resourceType: resourceType ?? this.resourceType,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -57,6 +61,7 @@ class Resource {
       'description': description,
       'category': category,
       'status': status,
+      'resourceType': resourceType,
       'createdAt': createdAt.toIso8601String(), // Menyimpan DateTime sebagai String format ISO 8601
     };
     if (id != null) {
@@ -83,6 +88,7 @@ class Resource {
       description: map['description'] as String? ?? '',
       category: map['category'] as String? ?? 'Lainnya',
       status: map['status'] as int? ?? 0,
+      resourceType: map['resourceType'] as String? ?? 'materi',
       createdAt: DateTime.parse(map['createdAt'] as String? ?? DateTime.now().toIso8601String()),
     );
   }

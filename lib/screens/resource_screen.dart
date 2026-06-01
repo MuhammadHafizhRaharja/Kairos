@@ -16,9 +16,28 @@ class ResourceScreen extends StatefulWidget {
   State<ResourceScreen> createState() => _ResourceScreenState();
 }
 
-class _ResourceScreenState extends State<ResourceScreen> {
+class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   // Kategori materi yang didukung
   final List<String> _categories = ['Video', 'Artikel', 'Buku', 'Dokumentasi', 'Lainnya'];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +45,12 @@ class _ResourceScreenState extends State<ResourceScreen> {
     final theme = Theme.of(context);
     final selectedFilter = provider.selectedFilter;
 
-    // Filter resources berdasarkan status
-    final filteredResources = provider.resources.where((resource) {
+    // Filter resources based on type
+    final materiList = provider.resources.where((r) => r.resourceType == 'materi').toList();
+    final referensiList = provider.resources.where((r) => r.resourceType == 'referensi').toList();
+
+    // Filter materi berdasarkan status tab
+    final filteredMateri = materiList.where((resource) {
       if (selectedFilter == 'Semua') return true;
       if (selectedFilter == 'Belum Dibaca') return resource.status == 0;
       if (selectedFilter == 'Sedang Dibaca') return resource.status == 1;
@@ -35,57 +58,92 @@ class _ResourceScreenState extends State<ResourceScreen> {
       return true;
     }).toList();
 
-    // Hitung statistik untuk header
-    final totalCount = provider.resources.length;
-    final unreadCount = provider.resources.where((r) => r.status == 0).length;
-    final readingCount = provider.resources.where((r) => r.status == 1).length;
-    final completedCount = provider.resources.where((r) => r.status == 2).length;
+    // Hitung statistik untuk tab Materi Belajar
+    final totalMateri = materiList.length;
+    final unreadMateri = materiList.where((r) => r.status == 0).length;
+    final readingMateri = materiList.where((r) => r.status == 1).length;
+    final completedMateri = materiList.where((r) => r.status == 2).length;
 
-    // Hitung persentase progres riil berdasarkan materi (Selesai = 100%, Sedang Dibaca = 50%)
-    double resourceProgress = 0.0;
-    if (totalCount > 0) {
-      resourceProgress = ((completedCount * 1.0) + (readingCount * 0.5)) / totalCount;
+    double materiProgress = 0.0;
+    if (totalMateri > 0) {
+      materiProgress = ((completedMateri * 1.0) + (readingMateri * 0.5)) / totalMateri;
     }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Materi & Referensi',
+          'Sumber Belajar',
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(
+              icon: Icon(Icons.menu_book_rounded, size: 20),
+              text: 'Materi Belajar',
+            ),
+            Tab(
+              icon: Icon(Icons.bookmark_added_rounded, size: 20),
+              text: 'Referensi Tambahan',
+            ),
+          ],
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+        ),
       ),
       body: SafeArea(
-        child: Column(
+        child: TabBarView(
+          controller: _tabController,
           children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
-                children: [
-                  // 1. STATS BANNER
-                  _buildStatsBanner(theme, totalCount, completedCount, readingCount, unreadCount, resourceProgress),
-                  const SizedBox(height: 16),
+            // TAB 1: MATERI BELAJAR
+            ListView(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 120),
+              children: [
+                _buildStatsBanner(
+                  theme,
+                  totalMateri,
+                  completedMateri,
+                  readingMateri,
+                  unreadMateri,
+                  materiProgress,
+                ),
+                const SizedBox(height: 16),
+                _buildFilterChips(theme, provider),
+                const SizedBox(height: 16),
+                filteredMateri.isEmpty
+                    ? _buildEmptyState(theme, selectedFilter)
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredMateri.length,
+                        itemBuilder: (context, index) {
+                          final resource = filteredMateri[index];
+                          return _buildResourceCard(context, provider, theme, resource);
+                        },
+                      ),
+              ],
+            ),
 
-                  // 3. FILTER TAB CHIPS
-                  _buildFilterChips(theme, provider),
-                  const SizedBox(height: 16),
-
-                  // 4. RESOURCE LIST / EMPTY STATE
-                  filteredResources.isEmpty
-                      ? _buildEmptyState(theme, selectedFilter)
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filteredResources.length,
-                          itemBuilder: (context, index) {
-                            final resource = filteredResources[index];
-                            return _buildResourceCard(context, provider, theme, resource);
-                          },
-                        ),
-                ],
-              ),
+            // TAB 2: REFERENSI TAMBAHAN
+            ListView(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 120),
+              children: [
+                referensiList.isEmpty
+                    ? _buildEmptyStateForReferences(theme)
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: referensiList.length,
+                        itemBuilder: (context, index) {
+                          final resource = referensiList[index];
+                          return _buildResourceCard(context, provider, theme, resource);
+                        },
+                      ),
+              ],
             ),
           ],
         ),
@@ -94,9 +152,15 @@ class _ResourceScreenState extends State<ResourceScreen> {
         padding: const EdgeInsets.only(bottom: 80.0), // Agar tidak tertutup BottomNavBar
         child: FloatingActionButton.extended(
           heroTag: null,
-          onPressed: () => _showAddEditResourceBottomSheet(context, provider),
+          onPressed: () {
+            if (_tabController.index == 0) {
+              _showAddEditResourceBottomSheet(context, provider, type: 'materi');
+            } else {
+              _showAddEditResourceBottomSheet(context, provider, type: 'referensi');
+            }
+          },
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Tambah Materi'),
+          label: Text(_tabController.index == 0 ? 'Tambah Materi' : 'Tambah Referensi'),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
         ),
@@ -244,14 +308,37 @@ class _ResourceScreenState extends State<ResourceScreen> {
           Icon(Icons.auto_stories_rounded, size: 72, color: theme.hintColor.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           Text(
-            'Tidak Ada Referensi',
+            'Tidak Ada Materi',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
             selectedFilter == 'Semua'
-                ? 'Belum ada referensi terdaftar. Tambahkan tautan materi belajar Anda!'
+                ? 'Belum ada materi belajar terdaftar. Tambahkan tautan materi belajar Anda!'
                 : 'Tidak ada materi dengan status: $selectedFilter',
+            style: TextStyle(color: theme.hintColor, fontSize: 12.5),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tampilan jika referensi kosong
+  Widget _buildEmptyStateForReferences(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        children: [
+          Icon(Icons.bookmark_border_rounded, size: 72, color: theme.hintColor.withValues(alpha: 0.3)),
+          const SizedBox(height: 16),
+          Text(
+            'Tidak Ada Referensi',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Belum ada referensi tambahan. Tambahkan tautan referensi yang berguna!',
             style: TextStyle(color: theme.hintColor, fontSize: 12.5),
             textAlign: TextAlign.center,
           ),
@@ -267,6 +354,8 @@ class _ResourceScreenState extends State<ResourceScreen> {
     ThemeData theme,
     Resource resource,
   ) {
+    final isReference = resource.resourceType == 'referensi';
+
     // 1. Cari relasi ke Skill
     Skill? linkedSkill;
     Color skillColor = theme.colorScheme.primary;
@@ -286,19 +375,18 @@ class _ResourceScreenState extends State<ResourceScreen> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.error,
+          color: theme.colorScheme.error.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Icon(Icons.delete_sweep_rounded, color: Colors.white, size: 28),
+        child: const Icon(Icons.delete_rounded, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
-        return await showDialog<bool>(
+        return await showDialog(
           context: context,
           builder: (dialogCtx) => AlertDialog(
-            title: const Text('Hapus Referensi?', style: TextStyle(fontWeight: FontWeight.bold)),
-            content: Text('Apakah Anda yakin ingin menghapus "${resource.title}" secara permanen?'),
+            title: const Text('Hapus?', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: Text('Apakah Anda yakin ingin menghapus "${resource.title}"?'),
             actions: [
               TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Batal')),
               ElevatedButton(
@@ -315,7 +403,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
           provider.deleteResource(resource.id!);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Materi "${resource.title}" berhasil dihapus'),
+              content: Text('${isReference ? "Referensi" : "Materi"} "${resource.title}" berhasil dihapus'),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 1),
             ),
@@ -323,34 +411,37 @@ class _ResourceScreenState extends State<ResourceScreen> {
         }
       },
       child: GestureDetector(
-        // Double Tap Shortcut: Ganti status dengan memutar nilai status 0 -> 1 -> 2 -> 0
-        onDoubleTap: () {
-          final nextStatus = (resource.status + 1) % 3;
-          final updatedResource = Resource(
-            id: resource.id,
-            userId: resource.userId,
-            skillId: resource.skillId,
-            title: resource.title,
-            url: resource.url,
-            description: resource.description,
-            category: resource.category,
-            status: nextStatus,
-            createdAt: resource.createdAt,
-          );
-          provider.updateResource(updatedResource);
-          
-          String statusWord = nextStatus == 0 ? 'Belum Dibaca 💤' : (nextStatus == 1 ? 'Sedang Dibaca 📖' : 'Selesai Dibaca! 🎉');
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('"${resource.title}" diubah ke: $statusWord'),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        },
+        // Double Tap Shortcut: Ganti status dengan memutar nilai status 0 -> 1 -> 2 -> 0 (hanya untuk materi)
+        onDoubleTap: isReference
+            ? null
+            : () {
+                final nextStatus = (resource.status + 1) % 3;
+                final updatedResource = Resource(
+                  id: resource.id,
+                  userId: resource.userId,
+                  skillId: resource.skillId,
+                  title: resource.title,
+                  url: resource.url,
+                  description: resource.description,
+                  category: resource.category,
+                  status: nextStatus,
+                  resourceType: resource.resourceType,
+                  createdAt: resource.createdAt,
+                );
+                provider.updateResource(updatedResource);
+                
+                String statusWord = nextStatus == 0 ? 'Belum Dibaca 💤' : (nextStatus == 1 ? 'Sedang Dibaca 📖' : 'Selesai Dibaca! 🎉');
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('"${resource.title}" diubah ke: $statusWord'),
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
         // Long Press Shortcut: langsung edit bottom sheet
-        onLongPress: () => _showAddEditResourceBottomSheet(context, provider, resource: resource),
+        onLongPress: () => _showAddEditResourceBottomSheet(context, provider, resource: resource, type: resource.resourceType),
         child: Card(
           elevation: 0.5,
           margin: const EdgeInsets.only(bottom: 12),
@@ -400,7 +491,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
                       icon: Icon(Icons.more_vert_rounded, color: theme.hintColor, size: 20),
                       onSelected: (val) {
                         if (val == 'edit') {
-                          _showAddEditResourceBottomSheet(context, provider, resource: resource);
+                          _showAddEditResourceBottomSheet(context, provider, resource: resource, type: resource.resourceType);
                         } else if (val == 'delete') {
                           _confirmDelete(context, provider, resource, theme);
                         } else if (val == 'status') {
@@ -408,7 +499,8 @@ class _ResourceScreenState extends State<ResourceScreen> {
                         }
                       },
                       itemBuilder: (popCtx) => [
-                        const PopupMenuItem(value: 'status', child: Row(children: [Icon(Icons.rule_rounded, size: 16), SizedBox(width: 8), Text('Ubah Status', style: TextStyle(fontSize: 12.5))])),
+                        if (!isReference)
+                          const PopupMenuItem(value: 'status', child: Row(children: [Icon(Icons.rule_rounded, size: 16), SizedBox(width: 8), Text('Ubah Status', style: TextStyle(fontSize: 12.5))])),
                         const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit_rounded, size: 16), SizedBox(width: 8), Text('Edit Detail', style: TextStyle(fontSize: 12.5))])),
                         const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_rounded, color: Colors.red, size: 16), SizedBox(width: 8), Text('Hapus', style: TextStyle(color: Colors.red, fontSize: 12.5))])),
                       ],
@@ -455,40 +547,68 @@ class _ResourceScreenState extends State<ResourceScreen> {
                 const Divider(height: 1),
                 const SizedBox(height: 10),
 
-                // Baris Bawah: Status Badge + Aksi Tautan
+                // Baris Bawah: Status Badge / Referensi Badge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Status Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(resource.status).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _getStatusColor(resource.status).withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(resource.status),
-                              shape: BoxShape.circle,
+                    // Status Badge / Referensi Badge
+                    if (!isReference)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(resource.status).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _getStatusColor(resource.status).withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(resource.status),
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _getStatusText(resource.status),
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: _getStatusColor(resource.status),
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(width: 6),
+                            Text(
+                              _getStatusText(resource.status),
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: _getStatusColor(resource.status),
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: theme.colorScheme.secondary.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.bookmark_rounded,
+                              size: 12,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Referensi',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: theme.colorScheme.secondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     
                     // Aksi URL
                     Row(
@@ -640,11 +760,15 @@ class _ResourceScreenState extends State<ResourceScreen> {
     BuildContext context,
     SkillProvider provider, {
     Resource? resource,
+    String? type,
   }) {
     final theme = Theme.of(context);
     final titleController = TextEditingController(text: resource?.title ?? '');
     final urlController = TextEditingController(text: resource?.url ?? '');
     final descController = TextEditingController(text: resource?.description ?? '');
+
+    final resType = resource?.resourceType ?? type ?? 'materi';
+    final isReference = resType == 'referensi';
 
     String currentCategory = resource?.category ?? 'Lainnya';
     int currentStatus = resource?.status ?? 0;
@@ -689,7 +813,9 @@ class _ResourceScreenState extends State<ResourceScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              resource == null ? 'Tambah Materi & Referensi' : 'Edit Materi & Referensi',
+                              resource == null
+                                  ? (isReference ? 'Tambah Referensi' : 'Tambah Materi Belajar')
+                                  : (isReference ? 'Edit Referensi' : 'Edit Materi Belajar'),
                               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 17),
                             ),
                             IconButton(
@@ -704,7 +830,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
                         TextFormField(
                           controller: titleController,
                           decoration: InputDecoration(
-                            labelText: 'Judul Materi / Referensi',
+                            labelText: isReference ? 'Judul Referensi' : 'Judul Materi',
                             prefixIcon: const Icon(Icons.title_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
@@ -720,7 +846,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
                         TextFormField(
                           controller: urlController,
                           decoration: InputDecoration(
-                            labelText: 'Link / URL Materi',
+                            labelText: isReference ? 'Link / URL Referensi' : 'Link / URL Materi',
                             prefixIcon: const Icon(Icons.link_rounded),
                             hintText: 'https://...',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -779,28 +905,30 @@ class _ResourceScreenState extends State<ResourceScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Chip Pilihan Status
-                        Text(
-                          'Status Membaca',
-                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _buildChoiceStatusChip(0, 'Belum Dibaca 💤', currentStatus, (status) {
-                              setSheetState(() => currentStatus = status);
-                            }),
-                            const SizedBox(width: 8),
-                            _buildChoiceStatusChip(1, 'Membaca 📖', currentStatus, (status) {
-                              setSheetState(() => currentStatus = status);
-                            }),
-                            const SizedBox(width: 8),
-                            _buildChoiceStatusChip(2, 'Selesai 🏆', currentStatus, (status) {
-                              setSheetState(() => currentStatus = status);
-                            }),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
+                        // Chip Pilihan Status (Hanya untuk materi)
+                        if (!isReference) ...[
+                          Text(
+                            'Status Membaca',
+                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              _buildChoiceStatusChip(0, 'Belum Dibaca 💤', currentStatus, (status) {
+                                setSheetState(() => currentStatus = status);
+                              }),
+                              const SizedBox(width: 8),
+                              _buildChoiceStatusChip(1, 'Membaca 📖', currentStatus, (status) {
+                                setSheetState(() => currentStatus = status);
+                              }),
+                              const SizedBox(width: 8),
+                              _buildChoiceStatusChip(2, 'Selesai 🏆', currentStatus, (status) {
+                                setSheetState(() => currentStatus = status);
+                              }),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
 
                         // Relasi ke Skill (Keahlian)
                         Text(
@@ -877,11 +1005,12 @@ class _ResourceScreenState extends State<ResourceScreen> {
                                   url: url,
                                   description: desc,
                                   category: currentCategory,
-                                  status: currentStatus,
+                                  status: isReference ? 0 : currentStatus,
+                                  resourceType: resType,
                                 );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Materi "$title" berhasil ditambahkan! 🚀'),
+                                    content: Text('${isReference ? "Referensi" : "Materi"} "$title" berhasil ditambahkan! 🚀'),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -894,13 +1023,14 @@ class _ResourceScreenState extends State<ResourceScreen> {
                                   url: url,
                                   description: desc,
                                   category: currentCategory,
-                                  status: currentStatus,
+                                  status: isReference ? 0 : currentStatus,
+                                  resourceType: resource.resourceType,
                                   createdAt: resource.createdAt,
                                 );
                                 provider.updateResource(updated);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Referensi "$title" berhasil diperbarui! 📝'),
+                                    content: Text('${isReference ? "Referensi" : "Materi"} "$title" berhasil diperbarui! 📝'),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -909,7 +1039,9 @@ class _ResourceScreenState extends State<ResourceScreen> {
                             }
                           },
                           icon: const Icon(Icons.save_rounded, size: 18),
-                          label: Text(resource == null ? 'Simpan Materi' : 'Perbarui Materi'),
+                          label: Text(resource == null
+                              ? (isReference ? 'Simpan Referensi' : 'Simpan Materi')
+                              : (isReference ? 'Perbarui Referensi' : 'Perbarui Materi')),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             backgroundColor: theme.colorScheme.primary,

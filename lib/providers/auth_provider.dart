@@ -114,6 +114,51 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Memperbarui nama, email, password, nomor telepon, dan foto profil pengguna
+  Future<String?> updateProfile({
+    required String name,
+    required String email,
+    String? password,
+    String? phone,
+    required String? photoPath,
+  }) async {
+    if (_currentUser == null) return 'Pengguna tidak ditemukan';
+    _setLoading(true);
+    try {
+      // Periksa apakah email baru sudah digunakan oleh orang lain
+      if (email.toLowerCase() != _currentUser!.email.toLowerCase()) {
+        final existingUser = await _dbHelper.getUserByEmail(email);
+        if (existingUser != null) {
+          return 'Email tersebut sudah digunakan oleh akun lain!';
+        }
+      }
+
+      final updatedUser = _currentUser!.copyWith(
+        name: name,
+        email: email,
+        password: (password != null && password.trim().isNotEmpty) ? password : _currentUser!.password,
+        photoPath: photoPath,
+        phone: phone,
+      );
+      
+      final result = await _dbHelper.updateUser(updatedUser);
+      if (result > 0) {
+        // Update session di SharedPreferences agar tidak ter-logout
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('logged_in_user_email', email);
+
+        _currentUser = updatedUser;
+        notifyListeners();
+        return null; // Sukses
+      }
+      return 'Gagal memperbarui profil di database';
+    } catch (e) {
+      return 'Terjadi kesalahan sistem: $e';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

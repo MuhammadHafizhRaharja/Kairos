@@ -113,7 +113,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 6,
       onCreate: _createDB,
       onConfigure: _configureDB,
       onUpgrade: _upgradeDB,
@@ -135,7 +135,9 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
-        createdAt TEXT NOT NULL
+        createdAt TEXT NOT NULL,
+        photoPath TEXT,
+        phone TEXT
       )
     ''');
 
@@ -231,6 +233,20 @@ class DatabaseHelper {
         debugPrint('Migration: userId already exists in resources: $e');
       }
     }
+    if (oldVersion < 5) {
+      try {
+        await db.execute('ALTER TABLE users ADD COLUMN photoPath TEXT');
+      } catch (e) {
+        debugPrint('Migration: photoPath already exists in users: $e');
+      }
+    }
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE users ADD COLUMN phone TEXT');
+      } catch (e) {
+        debugPrint('Migration: phone already exists in users: $e');
+      }
+    }
   }
 
   /// Memasukkan data kategori default ke dalam database.
@@ -286,6 +302,8 @@ class DatabaseHelper {
         email: user.email,
         password: user.password,
         createdAt: user.createdAt,
+        photoPath: user.photoPath,
+        phone: user.phone,
       );
       _webUsers.add(newUser);
       await _saveWebDataToPrefs();
@@ -339,6 +357,27 @@ class DatabaseHelper {
       return User.fromMap(result.first);
     }
     return null;
+  }
+
+  /// Update: Memperbarui data profil Pengguna (User)
+  Future<int> updateUser(User user) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final idx = _webUsers.indexWhere((u) => u.id == user.id);
+      if (idx != -1) {
+        _webUsers[idx] = user;
+        await _saveWebDataToPrefs();
+        return 1;
+      }
+      return 0;
+    }
+    final db = await instance.database;
+    return await db.update(
+      'users',
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
   }
 
   // ==========================================

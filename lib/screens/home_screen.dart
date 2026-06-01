@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/skill_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../widgets/activity_rings_chart.dart';
@@ -22,8 +23,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.currentUser;
     final theme = Theme.of(context);
     final isDark = provider.isDarkMode;
+    final String displayName = user?.name ?? provider.userName;
 
     return Scaffold(
       body: SafeArea(
@@ -65,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             Expanded(
                               child: Text(
-                                '${provider.userName}! 👋',
+                                '$displayName! 👋',
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -124,21 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
-                            child: Text(
-                              provider.userName.isNotEmpty
-                                  ? provider.userName[0].toUpperCase()
-                                  : 'K',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
+                          child: ProfileScreen.buildAvatarWidget(user?.photoPath, displayName, 20, theme),
                         ),
                       ),
                     ],

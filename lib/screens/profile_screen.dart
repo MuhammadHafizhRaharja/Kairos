@@ -1,12 +1,101 @@
 import 'dart:ui';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../providers/auth_provider.dart';
 import '../providers/skill_provider.dart';
 
 /// Layar Detail Profil Pengguna yang mewah, interaktif, dan berdedikasi tinggi.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  /// Render helper untuk avatar pengguna yang fleksibel dan premium
+  static Widget buildAvatarWidget(String? photoPath, String name, double radius, ThemeData theme) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'K';
+    
+    // Check if it's a predefined archetype first
+    if (photoPath == 'coder') {
+      return _avatarContainer(radius, [Colors.blue, Colors.cyan], Icons.code_rounded);
+    } else if (photoPath == 'athlete') {
+      return _avatarContainer(radius, [Colors.green, Colors.teal], Icons.fitness_center_rounded);
+    } else if (photoPath == 'polyglot') {
+      return _avatarContainer(radius, [Colors.orange, Colors.amber], Icons.translate_rounded);
+    } else if (photoPath == 'artist') {
+      return _avatarContainer(radius, [Colors.red, Colors.pink], Icons.music_note_rounded);
+    } else if (photoPath == 'explorer') {
+      return _avatarContainer(radius, [Colors.purple, Colors.deepPurple], Icons.rocket_launch_rounded);
+    } else if (photoPath == 'scholar') {
+      return _avatarContainer(radius, [Colors.teal, Colors.cyan], Icons.menu_book_rounded);
+    } else if (photoPath == 'gamer') {
+      return _avatarContainer(radius, [Colors.pink, Colors.purple], Icons.sports_esports_rounded);
+    } else if (photoPath == 'minimal') {
+      return _avatarContainer(radius, [Colors.blueGrey, Colors.grey], Icons.person_rounded);
+    }
+    
+    // Custom photo (Base64 string or Image URL)
+    if (photoPath != null && photoPath.isNotEmpty) {
+      try {
+        if (photoPath.startsWith('http') || photoPath.startsWith('https')) {
+          return CircleAvatar(
+            radius: radius,
+            backgroundColor: Colors.transparent,
+            backgroundImage: NetworkImage(photoPath),
+          );
+        }
+        
+        // Clean base64 string
+        String cleanBase64 = photoPath;
+        if (photoPath.contains(',')) {
+          cleanBase64 = photoPath.split(',').last;
+        }
+        final decodedBytes = base64Decode(cleanBase64);
+        return CircleAvatar(
+          radius: radius,
+          backgroundColor: Colors.transparent,
+          backgroundImage: MemoryImage(decodedBytes),
+        );
+      } catch (e) {
+        debugPrint('Error decoding base64 image: $e');
+      }
+    }
+    
+    // Fallback: Initial Avatar
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: theme.colorScheme.primaryContainer,
+      child: Text(
+        initial,
+        style: TextStyle(
+          fontSize: radius * 0.8,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
+      ),
+    );
+  }
+
+  static Widget _avatarContainer(double radius, List<Color> colors, IconData icon) {
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: radius,
+      ),
+    );
+  }
 
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider, ThemeData theme) {
     showDialog(
@@ -62,6 +151,438 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  void _showEditProfileBottomSheet(BuildContext context, AuthProvider authProvider, ThemeData theme) {
+    final user = authProvider.currentUser;
+    if (user == null) return;
+
+    final nameController = TextEditingController(text: user.name);
+    final emailController = TextEditingController(text: user.email);
+    final phoneController = TextEditingController(text: user.phone ?? '');
+    final urlController = TextEditingController(
+      text: (user.photoPath != null && user.photoPath!.startsWith('http')) ? user.photoPath : ''
+    );
+    
+    String? tempSelectedAvatar = user.photoPath;
+    final formKey = GlobalKey<FormState>();
+
+    final avatars = [
+      {'id': 'coder', 'icon': Icons.code_rounded, 'color': Colors.blue, 'label': 'Tech Coder'},
+      {'id': 'athlete', 'icon': Icons.fitness_center_rounded, 'color': Colors.green, 'label': 'Athlete'},
+      {'id': 'polyglot', 'icon': Icons.translate_rounded, 'color': Colors.orange, 'label': 'Polyglot'},
+      {'id': 'artist', 'icon': Icons.music_note_rounded, 'color': Colors.red, 'label': 'Artist'},
+      {'id': 'explorer', 'icon': Icons.rocket_launch_rounded, 'color': Colors.purple, 'label': 'Explorer'},
+      {'id': 'scholar', 'icon': Icons.menu_book_rounded, 'color': Colors.teal, 'label': 'Scholar'},
+      {'id': 'gamer', 'icon': Icons.sports_esports_rounded, 'color': Colors.pink, 'label': 'Gamer'},
+      {'id': 'minimal', 'icon': Icons.person_rounded, 'color': Colors.blueGrey, 'label': 'Minimalist'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            
+            Future<void> pickCustomImage() async {
+              try {
+                final result = await FilePicker.pickFiles(
+                  type: FileType.image,
+                  allowMultiple: false,
+                  withData: true,
+                );
+                if (result != null) {
+                  final file = result.files.single;
+                  Uint8List? bytes;
+                  
+                  if (kIsWeb) {
+                    bytes = file.bytes;
+                  } else {
+                    bytes = file.bytes ?? (file.path != null ? io.File(file.path!).readAsBytesSync() : null);
+                  }
+                  
+                  if (bytes != null) {
+                    final base64String = base64Encode(bytes);
+                    setSheetState(() {
+                      tempSelectedAvatar = base64String;
+                      urlController.clear(); // Bersihkan URL jika memilih file
+                    });
+                  }
+                }
+              } catch (e) {
+                debugPrint('Error picking file: $e');
+              }
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 12,
+                  bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+                ),
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 5,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Ubah Profil & Informasi',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded),
+                              onPressed: () => Navigator.pop(sheetCtx),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Input Nama Lengkap
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: 'Nama Lengkap',
+                            prefixIcon: const Icon(Icons.person_rounded),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) return 'Nama tidak boleh kosong';
+                            return null;
+                          },
+                          textCapitalization: TextCapitalization.words,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Input Email
+                        TextFormField(
+                          controller: emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            labelText: 'Email Akun',
+                            prefixIcon: const Icon(Icons.email_rounded),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) return 'Email tidak boleh kosong';
+                            if (!val.contains('@')) return 'Email tidak valid';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Input Nomor Telepon
+                        TextFormField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            labelText: 'Nomor Telepon',
+                            prefixIcon: const Icon(Icons.phone_rounded),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // ==========================================
+                        // SEKSI DEDIKASI: FOTO/GAMBAR CUSTOM
+                        // ==========================================
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.photo_library_rounded, color: theme.colorScheme.primary, size: 20),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Gunakan Foto Anda Sendiri',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  // Preview foto saat ini yang diupload
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
+                                            ? theme.colorScheme.primary
+                                            : Colors.grey.withValues(alpha: 0.3),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty)
+                                          ? buildAvatarWidget(tempSelectedAvatar, '', 30, theme)
+                                          : Container(
+                                              color: Colors.grey.withValues(alpha: 0.1),
+                                              child: const Icon(Icons.person_rounded, color: Colors.grey),
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
+                                              ? 'Foto kustom Anda aktif!'
+                                              : 'Menggunakan archetype/klasik.',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
+                                                ? Colors.green
+                                                : theme.hintColor,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        const Text(
+                                          'Pilih foto kecil (< 1MB) agar penyimpanan tetap awet.',
+                                          style: TextStyle(fontSize: 10, height: 1.3),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              
+                              // Cara 1: File Picker
+                              OutlinedButton.icon(
+                                onPressed: pickCustomImage,
+                                icon: const Icon(Icons.cloud_upload_rounded, size: 16),
+                                label: const Text('Pilih File dari Perangkat'),
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 10),
+                              const Center(child: Text('atau', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                              const SizedBox(height: 10),
+                              
+                              // Cara 2: Paste URL Gambar
+                              TextFormField(
+                                controller: urlController,
+                                decoration: InputDecoration(
+                                  labelText: 'Tautan/URL Gambar Web',
+                                  hintText: 'https://example.com/profile.jpg',
+                                  prefixIcon: const Icon(Icons.link_rounded),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                                style: const TextStyle(fontSize: 12),
+                                onChanged: (val) {
+                                  setSheetState(() {
+                                    tempSelectedAvatar = val.trim();
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Pilihan Avatar Archetype
+                        const Text(
+                          'Atau Pilih Karakter Archetype',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Grid Avatar Archetypes
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.95,
+                          ),
+                          itemCount: avatars.length + 1,
+                          itemBuilder: (gridCtx, index) {
+                            if (index == 0) {
+                              // Pilihan Avatar Klasik (Inisial Nama)
+                              final isSelected = tempSelectedAvatar == null || tempSelectedAvatar == '';
+                              return GestureDetector(
+                                onTap: () {
+                                  setSheetState(() {
+                                    tempSelectedAvatar = '';
+                                    urlController.clear();
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                                      width: 2.5,
+                                    ),
+                                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: theme.colorScheme.primaryContainer,
+                                        child: Text(
+                                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'K',
+                                          style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold, fontSize: 12),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Klasik',
+                                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final av = avatars[index - 1];
+                            final String id = av['id'] as String;
+                            final IconData icon = av['icon'] as IconData;
+                            final Color color = av['color'] as Color;
+                            final String label = av['label'] as String;
+                            final isSelected = tempSelectedAvatar == id;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setSheetState(() {
+                                  tempSelectedAvatar = id;
+                                  urlController.clear();
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                                    width: 2.5,
+                                  ),
+                                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [color, color.withValues(alpha: 0.7)],
+                                        ),
+                                      ),
+                                      child: Icon(icon, color: Colors.white, size: 18),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      label,
+                                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Action Submit Button
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            if (formKey.currentState!.validate()) {
+                              final newName = nameController.text.trim();
+                              final newEmail = emailController.text.trim();
+                              final newPhone = phoneController.text.trim();
+
+                              final errMsg = await authProvider.updateProfile(
+                                name: newName,
+                                email: newEmail,
+                                phone: newPhone,
+                                photoPath: tempSelectedAvatar,
+                              );
+
+                              if (context.mounted) {
+                                if (errMsg == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Profil & Informasi Akun berhasil diperbarui! 💖'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  Navigator.pop(sheetCtx);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(errMsg),
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.check_rounded, size: 18),
+                          label: const Text('Simpan Perubahan'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -71,7 +592,6 @@ class ProfileScreen extends StatelessWidget {
     final skillProvider = context.watch<SkillProvider>();
     
     final user = authProvider.currentUser;
-    final String initial = user != null && user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U';
     
     // Formatting date
     final String formattedDate = user != null
@@ -157,18 +677,7 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: CircleAvatar(
-                            radius: 46,
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            child: Text(
-                              initial,
-                              style: TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
+                          child: buildAvatarWidget(user?.photoPath, user?.name ?? '', 46, theme),
                         ),
                         const SizedBox(height: 16),
                         
@@ -191,7 +700,39 @@ class ProfileScreen extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        
+                        // Nomor Telepon Pengguna (Jika ada)
+                        if (user?.phone != null && user!.phone!.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.phone_rounded, size: 14, color: theme.colorScheme.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                user.phone!,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+
+                        // Tombol Edit Profil
+                        TextButton.icon(
+                          onPressed: () => _showEditProfileBottomSheet(context, authProvider, theme),
+                          icon: const Icon(Icons.edit_rounded, size: 14),
+                          label: const Text('Edit Profil & Informasi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          style: TextButton.styleFrom(
+                            foregroundColor: theme.colorScheme.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         
                         // Joined Chip
                         Chip(

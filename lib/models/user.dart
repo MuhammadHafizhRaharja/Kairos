@@ -4,6 +4,8 @@ class User {
   final String email;
   final String password;
   final DateTime createdAt;
+  final String? photoPath; // Path atau nama archetype avatar terpilih / Base64 string
+  final String? phone; // Nomor telepon pengguna
 
   User({
     this.id,
@@ -11,6 +13,8 @@ class User {
     required this.email,
     required this.password,
     required this.createdAt,
+    this.photoPath,
+    this.phone,
   });
 
   /// Menyalin objek User dengan beberapa modifikasi bidang
@@ -20,6 +24,8 @@ class User {
     String? email,
     String? password,
     DateTime? createdAt,
+    String? photoPath,
+    String? phone,
   }) {
     return User(
       id: id ?? this.id,
@@ -27,6 +33,8 @@ class User {
       email: email ?? this.email,
       password: password ?? this.password,
       createdAt: createdAt ?? this.createdAt,
+      photoPath: photoPath ?? this.photoPath,
+      phone: phone ?? this.phone,
     );
   }
 
@@ -37,6 +45,8 @@ class User {
       'email': email,
       'password': password,
       'createdAt': createdAt.toIso8601String(),
+      'photoPath': photoPath,
+      'phone': phone,
     };
     if (id != null) {
       map['id'] = id;
@@ -52,6 +62,8 @@ class User {
       email: map['email'] as String,
       password: map['password'] as String,
       createdAt: DateTime.parse(map['createdAt'] as String),
+      photoPath: map['photoPath'] as String?,
+      phone: map['phone'] as String?,
     );
   }
 }

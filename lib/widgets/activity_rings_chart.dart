@@ -15,53 +15,10 @@ class ActivityRingsChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
 
-    // 1. Menghitung ring luar (Skill): Rata-rata pencapaian tingkat keahlian (level 1-5 & progres)
-    double skillProgress = 0.0;
-    if (provider.skills.isNotEmpty) {
-      final totalScore = provider.skills
-          .map((s) {
-            // Asumsi level maksimal = 5.
-            // Formula: (level_saat_ini - 1 + progres) / 5
-            // Level 1 progres 0% -> 0.0
-            // Level 5 progres 100% -> 1.0 (Naik ke tingkat berikutnya)
-            return ((s.level - 1) + s.progress) / 5.0;
-          })
-          .reduce((a, b) => a + b);
-      skillProgress = (totalScore / provider.skills.length).clamp(0.0, 1.0);
-    } else {
-      skillProgress = 0.0; // Jika belum ada skill
-    }
-
-    // 2. Ring tengah (Resource): Responsif terhadap status preferensi, notifikasi, dan penyelesaian materi secara dinamis
-    double resourceProgress = 0.3;
-    if (provider.isNotificationEnabled) {
-      resourceProgress += 0.1;
-    }
-    if (provider.defaultLang == 'id') {
-      resourceProgress += 0.1;
-    }
-    
-    // Penanganan null-safe tambahan
-    final resList = provider.resources;
-    if (resList.isNotEmpty) {
-      final completed = resList.where((r) => r.status == 2).length;
-      resourceProgress += (completed / resList.length) * 0.45;
-    }
-    resourceProgress = resourceProgress.clamp(0.15, 0.95);
-
-    // 3. Ring dalam (Progress Log): Responsif terhadap penyelesaian tantangan dan log
-    double progressLogProgress = 0.3;
+    final skillProgress = provider.skillProgress;
+    final resourceProgress = provider.resourceProgress;
     final progressProvider = context.watch<ProgressProvider>();
-    final challenges = progressProvider.challenges;
-    final logs = progressProvider.logs;
-    
-    if (challenges.isNotEmpty) {
-      final completed = challenges.where((c) => c.isCompleted == 1).length;
-      progressLogProgress += (completed / challenges.length) * 0.65;
-    } else if (logs.isNotEmpty) {
-      progressLogProgress += (logs.length * 0.05);
-    }
-    progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
+    final progressLogProgress = progressProvider.progressLogProgress;
 
     return SizedBox(
       width: size,

@@ -21,6 +21,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _getFormattedDate(String lang) {
+    final now = DateTime.now();
+    final List<String> daysId = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    final List<String> monthsId = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final List<String> daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final List<String> monthsEn = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    final dayName = lang == 'id' ? daysId[now.weekday - 1] : daysEn[now.weekday - 1];
+    final monthName = lang == 'id' ? monthsId[now.month - 1] : monthsEn[now.month - 1];
+
+    return lang == 'id'
+        ? '$dayName, ${now.day} $monthName ${now.year}'
+        : '$dayName, $monthName ${now.day}, ${now.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
@@ -31,57 +52,87 @@ class _HomeScreenState extends State<HomeScreen> {
     final String displayName = user?.name ?? provider.userName;
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(
-            left: 20.0,
-            right: 20.0,
-            top: 20.0,
-            bottom: 120.0,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [
+                    theme.colorScheme.surface,
+                    theme.colorScheme.surface.withValues(alpha: 0.95),
+                    theme.colorScheme.primary.withValues(alpha: 0.03),
+                  ]
+                : [
+                    const Color(0xFFF9F8FC), // Soft lavender tint
+                    const Color(0xFFF3F1F8),
+                    theme.colorScheme.surface,
+                  ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. HEADER UTAMA (Greeting, Hari & Tanggal, Toggle Mode Gelap, Avatar Profil)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Logo KAIROS
-                        Text(
-                          'KAIROS',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 4.0,
-                            color: theme.colorScheme.primary,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.only(
+              left: 20.0,
+              right: 20.0,
+              top: 20.0,
+              bottom: 120.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. HEADER UTAMA (Greeting, Hari & Tanggal, Toggle Mode Gelap, Avatar Profil)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Logo KAIROS
+                          Text(
+                            'KAIROS',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 4.0,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Text(
-                              '${provider.translate('hello')}, ',
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                '$displayName! 👋',
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Text(
+                                '${provider.translate('hello')}, ',
                                 style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 24,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
+                              Expanded(
+                                child: Text(
+                                  '$displayName! 👋',
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getFormattedDate(provider.defaultLang),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.2,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   Row(
                     children: [
                       // Button Toggle Dark Mode (Shared Pref: appTheme)
@@ -92,11 +143,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               : Icons.dark_mode_rounded,
                         ),
                         style: IconButton.styleFrom(
-                          backgroundColor: theme.colorScheme.surfaceContainer,
+                          backgroundColor: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+                          side: BorderSide(
+                            color: isDark
+                                ? theme.dividerColor.withValues(alpha: 0.08)
+                                : theme.colorScheme.primary.withValues(alpha: 0.08),
+                            width: 1,
+                          ),
                           padding: const EdgeInsets.all(12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
+                          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+                          elevation: isDark ? 0 : 2,
                         ),
                         onPressed: () {
                           provider.toggleTheme(!provider.isDarkMode);
@@ -213,61 +272,84 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// Banner motivasi premium
   Widget _buildMotivationalBanner(ThemeData theme, SkillProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.85),
-            theme.colorScheme.primary,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.25),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Stack(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.white24,
-            child: Icon(Icons.bolt_rounded, color: Colors.amber[300], size: 28),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  provider.translate('focus_consistent'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.9),
+                  theme.colorScheme.primary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  provider.translate('quote_body'),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 11.5,
-                    height: 1.35,
+              ],
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  child: Icon(Icons.bolt_rounded, color: Colors.amber[300], size: 30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        provider.translate('focus_consistent'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        provider.translate('quote_body'),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ),
+          ),
+          Positioned(
+            right: -20,
+            top: -20,
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
+            ),
+          ),
+          Positioned(
+            left: -30,
+            bottom: -30,
+            child: CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
             ),
           ),
         ],
@@ -318,17 +400,30 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             final catColor = Color(parentCat.colorValue);
 
-            return Card(
-              elevation: 0.5,
-              margin: const EdgeInsets.only(bottom: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: theme.dividerColor.withValues(alpha: 0.05),
+            final isDark = theme.brightness == Brightness.dark;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark 
+                      ? theme.dividerColor.withValues(alpha: 0.08)
+                      : theme.colorScheme.primary.withValues(alpha: 0.08),
+                  width: 1,
                 ),
+                boxShadow: isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
               ),
               child: InkWell(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
                 onTap: () {
                   if (parentCat != null) {
                     Navigator.push(
@@ -374,7 +469,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               parentCat.name,
                               style: TextStyle(
-                                color: theme.hintColor,
+                                color: theme.colorScheme.onSurfaceVariant,
                                 fontSize: 11,
                               ),
                             ),
@@ -435,40 +530,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildActivityRingsCard(BuildContext context, SkillProvider provider) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    // 1. Hitung progres Skill
-    double skillProgress = 0.0;
-    if (provider.skills.isNotEmpty) {
-      final totalScore = provider.skills
-          .map((s) {
-            return ((s.level - 1) + s.progress) / 5.0;
-          })
-          .reduce((a, b) => a + b);
-      skillProgress = (totalScore / provider.skills.length).clamp(0.0, 1.0);
-    }
+    final skillProgress = provider.skillProgress;
+    final resourceProgress = provider.resourceProgress;
+    final progressLogProgress = context.watch<ProgressProvider>().progressLogProgress;
 
-    // 2. Hitung progres Resource secara dinamis berdasarkan setelan dan penyelesaian materi
-    double resourceProgress = 0.3;
-    if (provider.isNotificationEnabled) resourceProgress += 0.1;
-    if (provider.defaultLang == 'id') resourceProgress += 0.1;
-    
-    // Penanganan null-safe tambahan
-    final resList = provider.resources;
-    if (resList.isNotEmpty) {
-      final completed = resList.where((r) => r.status == 2).length;
-      resourceProgress += (completed / resList.length) * 0.45;
-    }
-    resourceProgress = resourceProgress.clamp(0.15, 0.95);
-
-    // 3. Hitung progres Progress Log
-    double progressLogProgress =
-        0.3 + ((context.watch<ProgressProvider>().fontSize - 12.0) / 12.0) * 0.5;
-    progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
-
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark 
+              ? theme.dividerColor.withValues(alpha: 0.08)
+              : theme.colorScheme.primary.withValues(alpha: 0.08),
+          width: 1,
+        ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -596,15 +683,26 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
   }) {
     final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.05),
+    final isDark = theme.brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark 
+              ? theme.dividerColor.withValues(alpha: 0.08)
+              : theme.colorScheme.primary.withValues(alpha: 0.08),
           width: 1,
         ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
@@ -627,7 +725,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     title,
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.hintColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -662,61 +760,67 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: startColor.withValues(alpha: 0.2), width: 1.5),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [
-              startColor.withValues(alpha: isDark ? 0.05 : 0.02),
-              endColor.withValues(alpha: isDark ? 0.18 : 0.08),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: startColor.withValues(alpha: isDark ? 0.25 : 0.25),
+          width: 1.5,
         ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 14.0,
-              horizontal: 8.0,
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: startColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: startColor, size: 24),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 9.5, color: theme.hintColor),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        gradient: LinearGradient(
+          colors: [
+            startColor.withValues(alpha: isDark ? 0.05 : 0.06),
+            endColor.withValues(alpha: isDark ? 0.18 : 0.15),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: startColor.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
-            ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: 14.0,
+            horizontal: 8.0,
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: startColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: startColor, size: 24),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 9.5, color: theme.colorScheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),

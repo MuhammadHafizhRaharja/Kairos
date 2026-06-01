@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/progress_provider.dart';
 
 /// Widget kustom untuk menampilkan diagram batang aktivitas mingguan (Weekly Activity Bar Chart).
 /// Memberikan nuansa visual pelacakan yang premium dan profesional.
@@ -10,20 +12,49 @@ class WeeklyActivityChart extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Data aktivitas mingguan (simulasi statis untuk visualisasi performa)
-    final List<double> activityHeights = [0.35, 0.6, 0.45, 0.8, 0.55, 0.9, 0.4];
-    final List<String> days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-    final int todayIndex = DateTime.now().weekday - 1; // 0 untuk Senin, dst.
+    final progressProvider = context.watch<ProgressProvider>();
+    final logs = progressProvider.logs;
 
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(
+    // Hitung aktivitas mingguan dari SQLite (Progress logs) untuk minggu berjalan (Senin-Minggu)
+    final now = DateTime.now();
+    final currentMonday = now.subtract(Duration(days: now.weekday - 1));
+
+    final List<int> dailyDurations = List.generate(7, (index) {
+      final dayDate = DateTime(currentMonday.year, currentMonday.month, currentMonday.day).add(Duration(days: index));
+      return logs
+          .where((log) =>
+              log.date.year == dayDate.year &&
+              log.date.month == dayDate.month &&
+              log.date.day == dayDate.day)
+          .fold<int>(0, (sum, log) => sum + log.durationMinutes);
+    });
+
+    final int maxDuration = dailyDurations.reduce((a, b) => a > b ? a : b);
+    final double divisor = maxDuration > 0 ? maxDuration.toDouble() : 60.0;
+
+    final List<double> activityHeights = dailyDurations.map((d) => d / divisor).toList();
+    final List<String> days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    final int todayIndex = now.weekday - 1; // 0 untuk Senin, dst.
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.05),
+        border: Border.all(
+          color: isDark 
+              ? theme.dividerColor.withValues(alpha: 0.08)
+              : theme.colorScheme.primary.withValues(alpha: 0.08),
           width: 1,
         ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -52,6 +83,7 @@ class WeeklyActivityChart extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: List.generate(7, (index) {
                 final heightFactor = activityHeights[index];
+                final duration = dailyDurations[index];
                 final isToday = index == todayIndex;
                 final barColor = isToday
                     ? theme.colorScheme.primary
@@ -59,6 +91,18 @@ class WeeklyActivityChart extends StatelessWidget {
 
                 return Column(
                   children: [
+                    SizedBox(
+                      height: 14,
+                      child: Text(
+                        duration > 0 ? '${duration}m' : '',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                          color: isToday ? theme.colorScheme.primary : theme.hintColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Container(
                       height: 100,
                       width: 14,
@@ -97,12 +141,8 @@ class WeeklyActivityChart extends StatelessWidget {
                       days[index],
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: isToday
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isToday
-                            ? theme.colorScheme.primary
-                            : theme.hintColor,
+                        fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                        color: isToday ? theme.colorScheme.primary : theme.hintColor,
                       ),
                     ),
                   ],

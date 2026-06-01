@@ -23,6 +23,17 @@ class ProgressProvider extends ChangeNotifier {
   double get fontSize => _fontSize;
   String get viewMode => _viewMode;
 
+  double get progressLogProgress {
+    double progress = 0.3;
+    if (_challenges.isNotEmpty) {
+      final completed = _challenges.where((c) => c.isCompleted == 1).length;
+      progress += (completed / _challenges.length) * 0.65;
+    } else if (_logs.isNotEmpty) {
+      progress += (_logs.length * 0.05);
+    }
+    return progress.clamp(0.15, 0.95);
+  }
+
   Future<void> setUserId(int? userId) async {
     if (_currentUserId == userId) return;
     _currentUserId = userId;

@@ -47,6 +47,26 @@ class SkillProvider extends ChangeNotifier {
     return _resources;
   }
 
+  double get skillProgress {
+    if (_skills.isEmpty) return 0.0;
+    final totalScore = _skills
+        .map((s) => ((s.level - 1) + s.progress) / 5.0)
+        .reduce((a, b) => a + b);
+    return (totalScore / _skills.length).clamp(0.0, 1.0);
+  }
+
+  double get resourceProgress {
+    double progress = 0.3;
+    if (_isNotificationEnabled) progress += 0.1;
+    if (_defaultLang == 'id') progress += 0.1;
+    
+    if (_resources.isNotEmpty) {
+      final completed = _resources.where((r) => r.status == 2).length;
+      progress += (completed / _resources.length) * 0.45;
+    }
+    return progress.clamp(0.15, 0.95);
+  }
+
   /// Memperbarui ID user aktif dan menyegarkan workspace data secara dinamis
   Future<void> setUserId(int? userId) async {
     if (_currentUserId == userId) return;

@@ -45,6 +45,8 @@ class _LoginScreenState extends State<LoginScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+        // Pop seluruh screen auth agar kembali ke root (MainApp akan otomatis render MainShell)
+        Navigator.popUntil(context, (route) => route.isFirst);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

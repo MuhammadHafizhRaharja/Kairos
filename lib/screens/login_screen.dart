@@ -38,7 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Selamat datang kembali, ${authProvider.currentUser?.name}! 👋'),
+            content: Text(
+              'Selamat datang kembali, ${authProvider.currentUser?.name}! 👋',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -84,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          
+
           // Lingkaran Dekorasi Blur Bercahaya (Ungu)
           Positioned(
             top: -100,
@@ -131,24 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo / Ilustrasi Ikon KAIROS
-                      Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            width: 2,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.all_inclusive_rounded,
-                          size: 48,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       // Judul KAIROS
                       Text(
                         'KAIROS',
@@ -183,8 +167,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : Colors.white.withValues(alpha: 0.45),
                               borderRadius: BorderRadius.circular(28),
                               border: Border.all(
-                                color: (isDark ? Colors.white : theme.colorScheme.primary)
-                                    .withValues(alpha: 0.08),
+                                color:
+                                    (isDark
+                                            ? Colors.white
+                                            : theme.colorScheme.primary)
+                                        .withValues(alpha: 0.08),
                                 width: 1.5,
                               ),
                             ),
@@ -196,14 +183,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   keyboardType: TextInputType.emailAddress,
                                   decoration: InputDecoration(
                                     labelText: 'Alamat Email',
-                                    prefixIcon: const Icon(Icons.email_outlined),
+                                    prefixIcon: const Icon(
+                                      Icons.email_outlined,
+                                    ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                        color: theme.dividerColor.withValues(alpha: 0.1),
+                                        color: theme.dividerColor.withValues(
+                                          alpha: 0.1,
+                                        ),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
@@ -218,7 +209,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     if (value == null || value.trim().isEmpty) {
                                       return 'Alamat email tidak boleh kosong!';
                                     }
-                                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                                    final emailRegex = RegExp(
+                                      r'^[^@]+@[^@]+\.[^@]+$',
+                                    );
                                     if (!emailRegex.hasMatch(value.trim())) {
                                       return 'Format email tidak valid!';
                                     }
@@ -252,7 +245,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                        color: theme.dividerColor.withValues(alpha: 0.1),
+                                        color: theme.dividerColor.withValues(
+                                          alpha: 0.1,
+                                        ),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
@@ -281,13 +276,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                   height: 56,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: theme.colorScheme.primary,
+                                      backgroundColor:
+                                          theme.colorScheme.primary,
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       elevation: 8,
-                                      shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                      shadowColor: theme.colorScheme.primary
+                                          .withValues(alpha: 0.3),
                                     ),
                                     onPressed: isLoading ? null : _handleLogin,
                                     child: isLoading
@@ -328,7 +325,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
+                                ),
                               );
                             },
                             child: Text(

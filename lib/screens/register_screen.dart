@@ -7,8 +7,8 @@ import '../models/skill_category.dart';
 import '../models/skill.dart';
 
 /// Halaman Register dengan desain premium, modern, dan sangat estetis (Glassmorphism).
-/// Menerapkan penyederhanaan Onboarding: fase intro interaktif diikuti formulir tunggal (Single Screen)
-/// dengan Roadmap Bubble Itinerary interaktif terintegrasi Scroll Spy.
+/// Menerapkan pendaftaran Multi-step dengan gelembung indikator (Bubble Itinerary) sebagai
+/// wizard navigasi antar halaman (Akun -> Kategori -> Keahlian).
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -18,18 +18,11 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _showIntro =
-      true; // true: Tampilan Komitmen Awal, false: Formulir Onboarding Tunggal
+      true; // true: Tampilan Komitmen Awal, false: Formulir Onboarding
+  int _currentStep = 0; // 0: Akun, 1: Kategori, 2: Keahlian & Level Awal
 
-  final _formKey = GlobalKey<FormState>();
-
-  // Keys untuk section (Bubble Itinerary Scroll Spy)
-  final _akunKey = GlobalKey();
-  final _kategoriKey = GlobalKey();
-  final _keahlianKey = GlobalKey();
-
-  // Scroll Controller & active index
-  final _scrollController = ScrollController();
-  int _activeSectionIndex = 0;
+  final _step1FormKey = GlobalKey<FormState>();
+  final _step3FormKey = GlobalKey<FormState>();
 
   // Controllers Section 1 (Kredensial Akun)
   final _nameController = TextEditingController();
@@ -73,15 +66,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   double _initialSkillProgress = 0.0; // 0.0 sampai 100.0
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -92,67 +77,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _onScroll() {
-    if (!mounted || _showIntro) return;
+  void _navigateToStep(int targetStep) {
+    if (targetStep == _currentStep) return;
 
-    final akunY = _getYOffset(_akunKey);
-    final kategoriY = _getYOffset(_kategoriKey);
-    final keahlianY = _getYOffset(_keahlianKey);
+    if (targetStep > _currentStep) {
+      // Hanya izinkan maju satu langkah demi satu langkah
+      if (targetStep > _currentStep + 1) {
+        targetStep = _currentStep + 1;
+      }
 
-    int newIdx = 0;
-    // Deteksi section yang paling dekat dengan batas atas viewport (misal Y < 240)
-    if (keahlianY != null && keahlianY < 240) {
-      newIdx = 2;
-    } else if (kategoriY != null && kategoriY < 240) {
-      newIdx = 1;
-    } else if (akunY != null) {
-      newIdx = 0;
-    }
-
-    if (newIdx != _activeSectionIndex) {
-      setState(() {
-        _activeSectionIndex = newIdx;
-      });
-    }
-  }
-
-  double? _getYOffset(GlobalKey key) {
-    final context = key.currentContext;
-    if (context != null) {
-      final box = context.findRenderObject() as RenderBox?;
-      if (box != null) {
-        return box.localToGlobal(Offset.zero).dy;
+      // Validasi dari langkah saat ini sebelum berpindah maju
+      if (_currentStep == 0) {
+        if (!_step1FormKey.currentState!.validate()) return;
+      }
+      if (_currentStep == 1 || targetStep > 1) {
+        if (_selectedCategoryType == 'Kustom' &&
+            _customCategoryNameController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nama kategori kustom tidak boleh kosong!'),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
       }
     }
-    return null;
-  }
 
-  void _scrollToSection(GlobalKey key) {
-    final context = key.currentContext;
-    if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    }
+    setState(() {
+      _currentStep = targetStep;
+    });
   }
 
   void _handleRegister() async {
-    if (_formKey.currentState!.validate()) {
-      // Validasi khusus untuk kategori kustom
-      if (_selectedCategoryType == 'Kustom' &&
-          _customCategoryNameController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Nama kategori kustom tidak boleh kosong!'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-
+    if (_step3FormKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final name = _nameController.text.trim();
       final email = _emailController.text.trim();
@@ -331,7 +290,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                controller: _scrollController,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24.0,
                   vertical: 20.0,
@@ -351,7 +309,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Text(
                       _showIntro
                           ? 'Mulai perjalanan melacak kemampuan Anda'
-                          : 'Lengkapi formulir onboarding tunggal Anda',
+                          : 'Lengkapi langkah pendaftaran onboarding Anda',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.hintColor,
@@ -465,6 +423,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onPressed: () {
                   setState(() {
                     _showIntro = false;
+                    _currentStep = 0;
                   });
                 },
                 child: const Text(
@@ -479,13 +438,290 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // FASE 2: Formulir Onboarding Tunggal (1 Screen)
+  // FASE 2: Formulir Wizard Per Halaman
   Widget _buildSingleForm(
     ThemeData theme,
     Color accentColor,
     bool isDark,
     bool isLoading,
   ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // BUBBLE ITINERARY ROADMAP
+        _buildBubbleItinerary(theme),
+        const SizedBox(height: 12),
+
+        // RENDER HALAMAN AKTIF DENGAN ANIMASI TRANSISI PREMIUM
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          switchInCurve: Curves.easeInOutCubic,
+          switchOutCurve: Curves.easeInOutCubic,
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 0.05),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: SizedBox(
+            key: ValueKey<int>(_currentStep),
+            child: _currentStep == 0
+                ? _buildStep1Credentials(theme)
+                : _currentStep == 1
+                ? _buildStep2Category(theme, isDark)
+                : _buildStep3SkillDetail(theme),
+          ),
+        ),
+
+        const SizedBox(height: 28),
+
+        // Tombol Aksi Minimalis Row
+        _buildNavigationButtons(theme, accentColor, isLoading),
+      ],
+    );
+  }
+
+  Widget _buildNavigationButtons(
+    ThemeData theme,
+    Color accentColor,
+    bool isLoading,
+  ) {
+    final isLastStep = _currentStep == 2;
+    final isFirstStep = _currentStep == 0;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              side: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.3),
+              ),
+              foregroundColor: theme.hintColor,
+            ),
+            onPressed: () {
+              if (isFirstStep) {
+                setState(() {
+                  _showIntro = true;
+                });
+              } else {
+                setState(() {
+                  _currentStep--;
+                });
+              }
+            },
+            child: Text(isFirstStep ? 'Batal' : 'Kembali'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accentColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0, // Minimalist (flat)
+            ),
+            onPressed: isLoading
+                ? null
+                : () {
+                    if (_currentStep == 0) {
+                      if (_step1FormKey.currentState!.validate()) {
+                        setState(() {
+                          _currentStep = 1;
+                        });
+                      }
+                    } else if (_currentStep == 1) {
+                      if (_selectedCategoryType == 'Kustom' &&
+                          _customCategoryNameController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Nama kategori kustom tidak boleh kosong!',
+                            ),
+                            backgroundColor: Colors.redAccent,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() {
+                        _currentStep = 2;
+                      });
+                    } else {
+                      _handleRegister();
+                    }
+                  },
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    isLastStep ? 'Selesai & Buat Akun' : 'Lanjut',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // LANGKAH 1: Kredensial Akun
+  Widget _buildStep1Credentials(ThemeData theme) {
+    return Form(
+      key: _step1FormKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.person_pin_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '1. Informasi Akun Baru',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Input Nama Lengkap
+          TextFormField(
+            controller: _nameController,
+            keyboardType: TextInputType.name,
+            decoration: InputDecoration(
+              labelText: 'Nama Lengkap',
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Nama lengkap tidak boleh kosong!';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Input Email
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              labelText: 'Alamat Email',
+              prefixIcon: const Icon(Icons.email_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Alamat email tidak boleh kosong!';
+              }
+              final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+              if (!emailRegex.hasMatch(value.trim())) {
+                return 'Format email tidak valid!';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Input Password
+          TextFormField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            decoration: InputDecoration(
+              labelText: 'Kata Sandi',
+              prefixIcon: const Icon(Icons.lock_outlined),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Kata sandi tidak boleh kosong!';
+              }
+              if (value.length < 6) {
+                return 'Kata sandi minimal harus 6 karakter!';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Input Konfirmasi Password
+          TextFormField(
+            controller: _confirmPasswordController,
+            obscureText: _obscureConfirmPassword,
+            decoration: InputDecoration(
+              labelText: 'Konfirmasi Kata Sandi',
+              prefixIcon: const Icon(Icons.lock_clock_outlined),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscureConfirmPassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                onPressed: () => setState(
+                  () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Konfirmasi kata sandi tidak boleh kosong!';
+              }
+              if (value != _passwordController.text) {
+                return 'Kata sandi tidak cocok!';
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // LANGKAH 2: Kategori Pertama
+  Widget _buildStep2Category(ThemeData theme, bool isDark) {
     final templates = [
       {
         'type': 'Pemrograman',
@@ -519,569 +755,361 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
     ];
 
+    Color getActiveColor() {
+      if (_selectedCategoryType == 'Pemrograman') return Colors.blue;
+      if (_selectedCategoryType == 'Kebugaran') return Colors.green;
+      if (_selectedCategoryType == 'Bahasa') return Colors.orange;
+      if (_selectedCategoryType == 'Musik & Seni') return Colors.purple;
+      return Color(_selectedCustomColor);
+    }
+
+    final activeColor = getActiveColor();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.category_rounded, color: activeColor, size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              '2. Kategori Keahlian Pertama',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Horizontal Template Selector
+        SizedBox(
+          height: 80,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: templates.length,
+            itemBuilder: (context, idx) {
+              final tpl = templates[idx];
+              final type = tpl['type'] as String;
+              final name = tpl['name'] as String;
+              final icon = tpl['icon'] as IconData;
+              final color = tpl['color'] as Color;
+              final isSelected = _selectedCategoryType == type;
+
+              return GestureDetector(
+                onTap: () => setState(() => _selectedCategoryType = type),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 8,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? color.withValues(alpha: 0.15)
+                        : (isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.white),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? color
+                          : theme.dividerColor.withValues(alpha: 0.2),
+                      width: isSelected ? 2 : 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        icon,
+                        color: isSelected ? color : theme.hintColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: isSelected
+                              ? (isDark ? Colors.white : Colors.black87)
+                              : theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        if (_selectedCategoryType == 'Kustom') ...[
+          const SizedBox(height: 12),
+          TextField(
+            controller: _customCategoryNameController,
+            decoration: InputDecoration(
+              labelText: 'Nama Kategori Kustom',
+              hintText: 'misal: Memasak, Fotografi, Keuangan',
+              prefixIcon: const Icon(Icons.category_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Pilih Warna Kategori:',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 36,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _colorsList.length,
+              itemBuilder: (context, idx) {
+                final colorVal = _colorsList[idx]['value'] as int;
+                final isColorSelected = _selectedCustomColor == colorVal;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedCustomColor = colorVal),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(colorVal),
+                      border: isColorSelected
+                          ? Border.all(
+                              color: isDark ? Colors.white : Colors.black,
+                              width: 3,
+                            )
+                          : null,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Pilih Ikon Kategori:',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 44,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _iconsList.length,
+              itemBuilder: (context, idx) {
+                final iconName = _iconsList[idx];
+                final isIconSelected = _selectedCustomIcon == iconName;
+                IconData getIcon(String name) {
+                  switch (name) {
+                    case 'code':
+                      return Icons.code_rounded;
+                    case 'fitness_center':
+                      return Icons.fitness_center_rounded;
+                    case 'translate':
+                      return Icons.translate_rounded;
+                    case 'music_note':
+                      return Icons.music_note_rounded;
+                    case 'book':
+                      return Icons.book_rounded;
+                    case 'brush':
+                      return Icons.brush_rounded;
+                    case 'sports_basketball':
+                      return Icons.sports_basketball_rounded;
+                    default:
+                      return Icons.category_rounded;
+                  }
+                }
+
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedCustomIcon = iconName),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isIconSelected
+                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isIconSelected
+                            ? theme.colorScheme.primary
+                            : Colors.grey.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Icon(
+                      getIcon(iconName),
+                      color: isIconSelected
+                          ? theme.colorScheme.primary
+                          : Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // LANGKAH 3: Detail Keahlian Pertama
+  Widget _buildStep3SkillDetail(ThemeData theme) {
+    Color getActiveColor() {
+      if (_selectedCategoryType == 'Pemrograman') return Colors.blue;
+      if (_selectedCategoryType == 'Kebugaran') return Colors.green;
+      if (_selectedCategoryType == 'Bahasa') return Colors.orange;
+      if (_selectedCategoryType == 'Musik & Seni') return Colors.purple;
+      return Color(_selectedCustomColor);
+    }
+
+    final activeColor = getActiveColor();
+
     return Form(
-      key: _formKey,
+      key: _step3FormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // BUBBLE ITINERARY ROADMAP
-          _buildBubbleItinerary(theme),
-          const SizedBox(height: 12),
-
-          // ---------------- SECTION 1: AKUN ----------------
-          Container(
-            key: _akunKey,
-            padding: const EdgeInsets.only(top: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person_pin_rounded,
-                      color: accentColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '1. Informasi Akun Baru',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nameController,
-                  keyboardType: TextInputType.name,
-                  decoration: InputDecoration(
-                    labelText: 'Nama Lengkap',
-                    prefixIcon: const Icon(Icons.person_outline_rounded),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Nama lengkap tidak boleh kosong!';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Alamat Email',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Alamat email tidak boleh kosong!';
-                    }
-                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                    if (!emailRegex.hasMatch(value.trim())) {
-                      return 'Format email tidak valid!';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Kata Sandi',
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Kata sandi tidak boleh kosong!';
-                    }
-                    if (value.length < 6) {
-                      return 'Kata sandi minimal harus 6 karakter!';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: _obscureConfirmPassword,
-                  decoration: InputDecoration(
-                    labelText: 'Konfirmasi Kata Sandi',
-                    prefixIcon: const Icon(Icons.lock_clock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                      ),
-                      onPressed: () => setState(
-                        () =>
-                            _obscureConfirmPassword = !_obscureConfirmPassword,
-                      ),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Konfirmasi kata sandi tidak boleh kosong!';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Kata sandi tidak cocok!';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 16),
-
-          // ---------------- SECTION 2: KATEGORI ----------------
-          Container(
-            key: _kategoriKey,
-            padding: const EdgeInsets.only(top: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.category_rounded, color: accentColor, size: 20),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '2. Kategori Keahlian Pertama',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Horizontal Template Selector
-                SizedBox(
-                  height: 80,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: templates.length,
-                    itemBuilder: (context, idx) {
-                      final tpl = templates[idx];
-                      final type = tpl['type'] as String;
-                      final name = tpl['name'] as String;
-                      final icon = tpl['icon'] as IconData;
-                      final color = tpl['color'] as Color;
-                      final isSelected = _selectedCategoryType == type;
-
-                      return GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedCategoryType = type),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 8,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? color.withValues(alpha: 0.15)
-                                : (isDark
-                                      ? Colors.white.withValues(alpha: 0.05)
-                                      : Colors.white),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? color
-                                  : theme.dividerColor.withValues(alpha: 0.2),
-                              width: isSelected ? 2 : 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                icon,
-                                color: isSelected ? color : theme.hintColor,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  color: isSelected
-                                      ? (isDark ? Colors.white : Colors.black87)
-                                      : theme.hintColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                if (_selectedCategoryType == 'Kustom') ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _customCategoryNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Nama Kategori Kustom',
-                      hintText: 'misal: Memasak, Fotografi, Keuangan',
-                      prefixIcon: const Icon(Icons.category_outlined),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Pilih Warna Kategori:',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 36,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _colorsList.length,
-                      itemBuilder: (context, idx) {
-                        final colorVal = _colorsList[idx]['value'] as int;
-                        final isColorSelected =
-                            _selectedCustomColor == colorVal;
-                        return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedCustomColor = colorVal),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(colorVal),
-                              border: isColorSelected
-                                  ? Border.all(
-                                      color: isDark
-                                          ? Colors.white
-                                          : Colors.black,
-                                      width: 3,
-                                    )
-                                  : null,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Pilih Ikon Kategori:',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 44,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _iconsList.length,
-                      itemBuilder: (context, idx) {
-                        final iconName = _iconsList[idx];
-                        final isIconSelected = _selectedCustomIcon == iconName;
-                        IconData getIcon(String name) {
-                          switch (name) {
-                            case 'code':
-                              return Icons.code_rounded;
-                            case 'fitness_center':
-                              return Icons.fitness_center_rounded;
-                            case 'translate':
-                              return Icons.translate_rounded;
-                            case 'music_note':
-                              return Icons.music_note_rounded;
-                            case 'book':
-                              return Icons.book_rounded;
-                            case 'brush':
-                              return Icons.brush_rounded;
-                            case 'sports_basketball':
-                              return Icons.sports_basketball_rounded;
-                            default:
-                              return Icons.category_rounded;
-                          }
-                        }
-
-                        return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedCustomIcon = iconName),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isIconSelected
-                                  ? theme.colorScheme.primary.withValues(
-                                      alpha: 0.15,
-                                    )
-                                  : Colors.transparent,
-                              border: Border.all(
-                                color: isIconSelected
-                                    ? theme.colorScheme.primary
-                                    : Colors.grey.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Icon(
-                              getIcon(iconName),
-                              color: isIconSelected
-                                  ? theme.colorScheme.primary
-                                  : Colors.grey,
-                              size: 20,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 16),
-
-          // ---------------- SECTION 3: KEAHLIAN ----------------
-          Container(
-            key: _keahlianKey,
-            padding: const EdgeInsets.only(top: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.stars_rounded, color: accentColor, size: 20),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '3. Keterampilan / Keahlian Pertama',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _skillNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nama Keahlian Pertama',
-                    hintText: 'misal: Flutter, Lari 5K, Gitar Klasik',
-                    prefixIcon: Icon(
-                      Icons.workspace_premium_rounded,
-                      color: accentColor,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: accentColor, width: 2),
-                    ),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Nama keahlian tidak boleh kosong!';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _skillDescController,
-                  decoration: InputDecoration(
-                    labelText: 'Deskripsi Keahlian (Opsional)',
-                    hintText: 'misal: Memahami widget & state provider',
-                    prefixIcon: Icon(
-                      Icons.edit_note_rounded,
-                      color: accentColor,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: accentColor, width: 2),
-                    ),
-                  ),
-                  maxLines: 2,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Level Awal Anda: Level $_initialSkillLevel',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(5, (index) {
-                    final lvl = index + 1;
-                    final isSelected = _initialSkillLevel == lvl;
-                    return GestureDetector(
-                      onTap: () => setState(() => _initialSkillLevel = lvl),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected
-                              ? accentColor
-                              : accentColor.withValues(alpha: 0.1),
-                          border: Border.all(
-                            color: isSelected
-                                ? accentColor
-                                : Colors.grey.withValues(alpha: 0.2),
-                            width: 2,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '$lvl',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : accentColor,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Progres Awal Keahlian:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                    Text(
-                      '${_initialSkillProgress.round()}%',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: accentColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Slider(
-                  value: _initialSkillProgress,
-                  min: 0,
-                  max: 100,
-                  divisions: 10,
-                  activeColor: accentColor,
-                  inactiveColor: accentColor.withValues(alpha: 0.25),
-                  label: '${_initialSkillProgress.round()}%',
-                  onChanged: (val) =>
-                      setState(() => _initialSkillProgress = val),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          // Tombol Aksi Minimalis Row
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    side: BorderSide(
-                      color: theme.dividerColor.withValues(alpha: 0.3),
-                    ),
-                    foregroundColor: theme.hintColor,
-                  ),
-                  onPressed: () => setState(() => _showIntro = true),
-                  child: const Text('Batal'),
-                ),
+              Icon(Icons.stars_rounded, color: activeColor, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                '3. Keterampilan / Keahlian Pertama',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0, // Minimalist (flat)
-                  ),
-                  onPressed: isLoading ? null : _handleRegister,
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Selesai & Buat Akun',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _skillNameController,
+            decoration: InputDecoration(
+              labelText: 'Nama Keahlian Pertama',
+              hintText: 'misal: Flutter, Lari 5K, Gitar Klasik',
+              prefixIcon: Icon(
+                Icons.workspace_premium_rounded,
+                color: activeColor,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: activeColor, width: 2),
+              ),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Nama keahlian tidak boleh kosong!';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _skillDescController,
+            decoration: InputDecoration(
+              labelText: 'Deskripsi Keahlian (Opsional)',
+              hintText: 'misal: Memahami widget & state provider',
+              prefixIcon: Icon(Icons.edit_note_rounded, color: activeColor),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: activeColor, width: 2),
+              ),
+            ),
+            maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Level Awal Anda: Level $_initialSkillLevel',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.5,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(5, (index) {
+              final lvl = index + 1;
+              final isSelected = _initialSkillLevel == lvl;
+              return GestureDetector(
+                onTap: () => setState(() => _initialSkillLevel = lvl),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected
+                        ? activeColor
+                        : activeColor.withValues(alpha: 0.1),
+                    border: Border.all(
+                      color: isSelected
+                          ? activeColor
+                          : Colors.grey.withValues(alpha: 0.2),
+                      width: 2,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$lvl',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : activeColor,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Progres Awal Keahlian:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+              ),
+              Text(
+                '${_initialSkillProgress.round()}%',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: activeColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Slider(
+            value: _initialSkillProgress,
+            min: 0,
+            max: 100,
+            divisions: 10,
+            activeColor: activeColor,
+            inactiveColor: activeColor.withValues(alpha: 0.25),
+            label: '${_initialSkillProgress.round()}%',
+            onChanged: (val) => setState(() => _initialSkillProgress = val),
           ),
         ],
       ),
@@ -1106,28 +1134,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildBubbleItem(0, 'Akun', _akunKey, theme),
+          _buildBubbleItem(0, 'Akun', theme),
           _buildBubbleConnector(theme, 0),
-          _buildBubbleItem(1, 'Kategori', _kategoriKey, theme),
+          _buildBubbleItem(1, 'Kategori', theme),
           _buildBubbleConnector(theme, 1),
-          _buildBubbleItem(2, 'Keahlian', _keahlianKey, theme),
+          _buildBubbleItem(2, 'Keahlian', theme),
         ],
       ),
     );
   }
 
-  Widget _buildBubbleItem(
-    int index,
-    String label,
-    GlobalKey key,
-    ThemeData theme,
-  ) {
-    final isSelected = _activeSectionIndex == index;
-    final isPassed = _activeSectionIndex > index;
+  Widget _buildBubbleItem(int index, String label, ThemeData theme) {
+    final isSelected = _currentStep == index;
+    final isPassed = _currentStep > index;
     final accentColor = theme.colorScheme.primary;
+    final isAccessible = index <= _currentStep + 1;
 
     return GestureDetector(
-      onTap: () => _scrollToSection(key),
+      onTap: isAccessible ? () => _navigateToStep(index) : null,
       child: Column(
         children: [
           AnimatedContainer(
@@ -1140,13 +1164,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ? accentColor
                   : (isPassed
                         ? Colors.green
-                        : accentColor.withValues(alpha: 0.1)),
+                        : (isAccessible
+                              ? accentColor.withValues(alpha: 0.15)
+                              : Colors.grey.withValues(alpha: 0.08))),
               border: Border.all(
                 color: isSelected
                     ? accentColor
                     : (isPassed
                           ? Colors.green
-                          : Colors.grey.withValues(alpha: 0.3)),
+                          : (isAccessible
+                                ? Colors.grey.withValues(alpha: 0.4)
+                                : Colors.grey.withValues(alpha: 0.2))),
                 width: 2,
               ),
               boxShadow: isSelected
@@ -1165,7 +1193,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 : Text(
                     '${index + 1}',
                     style: TextStyle(
-                      color: isSelected ? Colors.white : accentColor,
+                      color: isSelected
+                          ? Colors.white
+                          : (isAccessible
+                                ? accentColor
+                                : Colors.grey.withValues(alpha: 0.5)),
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -1179,7 +1211,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected
                   ? accentColor
-                  : (isPassed ? Colors.green : theme.hintColor),
+                  : (isPassed
+                        ? Colors.green
+                        : (isAccessible
+                              ? theme.hintColor
+                              : theme.hintColor.withValues(alpha: 0.4))),
             ),
           ),
         ],
@@ -1188,7 +1224,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildBubbleConnector(ThemeData theme, int afterStep) {
-    final isPassed = _activeSectionIndex > afterStep;
+    final isPassed = _currentStep > afterStep;
     return Expanded(
       child: Container(
         height: 2,

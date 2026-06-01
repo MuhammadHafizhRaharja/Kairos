@@ -379,6 +379,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80.0),
         child: FloatingActionButton(
+          heroTag: null,
           onPressed: () => _showAddCategoryDialog(context, provider),
           backgroundColor: Colors.deepPurple,
           foregroundColor: Colors.white,

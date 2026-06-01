@@ -228,6 +228,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => _showAddSkillDialog(context, provider, categoryColor),
         backgroundColor: categoryColor,
         foregroundColor: Colors.white,

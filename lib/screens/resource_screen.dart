@@ -99,6 +99,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80.0), // Agar tidak tertutup BottomNavBar
         child: FloatingActionButton.extended(
+          heroTag: null,
           onPressed: () => _showAddEditResourceBottomSheet(context, provider),
           icon: const Icon(Icons.add_rounded),
           label: const Text('Tambah Materi'),

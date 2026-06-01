@@ -779,71 +779,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        // Horizontal Template Selector
-        SizedBox(
-          height: 80,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: templates.length,
-            itemBuilder: (context, idx) {
-              final tpl = templates[idx];
-              final type = tpl['type'] as String;
-              final name = tpl['name'] as String;
-              final icon = tpl['icon'] as IconData;
-              final color = tpl['color'] as Color;
-              final isSelected = _selectedCategoryType == type;
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: templates.map((tpl) {
+            final type = tpl['type'] as String;
+            final name = tpl['name'] as String;
+            final icon = tpl['icon'] as IconData;
+            final color = tpl['color'] as Color;
+            final isSelected = _selectedCategoryType == type;
 
-              return GestureDetector(
-                onTap: () => setState(() => _selectedCategoryType = type),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 8,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
+            return GestureDetector(
+              onTap: () => setState(() => _selectedCategoryType = type),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withValues(alpha: 0.15)
+                      : (isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.white),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
                     color: isSelected
-                        ? color.withValues(alpha: 0.15)
-                        : (isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.white),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? color
-                          : theme.dividerColor.withValues(alpha: 0.2),
-                      width: isSelected ? 2 : 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        icon,
-                        color: isSelected ? color : theme.hintColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: isSelected
-                              ? (isDark ? Colors.white : Colors.black87)
-                              : theme.hintColor,
-                        ),
-                      ),
-                    ],
+                        ? color
+                        : theme.dividerColor.withValues(alpha: 0.2),
+                    width: isSelected ? 2 : 1.5,
                   ),
                 ),
-              );
-            },
-          ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      color: isSelected ? color : theme.hintColor,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isSelected
+                            ? (isDark ? Colors.white : Colors.black87)
+                            : theme.hintColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
 
         if (_selectedCategoryType == 'Kustom') ...[

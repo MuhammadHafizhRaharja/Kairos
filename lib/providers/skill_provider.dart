@@ -22,8 +22,6 @@ class SkillProvider extends ChangeNotifier {
   // State tambahan untuk Modul Resource & Progress rekan tim
   String _defaultLang = 'id';
   bool _isNotificationEnabled = true;
-  double _fontSize = 14.0;
-  String _viewMode = 'List';
 
   // State untuk Modul Resource (Materi & Referensi)
   List<Resource> _resources = [];
@@ -39,8 +37,6 @@ class SkillProvider extends ChangeNotifier {
   // Getter tambahan
   String get defaultLang => _defaultLang;
   bool get isNotificationEnabled => _isNotificationEnabled;
-  double get fontSize => _fontSize;
-  String get viewMode => _viewMode;
   List<Resource> get resources {
     // Pengamanan tambahan untuk hot-reload state injection pada Flutter Web
     final dynamic list = _resources;
@@ -84,8 +80,6 @@ class SkillProvider extends ChangeNotifier {
       // Memuat preferensi tambahan
       _defaultLang = await _prefsHelper.getDefaultLang();
       _isNotificationEnabled = await _prefsHelper.getIsNotificationEnabled();
-      _fontSize = await _prefsHelper.getFontSize();
-      _viewMode = await _prefsHelper.getViewMode();
 
       // 2. Mengambil data dari database
       await refreshCategories();
@@ -133,25 +127,10 @@ class SkillProvider extends ChangeNotifier {
     await _prefsHelper.setDefaultLang(lang);
   }
 
-  /// Mengatur preferensi notifikasi untuk Modul Resource.
   Future<void> toggleNotification(bool enabled) async {
     _isNotificationEnabled = enabled;
     notifyListeners();
     await _prefsHelper.setIsNotificationEnabled(enabled);
-  }
-
-  /// Mengatur ukuran font teks untuk Modul Progress.
-  Future<void> updateFontSize(double size) async {
-    _fontSize = size;
-    notifyListeners();
-    await _prefsHelper.setFontSize(size);
-  }
-
-  /// Mengatur mode tampilan untuk Modul Progress.
-  Future<void> updateViewMode(String mode) async {
-    _viewMode = mode;
-    notifyListeners();
-    await _prefsHelper.setViewMode(mode);
   }
 
   // ==========================================

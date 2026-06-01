@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/skill_provider.dart';
+import '../providers/progress_provider.dart';
 
 /// Widget grafik lingkaran kemajuan kustom menggunakan [CustomPainter].
 /// Menampilkan 3 ring konsentris mewakili status perkembangan ketiga modul (Skill, Resource, Progress).
@@ -51,7 +52,7 @@ class ActivityRingsChart extends StatelessWidget {
     // 3. Ring dalam (Progress Log): Responsif terhadap ukuran font catatan (mock)
     // Pemetaan ukuran font 12 pt s.d. 24 pt ke rentang progres 0.3 s.d. 0.8
     double progressLogProgress =
-        0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
+        0.3 + ((context.watch<ProgressProvider>().fontSize - 12.0) / 12.0) * 0.5;
     progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
 
     return SizedBox(

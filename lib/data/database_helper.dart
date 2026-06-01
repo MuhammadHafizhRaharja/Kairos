@@ -7,6 +7,8 @@ import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../models/resource.dart';
 import '../models/user.dart';
+import '../models/progress_log.dart';
+import '../models/challenge.dart';
 
 /// Helper class untuk mengelola database SQLite menggunakan sqflite.
 /// Menggunakan pola Singleton untuk memastikan hanya ada satu instance database yang aktif.
@@ -19,6 +21,8 @@ class DatabaseHelper {
   static final List<Skill> _webSkills = [];
   static final List<Resource> _webResources = [];
   static final List<User> _webUsers = [];
+  static final List<ProgressLog> _webProgressLogs = [];
+  static final List<Challenge> _webChallenges = [];
   static int _webIdCounter = 100;
   static bool _webDataLoaded = false;
 
@@ -69,6 +73,20 @@ class DatabaseHelper {
         _webUsers.addAll(decoded.map((json) => User.fromMap(Map<String, dynamic>.from(json))).toList());
       }
       
+      final logStr = prefs.getString('web_progress_logs');
+      if (logStr != null) {
+        final List decoded = json.decode(logStr);
+        _webProgressLogs.clear();
+        _webProgressLogs.addAll(decoded.map((json) => ProgressLog.fromMap(Map<String, dynamic>.from(json))).toList());
+      }
+
+      final challengeStr = prefs.getString('web_challenges');
+      if (challengeStr != null) {
+        final List decoded = json.decode(challengeStr);
+        _webChallenges.clear();
+        _webChallenges.addAll(decoded.map((json) => Challenge.fromMap(Map<String, dynamic>.from(json))).toList());
+      }
+
       _webIdCounter = prefs.getInt('web_id_counter') ?? 100;
       _webDataLoaded = true;
     } catch (e) {
@@ -86,11 +104,15 @@ class DatabaseHelper {
       final skillsJson = _webSkills.map((s) => s.toMap()).toList();
       final resourcesJson = _webResources.map((r) => r.toMap()).toList();
       final usersJson = _webUsers.map((u) => u.toMap()).toList();
+      final logsJson = _webProgressLogs.map((l) => l.toMap()).toList();
+      final challengesJson = _webChallenges.map((c) => c.toMap()).toList();
       
       await prefs.setString('web_categories', json.encode(categoriesJson));
       await prefs.setString('web_skills', json.encode(skillsJson));
       await prefs.setString('web_resources', json.encode(resourcesJson));
       await prefs.setString('web_users', json.encode(usersJson));
+      await prefs.setString('web_progress_logs', json.encode(logsJson));
+      await prefs.setString('web_challenges', json.encode(challengesJson));
       await prefs.setInt('web_id_counter', _webIdCounter);
     } catch (e) {
       debugPrint('Error menyimpan data SharedPreferences Web: $e');
@@ -113,7 +135,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onConfigure: _configureDB,
       onUpgrade: _upgradeDB,
@@ -184,7 +206,35 @@ class DatabaseHelper {
       )
     ''');
 
-    // 4. Memasukkan data awal (seed data) berupa beberapa kategori default agar UI tidak kosong saat pertama run.
+    // 4. Membuat tabel Progress Logs
+    await db.execute('''
+      CREATE TABLE progress_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
+        skillId INTEGER,
+        title TEXT NOT NULL,
+        note TEXT NOT NULL DEFAULT '',
+        durationMinutes INTEGER NOT NULL DEFAULT 0,
+        date TEXT NOT NULL,
+        FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
+      )
+    ''');
+
+    // 5. Membuat tabel Challenges
+    await db.execute('''
+      CREATE TABLE challenges (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
+        skillId INTEGER,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        targetDate TEXT NOT NULL,
+        isCompleted INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
+      )
+    ''');
+
+    // 6. Memasukkan data awal (seed data) berupa beberapa kategori default agar UI tidak kosong saat pertama run.
     await _seedDefaultCategories(db);
   }
 
@@ -246,6 +296,32 @@ class DatabaseHelper {
       } catch (e) {
         debugPrint('Migration: phone already exists in users: $e');
       }
+    }
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE progress_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          userId INTEGER,
+          skillId INTEGER,
+          title TEXT NOT NULL,
+          note TEXT NOT NULL DEFAULT '',
+          durationMinutes INTEGER NOT NULL DEFAULT 0,
+          date TEXT NOT NULL,
+          FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE challenges (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          userId INTEGER,
+          skillId INTEGER,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          targetDate TEXT NOT NULL,
+          isCompleted INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
+        )
+      ''');
     }
   }
 
@@ -657,6 +733,142 @@ class DatabaseHelper {
     }
     final db = await instance.database;
     return await db.delete('resources', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==========================================
+  // CRUD UNTUK TABEL PROGRESS LOGS (JOHANES DARREN YEHUDA)
+  // ==========================================
+
+  Future<int> insertProgressLog(ProgressLog log) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final newId = _webIdCounter++;
+      final newLog = ProgressLog(
+        id: newId,
+        userId: log.userId,
+        skillId: log.skillId,
+        title: log.title,
+        note: log.note,
+        durationMinutes: log.durationMinutes,
+        date: log.date,
+      );
+      _webProgressLogs.add(newLog);
+      await _saveWebDataToPrefs();
+      return newId;
+    }
+    final db = await instance.database;
+    return await db.insert('progress_logs', log.toMap());
+  }
+
+  Future<List<ProgressLog>> getAllProgressLogs(int? userId) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final filtered = _webProgressLogs.where((l) => l.userId == userId).toList();
+      filtered.sort((a, b) => b.date.compareTo(a.date));
+      return filtered;
+    }
+    final db = await instance.database;
+    final result = await db.query(
+      'progress_logs',
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'date DESC',
+    );
+    return result.map((json) => ProgressLog.fromMap(json)).toList();
+  }
+
+  Future<int> updateProgressLog(ProgressLog log) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final idx = _webProgressLogs.indexWhere((l) => l.id == log.id);
+      if (idx != -1) {
+        _webProgressLogs[idx] = log;
+        await _saveWebDataToPrefs();
+        return 1;
+      }
+      return 0;
+    }
+    final db = await instance.database;
+    return await db.update('progress_logs', log.toMap(), where: 'id = ?', whereArgs: [log.id]);
+  }
+
+  Future<int> deleteProgressLog(int id) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      _webProgressLogs.removeWhere((l) => l.id == id);
+      await _saveWebDataToPrefs();
+      return 1;
+    }
+    final db = await instance.database;
+    return await db.delete('progress_logs', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==========================================
+  // CRUD UNTUK TABEL CHALLENGES (JOHANES DARREN YEHUDA)
+  // ==========================================
+
+  Future<int> insertChallenge(Challenge challenge) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final newId = _webIdCounter++;
+      final newChallenge = Challenge(
+        id: newId,
+        userId: challenge.userId,
+        skillId: challenge.skillId,
+        title: challenge.title,
+        description: challenge.description,
+        targetDate: challenge.targetDate,
+        isCompleted: challenge.isCompleted,
+      );
+      _webChallenges.add(newChallenge);
+      await _saveWebDataToPrefs();
+      return newId;
+    }
+    final db = await instance.database;
+    return await db.insert('challenges', challenge.toMap());
+  }
+
+  Future<List<Challenge>> getAllChallenges(int? userId) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final filtered = _webChallenges.where((c) => c.userId == userId).toList();
+      filtered.sort((a, b) => a.targetDate.compareTo(b.targetDate));
+      return filtered;
+    }
+    final db = await instance.database;
+    final result = await db.query(
+      'challenges',
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'targetDate ASC',
+    );
+    return result.map((json) => Challenge.fromMap(json)).toList();
+  }
+
+  Future<int> updateChallenge(Challenge challenge) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final idx = _webChallenges.indexWhere((c) => c.id == challenge.id);
+      if (idx != -1) {
+        _webChallenges[idx] = challenge;
+        await _saveWebDataToPrefs();
+        return 1;
+      }
+      return 0;
+    }
+    final db = await instance.database;
+    return await db.update('challenges', challenge.toMap(), where: 'id = ?', whereArgs: [challenge.id]);
+  }
+
+  Future<int> deleteChallenge(int id) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      _webChallenges.removeWhere((c) => c.id == id);
+      await _saveWebDataToPrefs();
+      return 1;
+    }
+    final db = await instance.database;
+    return await db.delete('challenges', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Menutup database jika tidak digunakan lagi (misalnya untuk pengujian).

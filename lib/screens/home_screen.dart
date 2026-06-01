@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/skill_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/progress_provider.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../widgets/activity_rings_chart.dart';
@@ -199,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _buildFeatureBarItem(
                       context: context,
                       title: 'Jurnal',
-                      subtitle: 'Font ${provider.fontSize.toInt()} pt',
+                      subtitle: 'Font ${context.watch<ProgressProvider>().fontSize.toInt()} pt',
                       icon: Icons.trending_up_rounded,
                       startColor: const Color(0xFFFF9800),
                       endColor: const Color(0xFFFFB74D),
@@ -461,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 3. Hitung progres Progress Log
     double progressLogProgress =
-        0.3 + ((provider.fontSize - 12.0) / 12.0) * 0.5;
+        0.3 + ((context.watch<ProgressProvider>().fontSize - 12.0) / 12.0) * 0.5;
     progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
 
     return Card(

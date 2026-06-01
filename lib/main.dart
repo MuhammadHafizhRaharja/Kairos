@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/skill_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/progress_provider.dart';
 import 'screens/main_shell.dart';
 import 'screens/welcome_screen.dart';
 
@@ -18,11 +19,16 @@ void main() async {
   final authProvider = AuthProvider();
   await authProvider.checkLoginStatus();
 
+  // Inisiasi ProgressProvider & memuat data awal
+  final progressProvider = ProgressProvider();
+  await progressProvider.loadInitialData();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<SkillProvider>.value(value: skillProvider),
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+        ChangeNotifierProvider<ProgressProvider>.value(value: progressProvider),
       ],
       child: const MainApp(),
     ),
@@ -47,6 +53,10 @@ class MainApp extends StatelessWidget {
         final skillProvider = context.read<SkillProvider>();
         if (skillProvider.currentUserId != currentUser?.id) {
           skillProvider.setUserId(currentUser?.id);
+        }
+        final progressProvider = context.read<ProgressProvider>();
+        if (progressProvider.currentUserId != currentUser?.id) {
+          progressProvider.setUserId(currentUser?.id);
         }
       }
     });

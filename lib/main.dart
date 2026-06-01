@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'providers/skill_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/main_shell.dart';
-import 'screens/login_screen.dart';
+import 'screens/welcome_screen.dart';
 
 void main() async {
   // Wajib dipanggil untuk memastikan binding engine Flutter siap sebelum inisiasi async
@@ -75,8 +75,8 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
       ),
-      // Jika sudah masuk, arahkan ke MainShell, jika belum, ke LoginScreen
-      home: isLoggedIn ? const MainShell() : const LoginScreen(),
+      // Jika sudah masuk, arahkan ke MainShell, jika belum, ke WelcomeScreen
+      home: isLoggedIn ? const MainShell() : const WelcomeScreen(),
     );
   }
 }

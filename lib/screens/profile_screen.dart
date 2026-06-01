@@ -871,7 +871,6 @@ class ProfileScreen extends StatelessWidget {
                               items: const [
                                 DropdownMenuItem(value: 'id', child: Text('Indonesia (ID)', style: TextStyle(fontSize: 12))),
                                 DropdownMenuItem(value: 'en', child: Text('English (EN)', style: TextStyle(fontSize: 12))),
-                                DropdownMenuItem(value: 'jp', child: Text('日本語 (JP)', style: TextStyle(fontSize: 12))),
                               ],
                               onChanged: (val) {
                                 if (val != null) {

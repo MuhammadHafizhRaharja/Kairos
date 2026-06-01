@@ -43,14 +43,11 @@ class _ResourceScreenState extends State<ResourceScreen> {
     final readingCount = provider.resources.where((r) => r.status == 1).length;
     final completedCount = provider.resources.where((r) => r.status == 2).length;
 
-    // Hitung persentase progres untuk ring tengah
-    double resourceProgress = 0.3;
-    if (provider.isNotificationEnabled) resourceProgress += 0.1;
-    if (provider.defaultLang == 'id') resourceProgress += 0.1;
+    // Hitung persentase progres riil berdasarkan materi (Selesai = 100%, Sedang Dibaca = 50%)
+    double resourceProgress = 0.0;
     if (totalCount > 0) {
-      resourceProgress += (completedCount / totalCount) * 0.45;
+      resourceProgress = ((completedCount * 1.0) + (readingCount * 0.5)) / totalCount;
     }
-    resourceProgress = resourceProgress.clamp(0.15, 0.95);
 
     return Scaffold(
       appBar: AppBar(

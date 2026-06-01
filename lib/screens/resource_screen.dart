@@ -54,7 +54,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Referensi Belajar',
+          'Materi & Referensi',
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -103,7 +103,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
         child: FloatingActionButton.extended(
           onPressed: () => _showAddEditResourceBottomSheet(context, provider),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Tambah Referensi'),
+          label: const Text('Tambah Materi / Referensi'),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
         ),
@@ -795,7 +795,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              resource == null ? 'Tambah Referensi Belajar' : 'Edit Referensi Belajar',
+                              resource == null ? 'Tambah Materi & Referensi' : 'Edit Materi & Referensi',
                               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 17),
                             ),
                             IconButton(
@@ -810,7 +810,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
                         TextFormField(
                           controller: titleController,
                           decoration: InputDecoration(
-                            labelText: 'Judul Referensi',
+                            labelText: 'Judul Materi / Referensi',
                             prefixIcon: const Icon(Icons.title_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),

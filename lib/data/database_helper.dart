@@ -1,5 +1,7 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
@@ -15,17 +17,72 @@ class DatabaseHelper {
   static final List<SkillCategory> _webCategories = [];
   static final List<Skill> _webSkills = [];
   static final List<Resource> _webResources = [];
-  static int _webIdCounter = 1;
+  static int _webIdCounter = 100;
+  static bool _webDataLoaded = false;
 
-  void _seedWebDataIfNeeded() {
-    if (_webCategories.isEmpty) {
-      _webCategories.addAll([
-        SkillCategory(id: 1, name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3),
-        SkillCategory(id: 2, name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50),
-        SkillCategory(id: 3, name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800),
-        SkillCategory(id: 4, name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0),
-      ]);
-      _webIdCounter = 5;
+  /// Memuat data web dari SharedPreferences secara asinkron agar persisten
+  static Future<void> _loadWebDataFromPrefs() async {
+    if (!kIsWeb) return;
+    if (_webDataLoaded) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      final catStr = prefs.getString('web_categories');
+      if (catStr != null) {
+        final List decoded = json.decode(catStr);
+        _webCategories.clear();
+        _webCategories.addAll(decoded.map((json) => SkillCategory.fromMap(Map<String, dynamic>.from(json))).toList());
+      } else {
+        // Seed default categories jika pertama kali dibuka
+        _webCategories.clear();
+        _webCategories.addAll([
+          SkillCategory(id: 1, name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3),
+          SkillCategory(id: 2, name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50),
+          SkillCategory(id: 3, name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800),
+          SkillCategory(id: 4, name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0),
+        ]);
+        // Simpan langsung data awal
+        final categoriesJson = _webCategories.map((c) => c.toMap()).toList();
+        await prefs.setString('web_categories', json.encode(categoriesJson));
+      }
+      
+      final skillStr = prefs.getString('web_skills');
+      if (skillStr != null) {
+        final List decoded = json.decode(skillStr);
+        _webSkills.clear();
+        _webSkills.addAll(decoded.map((json) => Skill.fromMap(Map<String, dynamic>.from(json))).toList());
+      }
+      
+      final resStr = prefs.getString('web_resources');
+      if (resStr != null) {
+        final List decoded = json.decode(resStr);
+        _webResources.clear();
+        _webResources.addAll(decoded.map((json) => Resource.fromMap(Map<String, dynamic>.from(json))).toList());
+      }
+      
+      _webIdCounter = prefs.getInt('web_id_counter') ?? 100;
+      _webDataLoaded = true;
+    } catch (e) {
+      debugPrint('Error memuat data SharedPreferences Web: $e');
+    }
+  }
+
+  /// Menyimpan data web ke SharedPreferences agar tidak hilang saat restart browser
+  static Future<void> _saveWebDataToPrefs() async {
+    if (!kIsWeb) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      final categoriesJson = _webCategories.map((c) => c.toMap()).toList();
+      final skillsJson = _webSkills.map((s) => s.toMap()).toList();
+      final resourcesJson = _webResources.map((r) => r.toMap()).toList();
+      
+      await prefs.setString('web_categories', json.encode(categoriesJson));
+      await prefs.setString('web_skills', json.encode(skillsJson));
+      await prefs.setString('web_resources', json.encode(resourcesJson));
+      await prefs.setInt('web_id_counter', _webIdCounter);
+    } catch (e) {
+      debugPrint('Error menyimpan data SharedPreferences Web: $e');
     }
   }
 
@@ -160,7 +217,7 @@ class DatabaseHelper {
   /// Create: Menambahkan kategori baru.
   Future<int> insertCategory(SkillCategory category) async {
     if (kIsWeb) {
-      _seedWebDataIfNeeded();
+      await _loadWebDataFromPrefs();
       final newId = _webIdCounter++;
       final newCat = SkillCategory(
         id: newId,
@@ -169,6 +226,7 @@ class DatabaseHelper {
         colorValue: category.colorValue,
       );
       _webCategories.add(newCat);
+      await _saveWebDataToPrefs();
       return newId;
     }
     final db = await instance.database;
@@ -178,7 +236,7 @@ class DatabaseHelper {
   /// Read: Mengambil semua data kategori dari database.
   Future<List<SkillCategory>> getAllCategories() async {
     if (kIsWeb) {
-      _seedWebDataIfNeeded();
+      await _loadWebDataFromPrefs();
       final sorted = List<SkillCategory>.from(_webCategories);
       sorted.sort((a, b) => a.name.compareTo(b.name));
       return sorted;
@@ -191,10 +249,11 @@ class DatabaseHelper {
   /// Update: Memperbarui data kategori.
   Future<int> updateCategory(SkillCategory category) async {
     if (kIsWeb) {
-      _seedWebDataIfNeeded();
+      await _loadWebDataFromPrefs();
       final idx = _webCategories.indexWhere((c) => c.id == category.id);
       if (idx != -1) {
         _webCategories[idx] = category;
+        await _saveWebDataToPrefs();
         return 1;
       }
       return 0;
@@ -212,13 +271,14 @@ class DatabaseHelper {
   /// Karena menggunakan ON DELETE CASCADE, semua skill dengan categoryId ini otomatis terhapus.
   Future<int> deleteCategory(int id) async {
     if (kIsWeb) {
-      _seedWebDataIfNeeded();
+      await _loadWebDataFromPrefs();
       _webCategories.removeWhere((c) => c.id == id);
       // Cascade delete skills
       _webSkills.removeWhere((s) => s.categoryId == id);
       // Cascade delete resources
       final skillIds = _webSkills.map((s) => s.id).toSet();
       _webResources.removeWhere((r) => r.skillId != null && !skillIds.contains(r.skillId));
+      await _saveWebDataToPrefs();
       return 1;
     }
     final db = await instance.database;
@@ -236,6 +296,7 @@ class DatabaseHelper {
   /// Create: Menambahkan skill baru.
   Future<int> insertSkill(Skill skill) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final newId = _webIdCounter++;
       final newSkill = Skill(
         id: newId,
@@ -247,6 +308,7 @@ class DatabaseHelper {
         createdAt: skill.createdAt,
       );
       _webSkills.add(newSkill);
+      await _saveWebDataToPrefs();
       return newId;
     }
     final db = await instance.database;
@@ -256,6 +318,7 @@ class DatabaseHelper {
   /// Read: Mengambil semua data skill tanpa memandang kategori.
   Future<List<Skill>> getAllSkills() async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final sorted = List<Skill>.from(_webSkills);
       sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return sorted;
@@ -268,6 +331,7 @@ class DatabaseHelper {
   /// Read: Mengambil semua skill yang berada di bawah kategori tertentu.
   Future<List<Skill>> getSkillsByCategoryId(int categoryId) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final filtered = _webSkills.where((s) => s.categoryId == categoryId).toList();
       filtered.sort((a, b) => a.name.compareTo(b.name));
       return filtered;
@@ -285,9 +349,11 @@ class DatabaseHelper {
   /// Update: Memperbarui data skill.
   Future<int> updateSkill(Skill skill) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final idx = _webSkills.indexWhere((s) => s.id == skill.id);
       if (idx != -1) {
         _webSkills[idx] = skill;
+        await _saveWebDataToPrefs();
         return 1;
       }
       return 0;
@@ -304,8 +370,10 @@ class DatabaseHelper {
   /// Delete: Menghapus data skill berdasarkan ID.
   Future<int> deleteSkill(int id) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       _webSkills.removeWhere((s) => s.id == id);
       _webResources.removeWhere((r) => r.skillId == id);
+      await _saveWebDataToPrefs();
       return 1;
     }
     final db = await instance.database;
@@ -319,6 +387,7 @@ class DatabaseHelper {
   /// Create: Menambahkan resource/referensi materi baru.
   Future<int> insertResource(Resource resource) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final newId = _webIdCounter++;
       final newRes = Resource(
         id: newId,
@@ -331,6 +400,7 @@ class DatabaseHelper {
         createdAt: resource.createdAt,
       );
       _webResources.add(newRes);
+      await _saveWebDataToPrefs();
       return newId;
     }
     final db = await instance.database;
@@ -340,6 +410,7 @@ class DatabaseHelper {
   /// Read: Mengambil semua data resource materi dari database.
   Future<List<Resource>> getAllResources() async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final sorted = List<Resource>.from(_webResources);
       sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return sorted;
@@ -349,9 +420,10 @@ class DatabaseHelper {
     return result.map((json) => Resource.fromMap(json)).toList();
   }
 
-  /// Read: Mengambil semua resource materi yang terhubung ke skill tertentu.
+  /// Read: Mengambil data resource materi yang terkait dengan keahlian (skill) tertentu.
   Future<List<Resource>> getResourcesBySkillId(int skillId) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final filtered = _webResources.where((r) => r.skillId == skillId).toList();
       filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return filtered;
@@ -369,9 +441,11 @@ class DatabaseHelper {
   /// Update: Memperbarui data resource materi.
   Future<int> updateResource(Resource resource) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       final idx = _webResources.indexWhere((r) => r.id == resource.id);
       if (idx != -1) {
         _webResources[idx] = resource;
+        await _saveWebDataToPrefs();
         return 1;
       }
       return 0;
@@ -388,7 +462,9 @@ class DatabaseHelper {
   /// Delete: Menghapus data resource materi berdasarkan ID.
   Future<int> deleteResource(int id) async {
     if (kIsWeb) {
+      await _loadWebDataFromPrefs();
       _webResources.removeWhere((r) => r.id == id);
+      await _saveWebDataToPrefs();
       return 1;
     }
     final db = await instance.database;

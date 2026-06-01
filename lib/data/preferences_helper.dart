@@ -9,6 +9,7 @@ class PreferencesHelper {
   // Key tambahan untuk Modul Resource (Materi & Referensi)
   static const String keyDefaultLang = 'default_lang';
   static const String keyIsNotificationEnabled = 'is_notification_enabled';
+  static const String keyResourceFilter = 'resource_filter';
 
   // Key tambahan untuk Modul Progress (Log Progress & Tantangan)
   static const String keyFontSize = 'font_size';
@@ -68,6 +69,18 @@ class PreferencesHelper {
   Future<bool> getIsNotificationEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(keyIsNotificationEnabled) ?? true;
+  }
+
+  /// Menyimpan filter materi ke Shared Preferences.
+  Future<bool> setResourceFilter(String filter) async {
+    final prefs = await SharedPreferences.getInstance();
+    return await prefs.setString(keyResourceFilter, filter);
+  }
+
+  /// Mengambil filter materi dari Shared Preferences.
+  Future<String> getResourceFilter() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(keyResourceFilter) ?? 'Semua';
   }
 
   // ==========================================

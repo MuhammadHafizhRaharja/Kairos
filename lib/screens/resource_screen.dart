@@ -17,8 +17,6 @@ class ResourceScreen extends StatefulWidget {
 }
 
 class _ResourceScreenState extends State<ResourceScreen> {
-  String _selectedFilter = 'Semua'; // Filter tab: Semua, Belum Dibaca, Sedang Dibaca, Selesai
-
   // Kategori materi yang didukung
   final List<String> _categories = ['Video', 'Artikel', 'Buku', 'Dokumentasi', 'Lainnya'];
 
@@ -26,13 +24,14 @@ class _ResourceScreenState extends State<ResourceScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<SkillProvider>();
     final theme = Theme.of(context);
+    final selectedFilter = provider.selectedFilter;
 
     // Filter resources berdasarkan status
     final filteredResources = provider.resources.where((resource) {
-      if (_selectedFilter == 'Semua') return true;
-      if (_selectedFilter == 'Belum Dibaca') return resource.status == 0;
-      if (_selectedFilter == 'Sedang Dibaca') return resource.status == 1;
-      if (_selectedFilter == 'Selesai') return resource.status == 2;
+      if (selectedFilter == 'Semua') return true;
+      if (selectedFilter == 'Belum Dibaca') return resource.status == 0;
+      if (selectedFilter == 'Sedang Dibaca') return resource.status == 1;
+      if (selectedFilter == 'Selesai') return resource.status == 2;
       return true;
     }).toList();
 
@@ -70,12 +69,12 @@ class _ResourceScreenState extends State<ResourceScreen> {
                   const SizedBox(height: 16),
 
                   // 3. FILTER TAB CHIPS
-                  _buildFilterChips(theme),
+                  _buildFilterChips(theme, provider),
                   const SizedBox(height: 16),
 
                   // 4. RESOURCE LIST / EMPTY STATE
                   filteredResources.isEmpty
-                      ? _buildEmptyState(theme)
+                      ? _buildEmptyState(theme, selectedFilter)
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -201,14 +200,14 @@ class _ResourceScreenState extends State<ResourceScreen> {
 
 
   /// Chips untuk filter status resources
-  Widget _buildFilterChips(ThemeData theme) {
+  Widget _buildFilterChips(ThemeData theme, SkillProvider provider) {
     final filters = ['Semua', 'Belum Dibaca', 'Sedang Dibaca', 'Selesai'];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: filters.map((filter) {
-          final isSelected = _selectedFilter == filter;
+          final isSelected = provider.selectedFilter == filter;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ChoiceChip(
@@ -226,9 +225,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               onSelected: (val) {
                 if (val) {
-                  setState(() {
-                    _selectedFilter = filter;
-                  });
+                  provider.updateSelectedFilter(filter);
                 }
               },
             ),
@@ -239,7 +236,7 @@ class _ResourceScreenState extends State<ResourceScreen> {
   }
 
   /// Tampilan jika filter kosong
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyState(ThemeData theme, String selectedFilter) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Column(
@@ -252,9 +249,9 @@ class _ResourceScreenState extends State<ResourceScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            _selectedFilter == 'Semua'
+            selectedFilter == 'Semua'
                 ? 'Belum ada referensi terdaftar. Tambahkan tautan materi belajar Anda!'
-                : 'Tidak ada materi dengan status: $_selectedFilter',
+                : 'Tidak ada materi dengan status: $selectedFilter',
             style: TextStyle(color: theme.hintColor, fontSize: 12.5),
             textAlign: TextAlign.center,
           ),

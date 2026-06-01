@@ -22,6 +22,7 @@ class SkillProvider extends ChangeNotifier {
   // State tambahan untuk Modul Resource & Progress rekan tim
   String _defaultLang = 'id';
   bool _isNotificationEnabled = true;
+  String _selectedFilter = 'Semua';
 
   // State untuk Modul Resource (Materi & Referensi)
   List<Resource> _resources = [];
@@ -37,6 +38,7 @@ class SkillProvider extends ChangeNotifier {
   // Getter tambahan
   String get defaultLang => _defaultLang;
   bool get isNotificationEnabled => _isNotificationEnabled;
+  String get selectedFilter => _selectedFilter;
   List<Resource> get resources {
     // Pengamanan tambahan untuk hot-reload state injection pada Flutter Web
     final dynamic list = _resources;
@@ -80,6 +82,7 @@ class SkillProvider extends ChangeNotifier {
       // Memuat preferensi tambahan
       _defaultLang = await _prefsHelper.getDefaultLang();
       _isNotificationEnabled = await _prefsHelper.getIsNotificationEnabled();
+      _selectedFilter = await _prefsHelper.getResourceFilter();
 
       // 2. Mengambil data dari database
       await refreshCategories();
@@ -131,6 +134,12 @@ class SkillProvider extends ChangeNotifier {
     _isNotificationEnabled = enabled;
     notifyListeners();
     await _prefsHelper.setIsNotificationEnabled(enabled);
+  }
+
+  Future<void> updateSelectedFilter(String filter) async {
+    _selectedFilter = filter;
+    notifyListeners();
+    await _prefsHelper.setResourceFilter(filter);
   }
 
   // ==========================================

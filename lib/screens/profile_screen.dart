@@ -98,6 +98,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider, ThemeData theme) {
+    final skillProvider = Provider.of<SkillProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (ctx) {
@@ -109,17 +110,17 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 Icon(Icons.logout_rounded, color: theme.colorScheme.error),
                 const SizedBox(width: 8),
-                const Text('Keluar Sesi', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(skillProvider.translate('logout_session'), style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            content: const Text(
-              'Apakah Anda yakin ingin keluar dari akun Anda? Seluruh pencapaian belajarmu tetap tersimpan dengan aman.',
-              style: TextStyle(fontSize: 14, height: 1.4),
+            content: Text(
+              skillProvider.translate('logout_confirm'),
+              style: const TextStyle(fontSize: 14, height: 1.4),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('Batal', style: TextStyle(color: theme.hintColor)),
+                child: Text(skillProvider.translate('cancel'), style: TextStyle(color: theme.hintColor)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -134,15 +135,15 @@ class ProfileScreen extends StatelessWidget {
                   
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Anda telah berhasil keluar akun! Sampai jumpa lagi! 👋'),
+                      SnackBar(
+                        content: Text(skillProvider.translate('logout_success')),
                         backgroundColor: Colors.blueGrey,
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
                   }
                 },
-                child: const Text('Keluar'),
+                child: Text(skillProvider.translate('logout')),
               ),
             ],
           ),
@@ -227,6 +228,8 @@ class ProfileScreen extends StatelessWidget {
               }
             }
 
+            final skillProvider = Provider.of<SkillProvider>(context, listen: false);
+
             return SafeArea(
               child: Padding(
                 padding: EdgeInsets.only(
@@ -253,9 +256,9 @@ class ProfileScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Ubah Profil & Informasi',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                            Text(
+                              skillProvider.translate('edit_profile'),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                             ),
                             IconButton(
                               icon: const Icon(Icons.close_rounded),
@@ -269,12 +272,12 @@ class ProfileScreen extends StatelessWidget {
                         TextFormField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            labelText: 'Nama Lengkap',
+                            labelText: skillProvider.translate('full_name'),
                             prefixIcon: const Icon(Icons.person_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                           validator: (val) {
-                            if (val == null || val.trim().isEmpty) return 'Nama tidak boleh kosong';
+                            if (val == null || val.trim().isEmpty) return skillProvider.translate('name_empty');
                             return null;
                           },
                           textCapitalization: TextCapitalization.words,
@@ -286,13 +289,13 @@ class ProfileScreen extends StatelessWidget {
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: 'Email Akun',
+                            labelText: skillProvider.translate('email_account'),
                             prefixIcon: const Icon(Icons.email_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                           validator: (val) {
-                            if (val == null || val.trim().isEmpty) return 'Email tidak boleh kosong';
-                            if (!val.contains('@')) return 'Email tidak valid';
+                            if (val == null || val.trim().isEmpty) return skillProvider.translate('email_empty');
+                            if (!val.contains('@')) return skillProvider.translate('email_invalid');
                             return null;
                           },
                         ),
@@ -303,7 +306,7 @@ class ProfileScreen extends StatelessWidget {
                           controller: phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
-                            labelText: 'Nomor Telepon',
+                            labelText: skillProvider.translate('phone_number'),
                             prefixIcon: const Icon(Icons.phone_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
@@ -327,9 +330,9 @@ class ProfileScreen extends StatelessWidget {
                                 children: [
                                   Icon(Icons.photo_library_rounded, color: theme.colorScheme.primary, size: 20),
                                   const SizedBox(width: 8),
-                                  const Text(
-                                    'Gunakan Foto Anda Sendiri',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  Text(
+                                    skillProvider.translate('use_own_photo'),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                   ),
                                 ],
                               ),
@@ -365,8 +368,8 @@ class ProfileScreen extends StatelessWidget {
                                       children: [
                                         Text(
                                           (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
-                                              ? 'Foto kustom Anda aktif!'
-                                              : 'Menggunakan archetype/klasik.',
+                                              ? skillProvider.translate('custom_photo_active')
+                                              : skillProvider.translate('using_archetype'),
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
@@ -376,9 +379,9 @@ class ProfileScreen extends StatelessWidget {
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-                                        const Text(
-                                          'Pilih foto kecil (< 1MB) agar penyimpanan tetap awet.',
-                                          style: TextStyle(fontSize: 10, height: 1.3),
+                                        Text(
+                                          skillProvider.translate('choose_small_photo'),
+                                          style: const TextStyle(fontSize: 10, height: 1.3),
                                         ),
                                       ],
                                     ),
@@ -391,7 +394,7 @@ class ProfileScreen extends StatelessWidget {
                               OutlinedButton.icon(
                                 onPressed: pickCustomImage,
                                 icon: const Icon(Icons.cloud_upload_rounded, size: 16),
-                                label: const Text('Pilih File dari Perangkat'),
+                                label: Text(skillProvider.translate('choose_file_device')),
                                 style: OutlinedButton.styleFrom(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -399,14 +402,14 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               
                               const SizedBox(height: 10),
-                              const Center(child: Text('atau', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                              Center(child: Text(skillProvider.translate('or'), style: const TextStyle(fontSize: 11, color: Colors.grey))),
                               const SizedBox(height: 10),
                               
                               // Cara 2: Paste URL Gambar
                               TextFormField(
                                 controller: urlController,
                                 decoration: InputDecoration(
-                                  labelText: 'Tautan/URL Gambar Web',
+                                  labelText: skillProvider.translate('web_image_url'),
                                   hintText: 'https://example.com/profile.jpg',
                                   prefixIcon: const Icon(Icons.link_rounded),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -425,9 +428,9 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 20),
 
                         // Pilihan Avatar Archetype
-                        const Text(
-                          'Atau Pilih Karakter Archetype',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        Text(
+                          skillProvider.translate('or_choose_archetype'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         const SizedBox(height: 10),
 
@@ -474,9 +477,9 @@ class ProfileScreen extends StatelessWidget {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      const Text(
-                                        'Klasik',
-                                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                      Text(
+                                        skillProvider.translate('classic'),
+                                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                                         textAlign: TextAlign.center,
                                       ),
                                     ],
@@ -556,8 +559,8 @@ class ProfileScreen extends StatelessWidget {
                               if (context.mounted) {
                                 if (errMsg == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Profil & Informasi Akun berhasil diperbarui! 💖'),
+                                    SnackBar(
+                                      content: Text(skillProvider.translate('profile_updated')),
                                       behavior: SnackBarBehavior.floating,
                                     ),
                                   );
@@ -575,7 +578,7 @@ class ProfileScreen extends StatelessWidget {
                             }
                           },
                           icon: const Icon(Icons.check_rounded, size: 18),
-                          label: const Text('Simpan Perubahan'),
+                          label: Text(skillProvider.translate('save_changes')),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             backgroundColor: theme.colorScheme.primary,
@@ -619,7 +622,7 @@ class ProfileScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Profil Pengguna', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(skillProvider.translate('user_profile'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
       ),
       body: Stack(
@@ -736,7 +739,7 @@ class ProfileScreen extends StatelessWidget {
                         TextButton.icon(
                           onPressed: () => _showEditProfileBottomSheet(context, authProvider, theme),
                           icon: const Icon(Icons.edit_rounded, size: 14),
-                          label: const Text('Edit Profil & Informasi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          label: Text(skillProvider.translate('edit_profile_info'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                           style: TextButton.styleFrom(
                             foregroundColor: theme.colorScheme.primary,
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -750,7 +753,7 @@ class ProfileScreen extends StatelessWidget {
                         Chip(
                           avatar: Icon(Icons.calendar_today_rounded, size: 12, color: theme.colorScheme.primary),
                           label: Text(
-                            'Bergabung: $formattedDate',
+                            skillProvider.translate('joined', args: [formattedDate]),
                             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -767,7 +770,7 @@ class ProfileScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Pencapaian Belajar Anda',
+                      skillProvider.translate('learning_achievements'),
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -778,7 +781,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildStatCard(
                         theme, 
                         Icons.dashboard_customize_rounded, 
-                        'Kategori', 
+                        skillProvider.translate('categories'), 
                         '${skillProvider.categories.length}',
                         theme.colorScheme.primary,
                       ),
@@ -786,7 +789,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildStatCard(
                         theme, 
                         Icons.workspace_premium_rounded, 
-                        'Keahlian', 
+                        skillProvider.translate('nav_skills'), 
                         '${skillProvider.skills.length}',
                         theme.colorScheme.secondary,
                       ),
@@ -794,7 +797,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildStatCard(
                         theme, 
                         Icons.menu_book_rounded, 
-                        'Referensi', 
+                        skillProvider.translate('nav_resources'), 
                         '${skillProvider.resources.length}',
                         Colors.orange,
                       ),
@@ -806,7 +809,7 @@ class ProfileScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Preferensi & Setelan',
+                      skillProvider.translate('preferences_settings'),
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -822,8 +825,8 @@ class ProfileScreen extends StatelessWidget {
                           // 1. Switch Notifikasi
                           ListTile(
                             leading: Icon(Icons.notifications_active_outlined, color: theme.colorScheme.primary),
-                            title: const Text('Notifikasi Belajar Harian', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: const Text('Kirim pengingat belajar berkala', style: TextStyle(fontSize: 11)),
+                            title: Text(skillProvider.translate('daily_notifications'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            subtitle: Text(skillProvider.translate('periodic_reminders'), style: const TextStyle(fontSize: 11)),
                             trailing: Switch(
                               value: skillProvider.isNotificationEnabled,
                               onChanged: (val) {
@@ -831,7 +834,7 @@ class ProfileScreen extends StatelessWidget {
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(val ? 'Notifikasi belajar aktif! 🔔' : 'Notifikasi belajar nonaktif! 🔕'),
+                                    content: Text(val ? skillProvider.translate('notification_active') : skillProvider.translate('notification_inactive')),
                                     duration: const Duration(seconds: 1),
                                     behavior: SnackBarBehavior.floating,
                                   ),
@@ -847,9 +850,9 @@ class ProfileScreen extends StatelessWidget {
                               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
                               color: Colors.purple,
                             ),
-                            title: const Text('Mode Gelap / Tema', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            title: Text(skillProvider.translate('dark_mode'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                             subtitle: Text(
-                              isDark ? 'Tema gelap elegan aktif' : 'Tema terang dinamis aktif',
+                              isDark ? skillProvider.translate('dark_theme_active') : skillProvider.translate('light_theme_active'),
                               style: const TextStyle(fontSize: 11),
                             ),
                             trailing: Switch(
@@ -862,8 +865,8 @@ class ProfileScreen extends StatelessWidget {
                           // 3. Dropdown Bahasa Default
                           ListTile(
                             leading: const Icon(Icons.language_rounded, color: Colors.blue),
-                            title: const Text('Bahasa Utama Konten', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: const Text('Bahasa rujukan untuk artikel/materi', style: TextStyle(fontSize: 11)),
+                            title: Text(skillProvider.translate('main_language'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            subtitle: Text(skillProvider.translate('language_desc'), style: const TextStyle(fontSize: 11)),
                             trailing: DropdownButton<String>(
                               value: skillProvider.defaultLang,
                               underline: const SizedBox(),
@@ -878,7 +881,7 @@ class ProfileScreen extends StatelessWidget {
                                   ScaffoldMessenger.of(context).clearSnackBars();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Bahasa rujukan diubah ke: ${val.toUpperCase()} 🌐'),
+                                      content: Text(skillProvider.translate('lang_changed', args: [val.toUpperCase()])),
                                       duration: const Duration(seconds: 1),
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -906,9 +909,9 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       onPressed: () => _showLogoutDialog(context, authProvider, theme),
                       icon: const Icon(Icons.logout_rounded, size: 18),
-                      label: const Text(
-                        'Keluar dari Sesi Aktif',
-                        style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.3),
+                      label: Text(
+                        skillProvider.translate('logout_active_session'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.3),
                       ),
                     ),
                   ),

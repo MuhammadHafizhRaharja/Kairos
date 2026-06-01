@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Row(
                           children: [
                             Text(
-                              'Halo, ',
+                              '${provider.translate('hello')}, ',
                               style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.normal,
                               ),
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
 
               // 2. MOTIVATIONAL BANNER DENGAN DESAIN PREMIUM GRADIENT
-              _buildMotivationalBanner(theme),
+              _buildMotivationalBanner(theme, provider),
               const SizedBox(height: 20),
 
               // 3. GRAFIK RING KEMAJUAN KUSTOM
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // 7. AKSES FITUR UTAMA (HORIZONTAL GRID DENGAN PREMIUM GRADIENT CARD)
               Text(
-                'Menu Navigasi Fitur',
+                provider.translate('nav_menu'),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -171,8 +171,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: _buildFeatureBarItem(
                       context: context,
-                      title: 'Keahlian',
-                      subtitle: '${provider.skills.length} Keahlian',
+                      title: provider.translate('nav_skills'),
+                      subtitle: '${provider.skills.length} ${provider.translate('nav_skills')}',
                       icon: Icons.emoji_events_rounded,
                       startColor: theme.colorScheme.primary,
                       endColor: theme.colorScheme.primary.withValues(
@@ -185,10 +185,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: _buildFeatureBarItem(
                       context: context,
-                      title: 'Referensi',
+                      title: provider.translate('nav_resources'),
                       subtitle: provider.isNotificationEnabled
-                          ? 'Notifikasi Aktif'
-                          : 'Notifikasi Mati',
+                          ? provider.translate('notifications_active')
+                          : provider.translate('notifications_off'),
                       icon: Icons.auto_stories_rounded,
                       startColor: const Color(0xFF4CAF50),
                       endColor: const Color(0xFF81C784),
@@ -199,8 +199,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: _buildFeatureBarItem(
                       context: context,
-                      title: 'Jurnal',
-                      subtitle: 'Font ${context.watch<ProgressProvider>().fontSize.toInt()} pt',
+                      title: provider.translate('nav_journal'),
+                      subtitle: provider.translate('font_size_pt', args: [context.watch<ProgressProvider>().fontSize.toInt().toString()]),
                       icon: Icons.trending_up_rounded,
                       startColor: const Color(0xFFFF9800),
                       endColor: const Color(0xFFFFB74D),
@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Banner motivasi premium
-  Widget _buildMotivationalBanner(ThemeData theme) {
+  Widget _buildMotivationalBanner(ThemeData theme, SkillProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -250,9 +250,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Fokus & Konsisten',
-                  style: TextStyle(
+                Text(
+                  provider.translate('focus_consistent'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Langkah kecil setiap hari akan mengakumulasi perubahan besar. Keahlian apa yang ingin kamu asah hari ini?',
+                  provider.translate('quote_body'),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 11.5,
@@ -291,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Aktivitas Keahlian Terkini',
+              provider.translate('recent_activity'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -478,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Cincin Kemajuan',
+                  provider.translate('progress_rings'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -501,19 +501,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       _buildRingLegendItem(
                         color: theme.colorScheme.primary,
-                        label: 'Modul Skill',
+                        label: provider.translate('skill_module'),
                         value: '${(skillProgress * 100).toInt()}%',
                       ),
                       const SizedBox(height: 10),
                       _buildRingLegendItem(
                         color: const Color(0xFF4CAF50),
-                        label: 'Modul Resource',
+                        label: provider.translate('resource_module'),
                         value: '${(resourceProgress * 100).toInt()}%',
                       ),
                       const SizedBox(height: 10),
                       _buildRingLegendItem(
                         color: const Color(0xFFFF9800),
-                        label: 'Modul Progress',
+                        label: provider.translate('progress_module'),
                         value: '${(progressLogProgress * 100).toInt()}%',
                       ),
                     ],
@@ -568,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildMiniStatCard(
             context: context,
-            title: 'Kategori',
+            title: provider.translate('categories'),
             value: totalCategories.toString(),
             icon: Icons.category_rounded,
             color: theme.colorScheme.primary,
@@ -578,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildMiniStatCard(
             context: context,
-            title: 'Keahlian Aktif',
+            title: provider.translate('active_skills'),
             value: totalSkills.toString(),
             icon: Icons.bolt_rounded,
             color: theme.colorScheme.secondary,

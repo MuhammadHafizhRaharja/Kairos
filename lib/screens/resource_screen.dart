@@ -72,7 +72,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Sumber Belajar',
+          provider.translate('learning_resources'),
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -80,14 +80,14 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
+          tabs: [
             Tab(
-              icon: Icon(Icons.menu_book_rounded, size: 20),
-              text: 'Materi Belajar',
+              icon: const Icon(Icons.menu_book_rounded, size: 20),
+              text: provider.translate('study_materials'),
             ),
             Tab(
-              icon: Icon(Icons.bookmark_added_rounded, size: 20),
-              text: 'Referensi Tambahan',
+              icon: const Icon(Icons.bookmark_added_rounded, size: 20),
+              text: provider.translate('additional_references'),
             ),
           ],
           indicatorSize: TabBarIndicatorSize.tab,
@@ -105,6 +105,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
               children: [
                 _buildStatsBanner(
                   theme,
+                  provider,
                   totalMateri,
                   completedMateri,
                   readingMateri,
@@ -160,7 +161,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
             }
           },
           icon: const Icon(Icons.add_rounded),
-          label: Text(_tabController.index == 0 ? 'Tambah Materi' : 'Tambah Referensi'),
+          label: Text(_tabController.index == 0 ? provider.translate('add_material') : provider.translate('add_reference')),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
         ),
@@ -171,6 +172,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
   /// Membuat visualisasi statistik ringkas modul Resource
   Widget _buildStatsBanner(
     ThemeData theme,
+    SkillProvider provider,
     int total,
     int completed,
     int reading,
@@ -221,17 +223,17 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Progres Pembelajaran',
+                  provider.translate('learning_progress'),
                   style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildMiniStat('Total', total.toString(), theme),
-                    _buildMiniStat('Selesai', completed.toString(), theme, color: const Color(0xFF4CAF50)),
-                    _buildMiniStat('Membaca', reading.toString(), theme, color: const Color(0xFFFF9800)),
-                    _buildMiniStat('Unread', unread.toString(), theme),
+                    _buildMiniStat(provider.translate('total'), total.toString(), theme),
+                    _buildMiniStat(provider.translate('completed'), completed.toString(), theme, color: const Color(0xFF4CAF50)),
+                    _buildMiniStat(provider.translate('reading'), reading.toString(), theme, color: const Color(0xFFFF9800)),
+                    _buildMiniStat(provider.translate('unread'), unread.toString(), theme),
                   ],
                 ),
               ],
@@ -265,18 +267,25 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
 
   /// Chips untuk filter status resources
   Widget _buildFilterChips(ThemeData theme, SkillProvider provider) {
-    final filters = ['Semua', 'Belum Dibaca', 'Sedang Dibaca', 'Selesai'];
+    final filters = [
+      {'key': 'Semua', 'label': provider.translate('filter_all')},
+      {'key': 'Belum Dibaca', 'label': provider.translate('filter_unread')},
+      {'key': 'Sedang Dibaca', 'label': provider.translate('filter_reading')},
+      {'key': 'Selesai', 'label': provider.translate('filter_completed')},
+    ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: filters.map((filter) {
-          final isSelected = provider.selectedFilter == filter;
+        children: filters.map((f) {
+          final filterKey = f['key']!;
+          final filterLabel = f['label']!;
+          final isSelected = provider.selectedFilter == filterKey;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ChoiceChip(
               label: Text(
-                filter,
+                filterLabel,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -289,7 +298,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               onSelected: (val) {
                 if (val) {
-                  provider.updateSelectedFilter(filter);
+                  provider.updateSelectedFilter(filterKey);
                 }
               },
             ),
@@ -299,51 +308,67 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     );
   }
 
-  /// Tampilan jika filter kosong
   Widget _buildEmptyState(ThemeData theme, String selectedFilter) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Column(
-        children: [
-          Icon(Icons.auto_stories_rounded, size: 72, color: theme.hintColor.withValues(alpha: 0.3)),
-          const SizedBox(height: 16),
-          Text(
-            'Tidak Ada Materi',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    return Consumer<SkillProvider>(
+      builder: (context, skillProv, _) {
+        String localizedFilter = selectedFilter;
+        if (selectedFilter == 'Belum Dibaca') {
+          localizedFilter = skillProv.translate('filter_unread');
+        } else if (selectedFilter == 'Sedang Dibaca') {
+          localizedFilter = skillProv.translate('filter_reading');
+        } else if (selectedFilter == 'Selesai') {
+          localizedFilter = skillProv.translate('filter_completed');
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 48),
+          child: Column(
+            children: [
+              Icon(Icons.auto_stories_rounded, size: 72, color: theme.hintColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 16),
+              Text(
+                skillProv.translate('no_material'),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                selectedFilter == 'Semua'
+                    ? skillProv.translate('no_material_desc')
+                    : skillProv.translate('no_material_status', args: [localizedFilter]),
+                style: TextStyle(color: theme.hintColor, fontSize: 12.5),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            selectedFilter == 'Semua'
-                ? 'Belum ada materi belajar terdaftar. Tambahkan tautan materi belajar Anda!'
-                : 'Tidak ada materi dengan status: $selectedFilter',
-            style: TextStyle(color: theme.hintColor, fontSize: 12.5),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
   /// Tampilan jika referensi kosong
   Widget _buildEmptyStateForReferences(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Column(
-        children: [
-          Icon(Icons.bookmark_border_rounded, size: 72, color: theme.hintColor.withValues(alpha: 0.3)),
-          const SizedBox(height: 16),
-          Text(
-            'Tidak Ada Referensi',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    return Consumer<SkillProvider>(
+      builder: (context, skillProv, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 48),
+          child: Column(
+            children: [
+              Icon(Icons.bookmark_border_rounded, size: 72, color: theme.hintColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 16),
+              Text(
+                skillProv.translate('no_reference'),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                skillProv.translate('no_reference_desc'),
+                style: TextStyle(color: theme.hintColor, fontSize: 12.5),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Belum ada referensi tambahan. Tambahkan tautan referensi yang berguna!',
-            style: TextStyle(color: theme.hintColor, fontSize: 12.5),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
@@ -385,14 +410,14 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
         return await showDialog(
           context: context,
           builder: (dialogCtx) => AlertDialog(
-            title: const Text('Hapus?', style: TextStyle(fontWeight: FontWeight.bold)),
-            content: Text('Apakah Anda yakin ingin menghapus "${resource.title}"?'),
+            title: Text(provider.translate('delete_confirm_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            content: Text(provider.translate('delete_confirm_desc', args: [resource.title])),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Batal')),
+              TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: Text(provider.translate('cancel'))),
               ElevatedButton(
                 onPressed: () => Navigator.pop(dialogCtx, true),
                 style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error, foregroundColor: Colors.white),
-                child: const Text('Hapus'),
+                child: Text(provider.translate('delete')),
               ),
             ],
           ),
@@ -401,9 +426,10 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
       onDismissed: (direction) {
         if (resource.id != null) {
           provider.deleteResource(resource.id!);
+          final typeWord = provider.translate(isReference ? 'referensi' : 'materi');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${isReference ? "Referensi" : "Materi"} "${resource.title}" berhasil dihapus'),
+              content: Text(provider.translate('deleted_success', args: ['$typeWord "${resource.title}"'])),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 1),
             ),
@@ -430,11 +456,13 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                 );
                 provider.updateResource(updatedResource);
                 
-                String statusWord = nextStatus == 0 ? 'Belum Dibaca 💤' : (nextStatus == 1 ? 'Sedang Dibaca 📖' : 'Selesai Dibaca! 🎉');
+                String statusWord = nextStatus == 0 
+                    ? provider.translate('status_unread_icon') 
+                    : (nextStatus == 1 ? provider.translate('status_reading_icon') : provider.translate('status_completed_icon'));
                 ScaffoldMessenger.of(context).clearSnackBars();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('"${resource.title}" diubah ke: $statusWord'),
+                    content: Text(provider.translate('status_changed', args: [resource.title, statusWord])),
                     behavior: SnackBarBehavior.floating,
                     duration: const Duration(seconds: 1),
                   ),
@@ -480,7 +508,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            resource.category,
+                            _getLocalizedCategoryName(resource.category, provider.defaultLang),
                             style: TextStyle(fontSize: 10.5, color: theme.hintColor, fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -500,9 +528,9 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                       },
                       itemBuilder: (popCtx) => [
                         if (!isReference)
-                          const PopupMenuItem(value: 'status', child: Row(children: [Icon(Icons.rule_rounded, size: 16), SizedBox(width: 8), Text('Ubah Status', style: TextStyle(fontSize: 12.5))])),
-                        const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit_rounded, size: 16), SizedBox(width: 8), Text('Edit Detail', style: TextStyle(fontSize: 12.5))])),
-                        const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_rounded, color: Colors.red, size: 16), SizedBox(width: 8), Text('Hapus', style: TextStyle(color: Colors.red, fontSize: 12.5))])),
+                          PopupMenuItem(value: 'status', child: Row(children: [const Icon(Icons.rule_rounded, size: 16), const SizedBox(width: 8), Text(provider.translate('change_status'), style: const TextStyle(fontSize: 12.5))])),
+                        PopupMenuItem(value: 'edit', child: Row(children: [const Icon(Icons.edit_rounded, size: 16), const SizedBox(width: 8), Text(provider.translate('edit_details'), style: const TextStyle(fontSize: 12.5))])),
+                        PopupMenuItem(value: 'delete', child: Row(children: [const Icon(Icons.delete_rounded, color: Colors.red, size: 16), const SizedBox(width: 8), Text(provider.translate('delete'), style: const TextStyle(color: Colors.red, fontSize: 12.5))])),
                       ],
                     ),
                   ],
@@ -535,7 +563,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                         Icon(Icons.emoji_events_rounded, color: skillColor, size: 12),
                         const SizedBox(width: 4),
                         Text(
-                          'Keahlian: ${linkedSkill.name}',
+                          '${provider.translate('nav_skills')}: ${linkedSkill.name}',
                           style: TextStyle(color: skillColor, fontSize: 10.5, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -572,7 +600,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              _getStatusText(resource.status),
+                              _getStatusText(resource.status, provider),
                               style: TextStyle(
                                 fontSize: 10.5,
                                 color: _getStatusColor(resource.status),
@@ -599,7 +627,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Referensi',
+                              provider.translate('referensi'),
                               style: TextStyle(
                                 fontSize: 10.5,
                                 color: theme.colorScheme.secondary,
@@ -639,7 +667,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                             }
                           },
                           icon: const Icon(Icons.open_in_new_rounded, size: 14),
-                          label: const Text('Buka', style: TextStyle(fontSize: 11)),
+                          label: Text(provider.translate('open'), style: const TextStyle(fontSize: 11)),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
@@ -676,13 +704,13 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Pilih Status Membaca', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(provider.translate('choose_reading_status'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 16),
-              _buildQuickStatusItem(context, provider, resource, 0, 'Belum Dibaca 💤', Colors.grey),
+              _buildQuickStatusItem(context, provider, resource, 0, provider.translate('status_unread_icon'), Colors.grey),
               const Divider(height: 1),
-              _buildQuickStatusItem(context, provider, resource, 1, 'Sedang Dibaca 📖', const Color(0xFFFF9800)),
+              _buildQuickStatusItem(context, provider, resource, 1, provider.translate('status_reading_icon'), const Color(0xFFFF9800)),
               const Divider(height: 1),
-              _buildQuickStatusItem(context, provider, resource, 2, 'Selesai 🏆', const Color(0xFF4CAF50)),
+              _buildQuickStatusItem(context, provider, resource, 2, provider.translate('status_completed_icon'), const Color(0xFF4CAF50)),
             ],
           ),
         ),
@@ -730,10 +758,10 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Hapus Referensi?', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Apakah Anda yakin ingin menghapus "${resource.title}"?'),
+        title: Text(provider.translate('delete_confirm_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(provider.translate('delete_confirm_desc', args: [resource.title])),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: Text(provider.translate('cancel'))),
           ElevatedButton(
             onPressed: () {
               if (resource.id != null) {
@@ -741,14 +769,14 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                 Navigator.pop(dialogCtx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Materi "${resource.title}" berhasil dihapus'),
+                    content: Text(provider.translate('deleted_success', args: [resource.title])),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error, foregroundColor: Colors.white),
-            child: const Text('Hapus'),
+            child: Text(provider.translate('delete')),
           ),
         ],
       ),
@@ -814,8 +842,8 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                           children: [
                             Text(
                               resource == null
-                                  ? (isReference ? 'Tambah Referensi' : 'Tambah Materi Belajar')
-                                  : (isReference ? 'Edit Referensi' : 'Edit Materi Belajar'),
+                                  ? (isReference ? provider.translate('add_reference') : provider.translate('add_material'))
+                                  : (isReference ? '${provider.translate('edit')} ${provider.translate('referensi')}' : '${provider.translate('edit')} ${provider.translate('materi')}'),
                               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 17),
                             ),
                             IconButton(
@@ -830,12 +858,16 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                         TextFormField(
                           controller: titleController,
                           decoration: InputDecoration(
-                            labelText: isReference ? 'Judul Referensi' : 'Judul Materi',
+                            labelText: isReference
+                                ? (provider.defaultLang == 'id' ? 'Judul Referensi' : 'Reference Title')
+                                : (provider.defaultLang == 'id' ? 'Judul Materi' : 'Material Title'),
                             prefixIcon: const Icon(Icons.title_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                           validator: (val) {
-                            if (val == null || val.trim().isEmpty) return 'Judul tidak boleh kosong';
+                            if (val == null || val.trim().isEmpty) {
+                              return provider.defaultLang == 'id' ? 'Judul tidak boleh kosong' : 'Title cannot be empty';
+                            }
                             return null;
                           },
                           textCapitalization: TextCapitalization.sentences,
@@ -846,15 +878,19 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                         TextFormField(
                           controller: urlController,
                           decoration: InputDecoration(
-                            labelText: isReference ? 'Link / URL Referensi' : 'Link / URL Materi',
+                            labelText: isReference
+                                ? (provider.defaultLang == 'id' ? 'Link / URL Referensi' : 'Reference Link / URL')
+                                : (provider.defaultLang == 'id' ? 'Link / URL Materi' : 'Material Link / URL'),
                             prefixIcon: const Icon(Icons.link_rounded),
                             hintText: 'https://...',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                           validator: (val) {
-                            if (val == null || val.trim().isEmpty) return 'Link tidak boleh kosong';
+                            if (val == null || val.trim().isEmpty) {
+                              return provider.defaultLang == 'id' ? 'Link tidak boleh kosong' : 'Link cannot be empty';
+                            }
                             if (!val.trim().startsWith('http://') && !val.trim().startsWith('https://')) {
-                              return 'Gunakan format URL yang valid (dimulai http/https)';
+                              return provider.defaultLang == 'id' ? 'Gunakan format URL yang valid (dimulai http/https)' : 'Use valid URL format (starting with http/https)';
                             }
                             return null;
                           },
@@ -866,7 +902,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                         TextFormField(
                           controller: descController,
                           decoration: InputDecoration(
-                            labelText: 'Catatan / Deskripsi Singkat (Opsional)',
+                            labelText: provider.defaultLang == 'id' ? 'Catatan / Deskripsi Singkat (Opsional)' : 'Notes / Short Description (Optional)',
                             prefixIcon: const Icon(Icons.note_alt_rounded),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           ),
@@ -877,7 +913,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
 
                         // Chip Pilihan Kategori
                         Text(
-                          'Kategori Konten',
+                          provider.defaultLang == 'id' ? 'Kategori Konten' : 'Content Category',
                           style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
@@ -889,7 +925,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                               return Padding(
                                 padding: const EdgeInsets.only(right: 8.0),
                                 child: ChoiceChip(
-                                  label: Text(cat, style: const TextStyle(fontSize: 12)),
+                                  label: Text(_getLocalizedCategoryName(cat, provider.defaultLang), style: const TextStyle(fontSize: 12)),
                                   selected: isSelected,
                                   onSelected: (val) {
                                     if (val) {
@@ -908,21 +944,21 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                         // Chip Pilihan Status (Hanya untuk materi)
                         if (!isReference) ...[
                           Text(
-                            'Status Membaca',
+                            provider.defaultLang == 'id' ? 'Status Membaca' : 'Reading Status',
                             style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              _buildChoiceStatusChip(0, 'Belum Dibaca 💤', currentStatus, (status) {
+                              _buildChoiceStatusChip(0, provider.translate('status_unread_icon'), currentStatus, (status) {
                                 setSheetState(() => currentStatus = status);
                               }),
                               const SizedBox(width: 8),
-                              _buildChoiceStatusChip(1, 'Membaca 📖', currentStatus, (status) {
+                              _buildChoiceStatusChip(1, provider.translate('status_reading_icon'), currentStatus, (status) {
                                 setSheetState(() => currentStatus = status);
                               }),
                               const SizedBox(width: 8),
-                              _buildChoiceStatusChip(2, 'Selesai 🏆', currentStatus, (status) {
+                              _buildChoiceStatusChip(2, provider.translate('status_completed_icon'), currentStatus, (status) {
                                 setSheetState(() => currentStatus = status);
                               }),
                             ],
@@ -932,7 +968,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
 
                         // Relasi ke Skill (Keahlian)
                         Text(
-                          'Hubungkan ke Keahlian (Skill)',
+                          provider.defaultLang == 'id' ? 'Hubungkan ke Keahlian (Skill)' : 'Connect to Skill',
                           style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
@@ -944,14 +980,16 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 18),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 18),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Belum ada keahlian terdaftar. Buat keahlian terlebih dahulu di tab Keahlian untuk menghubungkan referensi.',
-                                        style: TextStyle(fontSize: 11, color: Colors.amber),
+                                        provider.defaultLang == 'id'
+                                            ? 'Belum ada keahlian terdaftar. Buat keahlian terlebih dahulu di tab Keahlian untuk menghubungkan referensi.'
+                                            : 'No skills registered yet. Create a skill in the Skills tab first to connect a reference.',
+                                        style: const TextStyle(fontSize: 11, color: Colors.amber),
                                       ),
                                     ),
                                   ],
@@ -967,16 +1005,22 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                                   child: DropdownButton<int?>(
                                     value: currentSkillId,
                                     isExpanded: true,
-                                    hint: const Text('Pilih keahlian terkait (Opsional)', style: TextStyle(fontSize: 13.5)),
+                                    hint: Text(
+                                      provider.defaultLang == 'id' ? 'Pilih keahlian terkait (Opsional)' : 'Select related skill (Optional)',
+                                      style: const TextStyle(fontSize: 13.5)
+                                    ),
                                     onChanged: (int? newValue) {
                                       setSheetState(() {
                                         currentSkillId = newValue;
                                       });
                                     },
                                     items: [
-                                      const DropdownMenuItem<int?>(
+                                      DropdownMenuItem<int?>(
                                         value: null,
-                                        child: Text('Tidak dihubungkan', style: TextStyle(fontSize: 13.5)),
+                                        child: Text(
+                                          provider.defaultLang == 'id' ? 'Tidak dihubungkan' : 'Not connected',
+                                          style: const TextStyle(fontSize: 13.5)
+                                        ),
                                       ),
                                       ...provider.skills.map((Skill skill) {
                                         return DropdownMenuItem<int?>(
@@ -990,8 +1034,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                               ),
                         const SizedBox(height: 24),
 
-                        // Tombol Aksi Simpan
-                        ElevatedButton.icon(
+                                         ElevatedButton.icon(
                           onPressed: () {
                             if (formKey.currentState!.validate()) {
                               final title = titleController.text.trim();
@@ -1010,7 +1053,11 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                                 );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('${isReference ? "Referensi" : "Materi"} "$title" berhasil ditambahkan! 🚀'),
+                                    content: Text(
+                                      provider.defaultLang == 'id'
+                                          ? '${isReference ? "Referensi" : "Materi"} "$title" berhasil ditambahkan! 🚀'
+                                          : '${isReference ? "Reference" : "Material"} "$title" successfully added! 🚀',
+                                    ),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -1030,7 +1077,11 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                                 provider.updateResource(updated);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('${isReference ? "Referensi" : "Materi"} "$title" berhasil diperbarui! 📝'),
+                                    content: Text(
+                                      provider.defaultLang == 'id'
+                                          ? '${isReference ? "Referensi" : "Materi"} "$title" berhasil diperbarui! 📝'
+                                          : '${isReference ? "Reference" : "Material"} "$title" successfully updated! 📝',
+                                    ),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -1039,9 +1090,15 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                             }
                           },
                           icon: const Icon(Icons.save_rounded, size: 18),
-                          label: Text(resource == null
-                              ? (isReference ? 'Simpan Referensi' : 'Simpan Materi')
-                              : (isReference ? 'Perbarui Referensi' : 'Perbarui Materi')),
+                          label: Text(
+                            resource == null
+                                ? (isReference
+                                    ? (provider.defaultLang == 'id' ? 'Simpan Referensi' : 'Save Reference')
+                                    : (provider.defaultLang == 'id' ? 'Simpan Materi' : 'Save Material'))
+                                : (isReference
+                                    ? (provider.defaultLang == 'id' ? 'Perbarui Referensi' : 'Update Reference')
+                                    : (provider.defaultLang == 'id' ? 'Perbarui Materi' : 'Update Material'))
+                          ),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             backgroundColor: theme.colorScheme.primary,
@@ -1061,17 +1118,6 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildChoiceStatusChip(int statusValue, String label, int selectedValue, Function(int) onSelected) {
-    final isSelected = selectedValue == statusValue;
-    return ChoiceChip(
-      label: Text(label, style: const TextStyle(fontSize: 11)),
-      selected: isSelected,
-      onSelected: (val) {
-        if (val) onSelected(statusValue);
-      },
-    );
-  }
-
   IconData _getCategoryIcon(String category) {
     switch (category) {
       case 'Video':
@@ -1087,6 +1133,30 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     }
   }
 
+  Widget _buildChoiceStatusChip(int statusValue, String label, int selectedValue, Function(int) onSelected) {
+    final isSelected = selectedValue == statusValue;
+    return ChoiceChip(
+      label: Text(label, style: const TextStyle(fontSize: 11)),
+      selected: isSelected,
+      onSelected: (val) {
+        if (val) onSelected(statusValue);
+      },
+    );
+  }
+
+  String _getLocalizedCategoryName(String cat, String lang) {
+    if (lang == 'en') {
+      switch (cat) {
+        case 'Artikel': return 'Article';
+        case 'Buku': return 'Book';
+        case 'Dokumentasi': return 'Documentation';
+        case 'Lainnya': return 'Others';
+        default: return cat;
+      }
+    }
+    return cat;
+  }
+
   Color _getStatusColor(int status) {
     switch (status) {
       case 2:
@@ -1098,14 +1168,14 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     }
   }
 
-  String _getStatusText(int status) {
+  String _getStatusText(int status, SkillProvider provider) {
     switch (status) {
       case 2:
-        return 'Selesai';
+        return provider.translate('filter_completed');
       case 1:
-        return 'Sedang Dibaca';
+        return provider.translate('filter_reading');
       default:
-        return 'Belum Dibaca';
+        return provider.translate('filter_unread');
     }
   }
 }

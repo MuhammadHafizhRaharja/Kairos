@@ -18,6 +18,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final skillProv = context.watch<SkillProvider>();
 
     return DefaultTabController(
       length: 2,
@@ -27,7 +28,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           title: Text(
-            'Jurnal Progres',
+            skillProv.translate('progress_journal'),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
@@ -40,7 +41,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.text_decrease),
-                      tooltip: 'Perkecil Teks',
+                      tooltip: skillProv.translate('decrease_text'),
                       onPressed: () {
                         if (provider.fontSize > 10.0) {
                           provider.updateFontSize(provider.fontSize - 2.0);
@@ -49,7 +50,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.text_increase),
-                      tooltip: 'Perbesar Teks',
+                      tooltip: skillProv.translate('increase_text'),
                       onPressed: () {
                         if (provider.fontSize < 30.0) {
                           provider.updateFontSize(provider.fontSize + 2.0);
@@ -62,7 +63,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             ? Icons.grid_view_rounded
                             : Icons.view_list_rounded,
                       ),
-                      tooltip: 'Ubah Tampilan',
+                      tooltip: skillProv.translate('change_view'),
                       onPressed: () {
                         provider.updateViewMode(
                           provider.viewMode == 'List' ? 'Grid' : 'List',
@@ -78,9 +79,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
             indicatorColor: theme.colorScheme.primary,
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: Colors.grey,
-            tabs: const [
-              Tab(text: 'Log Aktivitas', icon: Icon(Icons.history_edu)),
-              Tab(text: 'Tantangan', icon: Icon(Icons.emoji_events)),
+            tabs: [
+              Tab(text: skillProv.translate('activity_log'), icon: const Icon(Icons.history_edu)),
+              Tab(text: skillProv.translate('challenges'), icon: const Icon(Icons.emoji_events)),
             ],
           ),
         ),
@@ -100,26 +101,27 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 
   void _showAddDialog(BuildContext context) {
+    final skillProv = Provider.of<SkillProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (context) {
         return DefaultTabController(
           length: 2,
           child: AlertDialog(
-            title: const Text('Tambah Baru'),
+            title: Text(skillProv.translate('add_new')),
             content: SizedBox(
               width: double.maxFinite,
               height: 400,
               child: Column(
                 children: [
-                  const TabBar(
+                  TabBar(
                     tabs: [
-                      Tab(text: 'Log'),
-                      Tab(text: 'Tantangan'),
+                      Tab(text: skillProv.translate('log')),
+                      Tab(text: skillProv.translate('challenges')),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Expanded(
+                  const Expanded(
                     child: TabBarView(
                       children: [
                         _AddLogForm(),
@@ -143,11 +145,12 @@ class _ProgressLogsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProgressProvider>();
+    final skillProv = context.watch<SkillProvider>();
     final logs = provider.logs;
     final fontSize = provider.fontSize;
 
     if (logs.isEmpty) {
-      return const Center(child: Text('Belum ada log aktivitas.'));
+      return Center(child: Text(skillProv.translate('no_logs')));
     }
 
     if (provider.viewMode == 'Grid') {
@@ -172,7 +175,7 @@ class _ProgressLogsView extends StatelessWidget {
                   provider.deleteProgressLog(log.id!);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Log progres berhasil dihapus!')),
+                      SnackBar(content: Text(skillProv.translate('log_deleted'))),
                     );
                   }
                 }
@@ -196,7 +199,7 @@ class _ProgressLogsView extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '${log.durationMinutes} Menit',
+                      skillProv.translate('duration_minutes', args: [log.durationMinutes.toString()]),
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -235,7 +238,7 @@ class _ProgressLogsView extends StatelessWidget {
               ],
             ),
             trailing: Chip(
-              label: Text('${log.durationMinutes}m',
+              label: Text(skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
                   style: TextStyle(fontSize: fontSize * 0.8)),
             ),
             onTap: () => _showEditLogDialog(context, log),
@@ -245,7 +248,7 @@ class _ProgressLogsView extends StatelessWidget {
                 provider.deleteProgressLog(log.id!);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Log progres berhasil dihapus!')),
+                    SnackBar(content: Text(skillProv.translate('log_deleted'))),
                   );
                 }
               }
@@ -263,11 +266,12 @@ class _ChallengesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProgressProvider>();
+    final skillProv = context.watch<SkillProvider>();
     final challenges = provider.challenges;
     final fontSize = provider.fontSize;
 
     if (challenges.isEmpty) {
-      return const Center(child: Text('Belum ada tantangan.'));
+      return Center(child: Text(skillProv.translate('no_challenges')));
     }
 
     return ListView.builder(
@@ -307,7 +311,9 @@ class _ChallengesView extends StatelessWidget {
                   const SizedBox(height: 4),
                 ],
                 Text(
-                  'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
+                  skillProv.defaultLang == 'id'
+                      ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
+                      : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
                   style: TextStyle(
                       fontSize: fontSize * 0.8,
                       color: isCompleted ? Colors.grey : Colors.orange),
@@ -323,7 +329,7 @@ class _ChallengesView extends StatelessWidget {
                   provider.deleteChallenge(challenge.id!);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tantangan berhasil dihapus!')),
+                      SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
                     );
                   }
                 }
@@ -361,6 +367,7 @@ class _AddLogFormState extends State<_AddLogForm> {
   @override
   Widget build(BuildContext context) {
     final skills = context.watch<SkillProvider>().skills;
+    final skillProv = context.watch<SkillProvider>();
 
     return Form(
       key: _formKey,
@@ -369,13 +376,13 @@ class _AddLogFormState extends State<_AddLogForm> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Judul Aktivitas',
-                hintText: 'Contoh: Belajar Asynchronous Programming',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Judul Aktivitas' : 'Activity Title',
+                hintText: skillProv.defaultLang == 'id' ? 'Contoh: Belajar Asynchronous Programming' : 'Example: Learn Asynchronous Programming',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Judul tidak boleh kosong';
+                  return skillProv.defaultLang == 'id' ? 'Judul tidak boleh kosong' : 'Title cannot be empty';
                 }
                 return null;
               },
@@ -383,27 +390,27 @@ class _AddLogFormState extends State<_AddLogForm> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Catatan',
-                hintText: 'Tulis deskripsi progres belajar Anda',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Catatan' : 'Notes',
+                hintText: skillProv.defaultLang == 'id' ? 'Tulis deskripsi progres belajar Anda' : 'Write a description of your learning progress',
               ),
               maxLines: 3,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _durationController,
-              decoration: const InputDecoration(
-                labelText: 'Durasi (Menit)',
-                hintText: 'Contoh: 30',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Durasi (Menit)' : 'Duration (Minutes)',
+                hintText: skillProv.defaultLang == 'id' ? 'Contoh: 30' : 'Example: 30',
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Durasi tidak boleh kosong';
+                  return skillProv.defaultLang == 'id' ? 'Durasi tidak boleh kosong' : 'Duration cannot be empty';
                 }
                 final dur = int.tryParse(value);
                 if (dur == null || dur <= 0) {
-                  return 'Durasi harus berupa angka positif (> 0)';
+                  return skillProv.defaultLang == 'id' ? 'Durasi harus berupa angka positif (> 0)' : 'Duration must be a positive number (> 0)';
                 }
                 return null;
               },
@@ -411,13 +418,13 @@ class _AddLogFormState extends State<_AddLogForm> {
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
-              decoration: const InputDecoration(
-                labelText: 'Keahlian Terkait',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
               items: [
-                const DropdownMenuItem<int?>(
+                DropdownMenuItem<int?>(
                   value: null,
-                  child: Text('Global (Tanpa Keahlian)'),
+                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -446,12 +453,12 @@ class _AddLogFormState extends State<_AddLogForm> {
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Log progres berhasil ditambahkan!')),
+                      SnackBar(content: Text(skillProv.translate('add_log_success'))),
                     );
                   }
                 }
               },
-              child: const Text('Simpan Log'),
+              child: Text(skillProv.defaultLang == 'id' ? 'Simpan Log' : 'Save Log'),
             ),
           ],
         ),
@@ -498,6 +505,7 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
   @override
   Widget build(BuildContext context) {
     final skills = context.watch<SkillProvider>().skills;
+    final skillProv = context.watch<SkillProvider>();
 
     return Form(
       key: _formKey,
@@ -506,13 +514,13 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Nama Tantangan',
-                hintText: 'Contoh: Selesaikan 3 Coding Challenge',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Nama Tantangan' : 'Challenge Name',
+                hintText: skillProv.defaultLang == 'id' ? 'Contoh: Selesaikan 3 Coding Challenge' : 'Example: Solve 3 Coding Challenges',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Nama tantangan tidak boleh kosong';
+                  return skillProv.defaultLang == 'id' ? 'Nama tantangan tidak boleh kosong' : 'Challenge name cannot be empty';
                 }
                 return null;
               },
@@ -520,9 +528,9 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _descController,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi',
-                hintText: 'Tulis rincian tantangan Anda',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Deskripsi' : 'Description',
+                hintText: skillProv.defaultLang == 'id' ? 'Tulis rincian tantangan Anda' : 'Write the details of your challenge',
               ),
               maxLines: 3,
             ),
@@ -531,27 +539,29 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
               children: [
                 Expanded(
                   child: Text(
-                    'Tenggat: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
+                    skillProv.defaultLang == 'id'
+                        ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(_selectedDate)}'
+                        : 'Due: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: () => _pickDate(context),
                   icon: const Icon(Icons.calendar_month),
-                  label: const Text('Pilih Tanggal'),
+                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
-              decoration: const InputDecoration(
-                labelText: 'Keahlian Terkait',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
               items: [
-                const DropdownMenuItem<int?>(
+                DropdownMenuItem<int?>(
                   value: null,
-                  child: Text('Global (Tanpa Keahlian)'),
+                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -579,12 +589,12 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tantangan baru berhasil ditambahkan!')),
+                      SnackBar(content: Text(skillProv.translate('add_challenge_success'))),
                     );
                   }
                 }
               },
-              child: const Text('Simpan Tantangan'),
+              child: Text(skillProv.defaultLang == 'id' ? 'Simpan Tantangan' : 'Save Challenge'),
             ),
           ],
         ),
@@ -628,6 +638,7 @@ class _EditLogFormState extends State<_EditLogForm> {
   @override
   Widget build(BuildContext context) {
     final skills = context.watch<SkillProvider>().skills;
+    final skillProv = context.watch<SkillProvider>();
 
     return Form(
       key: _formKey,
@@ -636,12 +647,12 @@ class _EditLogFormState extends State<_EditLogForm> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Judul Aktivitas',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Judul Aktivitas' : 'Activity Title',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Judul tidak boleh kosong';
+                  return skillProv.defaultLang == 'id' ? 'Judul tidak boleh kosong' : 'Title cannot be empty';
                 }
                 return null;
               },
@@ -649,25 +660,25 @@ class _EditLogFormState extends State<_EditLogForm> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Catatan',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Catatan' : 'Notes',
               ),
               maxLines: 3,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _durationController,
-              decoration: const InputDecoration(
-                labelText: 'Durasi (Menit)',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Durasi (Menit)' : 'Duration (Minutes)',
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Durasi tidak boleh kosong';
+                  return skillProv.defaultLang == 'id' ? 'Durasi tidak boleh kosong' : 'Duration cannot be empty';
                 }
                 final dur = int.tryParse(value);
                 if (dur == null || dur <= 0) {
-                  return 'Durasi harus berupa angka positif (> 0)';
+                  return skillProv.defaultLang == 'id' ? 'Durasi harus berupa angka positif (> 0)' : 'Duration must be a positive number (> 0)';
                 }
                 return null;
               },
@@ -675,13 +686,13 @@ class _EditLogFormState extends State<_EditLogForm> {
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
-              decoration: const InputDecoration(
-                labelText: 'Keahlian Terkait',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
               items: [
-                const DropdownMenuItem<int?>(
+                DropdownMenuItem<int?>(
                   value: null,
-                  child: Text('Global (Tanpa Keahlian)'),
+                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -710,12 +721,12 @@ class _EditLogFormState extends State<_EditLogForm> {
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Log progres berhasil diperbarui!')),
+                      SnackBar(content: Text(skillProv.translate('edit_log_success'))),
                     );
                   }
                 }
               },
-              child: const Text('Simpan Perubahan'),
+              child: Text(skillProv.translate('save')),
             ),
           ],
         ),
@@ -772,6 +783,7 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
   @override
   Widget build(BuildContext context) {
     final skills = context.watch<SkillProvider>().skills;
+    final skillProv = context.watch<SkillProvider>();
 
     return Form(
       key: _formKey,
@@ -780,12 +792,12 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Nama Tantangan',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Nama Tantangan' : 'Challenge Name',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Nama tantangan tidak boleh kosong';
+                  return skillProv.defaultLang == 'id' ? 'Nama tantangan tidak boleh kosong' : 'Challenge name cannot be empty';
                 }
                 return null;
               },
@@ -793,8 +805,8 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _descController,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Deskripsi' : 'Description',
               ),
               maxLines: 3,
             ),
@@ -803,27 +815,29 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
               children: [
                 Expanded(
                   child: Text(
-                    'Tenggat: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
+                    skillProv.defaultLang == 'id'
+                        ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(_selectedDate)}'
+                        : 'Due: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: () => _pickDate(context),
                   icon: const Icon(Icons.calendar_month),
-                  label: const Text('Pilih Tanggal'),
+                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
-              decoration: const InputDecoration(
-                labelText: 'Keahlian Terkait',
+              decoration: InputDecoration(
+                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
               items: [
-                const DropdownMenuItem<int?>(
+                DropdownMenuItem<int?>(
                   value: null,
-                  child: Text('Global (Tanpa Keahlian)'),
+                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -852,12 +866,12 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tantangan berhasil diperbarui!')),
+                      SnackBar(content: Text(skillProv.translate('edit_challenge_success'))),
                     );
                   }
                 }
               },
-              child: const Text('Simpan Perubahan'),
+              child: Text(skillProv.translate('save')),
             ),
           ],
         ),
@@ -871,11 +885,12 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
 // =============================================================================
 
 void _showEditLogDialog(BuildContext context, ProgressLog log) {
+  final skillProv = Provider.of<SkillProvider>(context, listen: false);
   showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Edit Log Aktivitas'),
+        title: Text(skillProv.defaultLang == 'id' ? 'Edit Log Aktivitas' : 'Edit Activity Log'),
         content: SizedBox(
           width: double.maxFinite,
           height: 400,
@@ -887,11 +902,12 @@ void _showEditLogDialog(BuildContext context, ProgressLog log) {
 }
 
 void _showEditChallengeDialog(BuildContext context, Challenge challenge) {
+  final skillProv = Provider.of<SkillProvider>(context, listen: false);
   showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Edit Tantangan'),
+        title: Text(skillProv.defaultLang == 'id' ? 'Edit Tantangan' : 'Edit Challenge'),
         content: SizedBox(
           width: double.maxFinite,
           height: 450,
@@ -903,21 +919,22 @@ void _showEditChallengeDialog(BuildContext context, Challenge challenge) {
 }
 
 Future<bool> _showDeleteConfirmationDialog(BuildContext context, String title) async {
+  final skillProv = Provider.of<SkillProvider>(context, listen: false);
   return await showDialog<bool>(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Konfirmasi Hapus'),
-            content: Text('Apakah Anda yakin ingin menghapus "$title"?'),
+            title: Text(skillProv.translate('delete_confirm_title')),
+            content: Text(skillProv.translate('delete_confirm_desc', args: [title])),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Batal'),
+                child: Text(skillProv.translate('cancel')),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Hapus'),
+                child: Text(skillProv.translate('delete')),
               ),
             ],
           );

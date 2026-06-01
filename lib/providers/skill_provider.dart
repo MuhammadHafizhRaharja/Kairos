@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
 import '../data/preferences_helper.dart';
+import '../data/localization_data.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../models/resource.dart';
@@ -128,6 +129,11 @@ class SkillProvider extends ChangeNotifier {
     _defaultLang = lang;
     notifyListeners();
     await _prefsHelper.setDefaultLang(lang);
+  }
+
+  /// Melakukan penerjemahan string berdasarkan bahasa default yang aktif secara dinamis.
+  String translate(String key, {List<String>? args}) {
+    return AppLocalizations.translate(_defaultLang, key, args: args);
   }
 
   Future<void> toggleNotification(bool enabled) async {

@@ -361,6 +361,7 @@ class DatabaseHelper {
           targetDate TEXT NOT NULL,
           isCompleted INTEGER NOT NULL DEFAULT 0,
           FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
+        )
       ''');
     }
     if (oldVersion < 8) {

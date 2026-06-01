@@ -49,10 +49,18 @@ class ActivityRingsChart extends StatelessWidget {
     }
     resourceProgress = resourceProgress.clamp(0.15, 0.95);
 
-    // 3. Ring dalam (Progress Log): Responsif terhadap ukuran font catatan (mock)
-    // Pemetaan ukuran font 12 pt s.d. 24 pt ke rentang progres 0.3 s.d. 0.8
-    double progressLogProgress =
-        0.3 + ((context.watch<ProgressProvider>().fontSize - 12.0) / 12.0) * 0.5;
+    // 3. Ring dalam (Progress Log): Responsif terhadap penyelesaian tantangan dan log
+    double progressLogProgress = 0.3;
+    final progressProvider = context.watch<ProgressProvider>();
+    final challenges = progressProvider.challenges;
+    final logs = progressProvider.logs;
+    
+    if (challenges.isNotEmpty) {
+      final completed = challenges.where((c) => c.isCompleted == 1).length;
+      progressLogProgress += (completed / challenges.length) * 0.65;
+    } else if (logs.isNotEmpty) {
+      progressLogProgress += (logs.length * 0.05);
+    }
     progressLogProgress = progressLogProgress.clamp(0.15, 0.95);
 
     return SizedBox(

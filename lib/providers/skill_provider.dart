@@ -3,6 +3,7 @@ import '../data/database_helper.dart';
 import '../data/preferences_helper.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
+import '../models/resource.dart';
 
 /// State Management Provider untuk modul Skill.
 /// Menghubungkan database (SQLite) dan preferensi lokal (Shared Preferences) dengan UI.
@@ -23,6 +24,9 @@ class SkillProvider extends ChangeNotifier {
   double _fontSize = 14.0;
   String _viewMode = 'List';
 
+  // State untuk Modul Resource (Materi & Referensi)
+  List<Resource> _resources = [];
+
   // Getter untuk mengakses state dari UI
   List<SkillCategory> get categories => _categories;
   List<Skill> get skills => _skills;
@@ -35,6 +39,12 @@ class SkillProvider extends ChangeNotifier {
   bool get isNotificationEnabled => _isNotificationEnabled;
   double get fontSize => _fontSize;
   String get viewMode => _viewMode;
+  List<Resource> get resources {
+    // Pengamanan tambahan untuk hot-reload state injection pada Flutter Web
+    final dynamic list = _resources;
+    if (list == null) return [];
+    return _resources;
+  }
 
   /// Memuat seluruh data awal (kategori, skill, dan preferensi pengguna)
   /// Method ini wajib dipanggil saat inisiasi aplikasi di [main.dart].
@@ -54,6 +64,7 @@ class SkillProvider extends ChangeNotifier {
       // 2. Mengambil data dari database
       await refreshCategories();
       await refreshSkills();
+      await refreshResources();
     } catch (e) {
       debugPrint('Error saat memuat data awal: $e');
     } finally {
@@ -191,11 +202,56 @@ class SkillProvider extends ChangeNotifier {
   Future<void> deleteSkill(int id) async {
     await _dbHelper.deleteSkill(id);
     await refreshSkills(); // Perbarui daftar skill
+    await refreshResources(); // Perbarui daftar resource karena ada cascade delete dari database
   }
 
   /// Helper: Mengambil list skill yang difilter berdasarkan kategori tertentu di memori.
   /// Membantu mereduksi query database berulang ketika menampilkan detail per kategori.
   List<Skill> getSkillsForCategory(int categoryId) {
     return _skills.where((skill) => skill.categoryId == categoryId).toList();
+  }
+
+  // ==========================================
+  // OPERASI STATE & CRUD: RESOURCES
+  // ==========================================
+
+  /// Menyegarkan daftar resource materi di memori dengan data terbaru dari database.
+  Future<void> refreshResources() async {
+    _resources = await _dbHelper.getAllResources();
+    notifyListeners();
+  }
+
+  /// Create: Menambahkan resource materi baru.
+  Future<void> addResource({
+    int? skillId,
+    required String title,
+    required String url,
+    String description = '',
+    String category = 'Lainnya',
+    int status = 0,
+  }) async {
+    final newResource = Resource(
+      skillId: skillId,
+      title: title,
+      url: url,
+      description: description,
+      category: category,
+      status: status,
+      createdAt: DateTime.now(),
+    );
+    await _dbHelper.insertResource(newResource);
+    await refreshResources(); // Perbarui daftar resource materi
+  }
+
+  /// Update: Memperbarui data resource materi.
+  Future<void> updateResource(Resource resource) async {
+    await _dbHelper.updateResource(resource);
+    await refreshResources(); // Perbarui daftar resource materi
+  }
+
+  /// Delete: Menghapus data resource materi berdasarkan ID.
+  Future<void> deleteResource(int id) async {
+    await _dbHelper.deleteResource(id);
+    await refreshResources(); // Perbarui daftar resource materi
   }
 }

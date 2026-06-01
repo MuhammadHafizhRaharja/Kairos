@@ -31,13 +31,20 @@ class ActivityRingsChart extends StatelessWidget {
       skillProgress = 0.0; // Jika belum ada skill
     }
 
-    // 2. Ring tengah (Resource): Responsif terhadap status preferensi bahasa & notifikasi (mock)
-    double resourceProgress = 0.5;
+    // 2. Ring tengah (Resource): Responsif terhadap status preferensi, notifikasi, dan penyelesaian materi secara dinamis
+    double resourceProgress = 0.3;
     if (provider.isNotificationEnabled) {
-      resourceProgress += 0.2;
+      resourceProgress += 0.1;
     }
     if (provider.defaultLang == 'id') {
       resourceProgress += 0.1;
+    }
+    
+    // Penanganan null-safe tambahan
+    final resList = provider.resources;
+    if (resList.isNotEmpty) {
+      final completed = resList.where((r) => r.status == 2).length;
+      resourceProgress += (completed / resList.length) * 0.45;
     }
     resourceProgress = resourceProgress.clamp(0.15, 0.95);
 

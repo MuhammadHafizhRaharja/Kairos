@@ -1,13 +1,33 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
+import '../models/resource.dart';
 
 /// Helper class untuk mengelola database SQLite menggunakan sqflite.
 /// Menggunakan pola Singleton untuk memastikan hanya ada satu instance database yang aktif.
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+
+  // In-memory fallbacks untuk mendukung demo di Flutter Web tanpa crash SQLite
+  static final List<SkillCategory> _webCategories = [];
+  static final List<Skill> _webSkills = [];
+  static final List<Resource> _webResources = [];
+  static int _webIdCounter = 1;
+
+  void _seedWebDataIfNeeded() {
+    if (_webCategories.isEmpty) {
+      _webCategories.addAll([
+        SkillCategory(id: 1, name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3),
+        SkillCategory(id: 2, name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50),
+        SkillCategory(id: 3, name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800),
+        SkillCategory(id: 4, name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0),
+      ]);
+      _webIdCounter = 5;
+    }
+  }
 
   DatabaseHelper._init();
 
@@ -25,9 +45,10 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
       onConfigure: _configureDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -64,8 +85,42 @@ class DatabaseHelper {
       )
     ''');
 
-    // 3. Memasukkan data awal (seed data) berupa beberapa kategori default agar UI tidak kosong saat pertama run.
+    // 3. Membuat tabel Sumber & Materi Belajar (Resources) dengan relasi Foreign Key ke Skills (nullable, cascade delete)
+    await db.execute('''
+      CREATE TABLE resources (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        skillId INTEGER,
+        title TEXT NOT NULL,
+        url TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'Lainnya',
+        status INTEGER NOT NULL DEFAULT 0,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // 4. Memasukkan data awal (seed data) berupa beberapa kategori default agar UI tidak kosong saat pertama run.
     await _seedDefaultCategories(db);
+  }
+
+  /// Meng-upgrade database jika nomor versi bertambah.
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE resources (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          skillId INTEGER,
+          title TEXT NOT NULL,
+          url TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          category TEXT NOT NULL DEFAULT 'Lainnya',
+          status INTEGER NOT NULL DEFAULT 0,
+          createdAt TEXT NOT NULL,
+          FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE CASCADE
+        )
+      ''');
+    }
   }
 
   /// Memasukkan data kategori default ke dalam database.
@@ -104,12 +159,30 @@ class DatabaseHelper {
 
   /// Create: Menambahkan kategori baru.
   Future<int> insertCategory(SkillCategory category) async {
+    if (kIsWeb) {
+      _seedWebDataIfNeeded();
+      final newId = _webIdCounter++;
+      final newCat = SkillCategory(
+        id: newId,
+        name: category.name,
+        icon: category.icon,
+        colorValue: category.colorValue,
+      );
+      _webCategories.add(newCat);
+      return newId;
+    }
     final db = await instance.database;
     return await db.insert('skill_categories', category.toMap());
   }
 
   /// Read: Mengambil semua data kategori dari database.
   Future<List<SkillCategory>> getAllCategories() async {
+    if (kIsWeb) {
+      _seedWebDataIfNeeded();
+      final sorted = List<SkillCategory>.from(_webCategories);
+      sorted.sort((a, b) => a.name.compareTo(b.name));
+      return sorted;
+    }
     final db = await instance.database;
     final result = await db.query('skill_categories', orderBy: 'name ASC');
     return result.map((json) => SkillCategory.fromMap(json)).toList();
@@ -117,6 +190,15 @@ class DatabaseHelper {
 
   /// Update: Memperbarui data kategori.
   Future<int> updateCategory(SkillCategory category) async {
+    if (kIsWeb) {
+      _seedWebDataIfNeeded();
+      final idx = _webCategories.indexWhere((c) => c.id == category.id);
+      if (idx != -1) {
+        _webCategories[idx] = category;
+        return 1;
+      }
+      return 0;
+    }
     final db = await instance.database;
     return await db.update(
       'skill_categories',
@@ -129,6 +211,16 @@ class DatabaseHelper {
   /// Delete: Menghapus kategori berdasarkan ID.
   /// Karena menggunakan ON DELETE CASCADE, semua skill dengan categoryId ini otomatis terhapus.
   Future<int> deleteCategory(int id) async {
+    if (kIsWeb) {
+      _seedWebDataIfNeeded();
+      _webCategories.removeWhere((c) => c.id == id);
+      // Cascade delete skills
+      _webSkills.removeWhere((s) => s.categoryId == id);
+      // Cascade delete resources
+      final skillIds = _webSkills.map((s) => s.id).toSet();
+      _webResources.removeWhere((r) => r.skillId != null && !skillIds.contains(r.skillId));
+      return 1;
+    }
     final db = await instance.database;
     return await db.delete(
       'skill_categories',
@@ -143,12 +235,31 @@ class DatabaseHelper {
 
   /// Create: Menambahkan skill baru.
   Future<int> insertSkill(Skill skill) async {
+    if (kIsWeb) {
+      final newId = _webIdCounter++;
+      final newSkill = Skill(
+        id: newId,
+        categoryId: skill.categoryId,
+        name: skill.name,
+        description: skill.description,
+        level: skill.level,
+        progress: skill.progress,
+        createdAt: skill.createdAt,
+      );
+      _webSkills.add(newSkill);
+      return newId;
+    }
     final db = await instance.database;
     return await db.insert('skills', skill.toMap());
   }
 
   /// Read: Mengambil semua data skill tanpa memandang kategori.
   Future<List<Skill>> getAllSkills() async {
+    if (kIsWeb) {
+      final sorted = List<Skill>.from(_webSkills);
+      sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return sorted;
+    }
     final db = await instance.database;
     final result = await db.query('skills', orderBy: 'createdAt DESC');
     return result.map((json) => Skill.fromMap(json)).toList();
@@ -156,6 +267,11 @@ class DatabaseHelper {
 
   /// Read: Mengambil semua skill yang berada di bawah kategori tertentu.
   Future<List<Skill>> getSkillsByCategoryId(int categoryId) async {
+    if (kIsWeb) {
+      final filtered = _webSkills.where((s) => s.categoryId == categoryId).toList();
+      filtered.sort((a, b) => a.name.compareTo(b.name));
+      return filtered;
+    }
     final db = await instance.database;
     final result = await db.query(
       'skills',
@@ -168,6 +284,14 @@ class DatabaseHelper {
 
   /// Update: Memperbarui data skill.
   Future<int> updateSkill(Skill skill) async {
+    if (kIsWeb) {
+      final idx = _webSkills.indexWhere((s) => s.id == skill.id);
+      if (idx != -1) {
+        _webSkills[idx] = skill;
+        return 1;
+      }
+      return 0;
+    }
     final db = await instance.database;
     return await db.update(
       'skills',
@@ -179,12 +303,101 @@ class DatabaseHelper {
 
   /// Delete: Menghapus data skill berdasarkan ID.
   Future<int> deleteSkill(int id) async {
+    if (kIsWeb) {
+      _webSkills.removeWhere((s) => s.id == id);
+      _webResources.removeWhere((r) => r.skillId == id);
+      return 1;
+    }
     final db = await instance.database;
     return await db.delete('skills', where: 'id = ?', whereArgs: [id]);
   }
 
+  // ==========================================
+  // CRUD UNTUK TABEL RESOURCES
+  // ==========================================
+
+  /// Create: Menambahkan resource/referensi materi baru.
+  Future<int> insertResource(Resource resource) async {
+    if (kIsWeb) {
+      final newId = _webIdCounter++;
+      final newRes = Resource(
+        id: newId,
+        skillId: resource.skillId,
+        title: resource.title,
+        url: resource.url,
+        description: resource.description,
+        category: resource.category,
+        status: resource.status,
+        createdAt: resource.createdAt,
+      );
+      _webResources.add(newRes);
+      return newId;
+    }
+    final db = await instance.database;
+    return await db.insert('resources', resource.toMap());
+  }
+
+  /// Read: Mengambil semua data resource materi dari database.
+  Future<List<Resource>> getAllResources() async {
+    if (kIsWeb) {
+      final sorted = List<Resource>.from(_webResources);
+      sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return sorted;
+    }
+    final db = await instance.database;
+    final result = await db.query('resources', orderBy: 'createdAt DESC');
+    return result.map((json) => Resource.fromMap(json)).toList();
+  }
+
+  /// Read: Mengambil semua resource materi yang terhubung ke skill tertentu.
+  Future<List<Resource>> getResourcesBySkillId(int skillId) async {
+    if (kIsWeb) {
+      final filtered = _webResources.where((r) => r.skillId == skillId).toList();
+      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return filtered;
+    }
+    final db = await instance.database;
+    final result = await db.query(
+      'resources',
+      where: 'skillId = ?',
+      whereArgs: [skillId],
+      orderBy: 'createdAt DESC',
+    );
+    return result.map((json) => Resource.fromMap(json)).toList();
+  }
+
+  /// Update: Memperbarui data resource materi.
+  Future<int> updateResource(Resource resource) async {
+    if (kIsWeb) {
+      final idx = _webResources.indexWhere((r) => r.id == resource.id);
+      if (idx != -1) {
+        _webResources[idx] = resource;
+        return 1;
+      }
+      return 0;
+    }
+    final db = await instance.database;
+    return await db.update(
+      'resources',
+      resource.toMap(),
+      where: 'id = ?',
+      whereArgs: [resource.id],
+    );
+  }
+
+  /// Delete: Menghapus data resource materi berdasarkan ID.
+  Future<int> deleteResource(int id) async {
+    if (kIsWeb) {
+      _webResources.removeWhere((r) => r.id == id);
+      return 1;
+    }
+    final db = await instance.database;
+    return await db.delete('resources', where: 'id = ?', whereArgs: [id]);
+  }
+
   /// Menutup database jika tidak digunakan lagi (misalnya untuk pengujian).
   Future close() async {
+    if (kIsWeb) return;
     final db = await instance.database;
     db.close();
   }

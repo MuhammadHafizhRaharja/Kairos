@@ -586,10 +586,17 @@ class _HomeScreenState extends State<HomeScreen> {
       skillProgress = (totalScore / provider.skills.length).clamp(0.0, 1.0);
     }
 
-    // 2. Hitung progres Resource
-    double resourceProgress = 0.5;
-    if (provider.isNotificationEnabled) resourceProgress += 0.2;
+    // 2. Hitung progres Resource secara dinamis berdasarkan setelan dan penyelesaian materi
+    double resourceProgress = 0.3;
+    if (provider.isNotificationEnabled) resourceProgress += 0.1;
     if (provider.defaultLang == 'id') resourceProgress += 0.1;
+    
+    // Penanganan null-safe tambahan
+    final resList = provider.resources;
+    if (resList.isNotEmpty) {
+      final completed = resList.where((r) => r.status == 2).length;
+      resourceProgress += (completed / resList.length) * 0.45;
+    }
     resourceProgress = resourceProgress.clamp(0.15, 0.95);
 
     // 3. Hitung progres Progress Log

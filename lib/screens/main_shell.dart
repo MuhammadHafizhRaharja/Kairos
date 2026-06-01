@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'skill_category_screen.dart';
-import 'resource_placeholder_screen.dart';
+import 'resource_screen.dart';
 import 'progress_placeholder_screen.dart';
 
 /// Shell utama aplikasi Kairos dengan Bottom Navigation Bar Kustom yang sangat elegan dan interaktif.
@@ -30,7 +30,7 @@ class _MainShellState extends State<MainShell> {
         },
       ),
       const SkillCategoryScreen(),
-      const ResourcePlaceholderScreen(),
+      const ResourceScreen(),
       const ProgressPlaceholderScreen(),
     ];
   }

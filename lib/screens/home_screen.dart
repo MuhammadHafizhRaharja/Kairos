@@ -6,6 +6,7 @@ import '../models/skill_category.dart';
 import '../widgets/activity_rings_chart.dart';
 import '../widgets/weekly_activity_chart.dart';
 import 'skill_detail_screen.dart';
+import 'profile_screen.dart';
 
 /// Dashboard Utama aplikasi Kairos.
 /// Menjadi pintu masuk navigasi ke semua modul dan mengelola data profil serta tema utama.
@@ -99,8 +100,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 10),
                       // Tappable Avatar dengan outline bercahaya
                       GestureDetector(
-                        onTap: () =>
-                            _showEditProfileBottomSheet(context, provider),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                          );
+                        },
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -435,142 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showEditProfileBottomSheet(
-    BuildContext context,
-    SkillProvider provider,
-  ) {
-    final nameController = TextEditingController(text: provider.userName);
-    final theme = Theme.of(context);
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (modalContext) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 12,
-              bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Drag Handle Pill
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Pengaturan Profil',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.pop(modalContext),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Ubah nama panggilan Anda untuk personalisasi dashboard.',
-                  style: TextStyle(color: theme.hintColor, fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: CircleAvatar(
-                    radius: 36,
-                    backgroundColor: theme.colorScheme.primary.withValues(
-                      alpha: 0.12,
-                    ),
-                    child: Text(
-                      provider.userName.isNotEmpty
-                          ? provider.userName[0].toUpperCase()
-                          : 'K',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 28,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nama Panggilan',
-                    prefixIcon: const Icon(
-                      Icons.person_rounded,
-                      color: Colors.deepPurple,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: Colors.deepPurple,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final text = nameController.text.trim();
-                    if (text.isNotEmpty) {
-                      provider.updateUserName(text);
-                      Navigator.pop(modalContext);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Nama profil berhasil disimpan secara persisten!',
-                          ),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.save_rounded, size: 18),
-                  label: const Text('Simpan Perubahan'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildActivityRingsCard(BuildContext context, SkillProvider provider) {
     final theme = Theme.of(context);

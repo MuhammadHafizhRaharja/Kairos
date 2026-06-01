@@ -12,6 +12,7 @@ class SkillProvider extends ChangeNotifier {
   final PreferencesHelper _prefsHelper = PreferencesHelper();
 
   // State internal
+  int? _currentUserId;
   List<SkillCategory> _categories = [];
   List<Skill> _skills = [];
   String _userName = 'Pengguna Kairos';
@@ -28,6 +29,7 @@ class SkillProvider extends ChangeNotifier {
   List<Resource> _resources = [];
 
   // Getter untuk mengakses state dari UI
+  int? get currentUserId => _currentUserId;
   List<SkillCategory> get categories => _categories;
   List<Skill> get skills => _skills;
   String get userName => _userName;
@@ -44,6 +46,30 @@ class SkillProvider extends ChangeNotifier {
     final dynamic list = _resources;
     if (list == null) return [];
     return _resources;
+  }
+
+  /// Memperbarui ID user aktif dan menyegarkan workspace data secara dinamis
+  Future<void> setUserId(int? userId) async {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    
+    if (userId == null) {
+      _categories = [];
+      _skills = [];
+      _resources = [];
+      notifyListeners();
+    } else {
+      _setLoading(true);
+      try {
+        await refreshCategories();
+        await refreshSkills();
+        await refreshResources();
+      } catch (e) {
+        debugPrint('Error memuat data user-specific: $e');
+      } finally {
+        _setLoading(false);
+      }
+    }
   }
 
   /// Memuat seluruh data awal (kategori, skill, dan preferensi pengguna)
@@ -134,13 +160,14 @@ class SkillProvider extends ChangeNotifier {
 
   /// Menyegarkan daftar kategori di memori dengan data terbaru dari database.
   Future<void> refreshCategories() async {
-    _categories = await _dbHelper.getAllCategories();
+    _categories = await _dbHelper.getAllCategories(_currentUserId);
     notifyListeners();
   }
 
   /// Create: Menambahkan kategori baru.
   Future<void> addCategory(String name, String icon, int colorValue) async {
     final newCategory = SkillCategory(
+      userId: _currentUserId,
       name: name,
       icon: icon,
       colorValue: colorValue,
@@ -168,7 +195,7 @@ class SkillProvider extends ChangeNotifier {
 
   /// Menyegarkan daftar skill di memori dengan data terbaru dari database.
   Future<void> refreshSkills() async {
-    _skills = await _dbHelper.getAllSkills();
+    _skills = await _dbHelper.getAllSkills(_currentUserId);
     notifyListeners();
   }
 
@@ -181,6 +208,7 @@ class SkillProvider extends ChangeNotifier {
     double progress = 0.0,
   }) async {
     final newSkill = Skill(
+      userId: _currentUserId,
       categoryId: categoryId,
       name: name,
       description: description,
@@ -217,7 +245,7 @@ class SkillProvider extends ChangeNotifier {
 
   /// Menyegarkan daftar resource materi di memori dengan data terbaru dari database.
   Future<void> refreshResources() async {
-    _resources = await _dbHelper.getAllResources();
+    _resources = await _dbHelper.getAllResources(_currentUserId);
     notifyListeners();
   }
 
@@ -231,6 +259,7 @@ class SkillProvider extends ChangeNotifier {
     int status = 0,
   }) async {
     final newResource = Resource(
+      userId: _currentUserId,
       skillId: skillId,
       title: title,
       url: url,

@@ -2,6 +2,7 @@
 /// Digunakan untuk menyimpan tautan, referensi, dan materi belajar yang terintegrasi dengan skill tertentu.
 class Resource {
   final int? id; // ID unik (auto-increment di SQLite)
+  final int? userId; // ID Pengguna pemilik materi belajar ini
   final int? skillId; // ID Keahlian yang terhubung (opsional, nullable)
   final String title; // Judul materi (misal: "Dokumentasi Flutter", "Tips Clean Code")
   final String url; // Tautan/Link web materi
@@ -12,6 +13,7 @@ class Resource {
 
   Resource({
     this.id,
+    this.userId,
     this.skillId,
     required this.title,
     required this.url,
@@ -20,6 +22,31 @@ class Resource {
     this.status = 0,
     required this.createdAt,
   });
+
+  /// Menyalin objek Resource dengan beberapa modifikasi bidang
+  Resource copyWith({
+    int? id,
+    int? userId,
+    int? skillId,
+    String? title,
+    String? url,
+    String? description,
+    String? category,
+    int? status,
+    DateTime? createdAt,
+  }) {
+    return Resource(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      skillId: skillId ?? this.skillId,
+      title: title ?? this.title,
+      url: url ?? this.url,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   /// Mengonversi objek [Resource] menjadi [Map]
   /// Digunakan saat menyimpan data ke database SQLite.
@@ -35,6 +62,9 @@ class Resource {
     if (id != null) {
       map['id'] = id;
     }
+    if (userId != null) {
+      map['userId'] = userId;
+    }
     if (skillId != null) {
       map['skillId'] = skillId;
     }
@@ -46,6 +76,7 @@ class Resource {
   factory Resource.fromMap(Map<String, dynamic> map) {
     return Resource(
       id: map['id'] as int?,
+      userId: map['userId'] as int?,
       skillId: map['skillId'] as int?,
       title: map['title'] as String? ?? '',
       url: map['url'] as String? ?? '',

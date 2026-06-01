@@ -2,20 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/skill_provider.dart';
+import 'providers/auth_provider.dart';
 import 'screens/main_shell.dart';
+import 'screens/login_screen.dart';
 
 void main() async {
   // Wajib dipanggil untuk memastikan binding engine Flutter siap sebelum inisiasi async
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Membuat instance provider secara independen untuk memuat data awal terlebih dahulu
+  // Inisiasi SkillProvider & memuat data awal
   final skillProvider = SkillProvider();
   await skillProvider.loadInitialData();
+
+  // Inisiasi AuthProvider & memuat status sesi aktif
+  final authProvider = AuthProvider();
+  await authProvider.checkLoginStatus();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<SkillProvider>.value(value: skillProvider),
+        ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
       ],
       child: const MainApp(),
     ),
@@ -29,6 +36,20 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Memantau perubahan status mode gelap dari SkillProvider secara reaktif
     final isDarkMode = context.watch<SkillProvider>().isDarkMode;
+    // Memantau status login secara reaktif
+    final authProvider = context.watch<AuthProvider>();
+    final isLoggedIn = authProvider.isLoggedIn;
+    final currentUser = authProvider.currentUser;
+
+    // Sinkronisasi data user aktif ke SkillProvider secara reaktif dan aman
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        final skillProvider = context.read<SkillProvider>();
+        if (skillProvider.currentUserId != currentUser?.id) {
+          skillProvider.setUserId(currentUser?.id);
+        }
+      }
+    });
 
     return MaterialApp(
       title: 'Kairos - Personal Growth Tracker',
@@ -54,7 +75,8 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
       ),
-      home: const MainShell(),
+      // Jika sudah masuk, arahkan ke MainShell, jika belum, ke LoginScreen
+      home: isLoggedIn ? const MainShell() : const LoginScreen(),
     );
   }
 }

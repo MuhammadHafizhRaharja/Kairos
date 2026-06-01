@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../models/resource.dart';
+import '../models/user.dart';
 
 /// Helper class untuk mengelola database SQLite menggunakan sqflite.
 /// Menggunakan pola Singleton untuk memastikan hanya ada satu instance database yang aktif.
@@ -17,6 +18,7 @@ class DatabaseHelper {
   static final List<SkillCategory> _webCategories = [];
   static final List<Skill> _webSkills = [];
   static final List<Resource> _webResources = [];
+  static final List<User> _webUsers = [];
   static int _webIdCounter = 100;
   static bool _webDataLoaded = false;
 
@@ -33,13 +35,13 @@ class DatabaseHelper {
         _webCategories.clear();
         _webCategories.addAll(decoded.map((json) => SkillCategory.fromMap(Map<String, dynamic>.from(json))).toList());
       } else {
-        // Seed default categories jika pertama kali dibuka
+        // Seed default categories jika pertama kali dibuka (userId = null / global)
         _webCategories.clear();
         _webCategories.addAll([
-          SkillCategory(id: 1, name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3),
-          SkillCategory(id: 2, name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50),
-          SkillCategory(id: 3, name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800),
-          SkillCategory(id: 4, name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0),
+          SkillCategory(id: 1, userId: null, name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3),
+          SkillCategory(id: 2, userId: null, name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50),
+          SkillCategory(id: 3, userId: null, name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800),
+          SkillCategory(id: 4, userId: null, name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0),
         ]);
         // Simpan langsung data awal
         final categoriesJson = _webCategories.map((c) => c.toMap()).toList();
@@ -59,6 +61,13 @@ class DatabaseHelper {
         _webResources.clear();
         _webResources.addAll(decoded.map((json) => Resource.fromMap(Map<String, dynamic>.from(json))).toList());
       }
+
+      final userStr = prefs.getString('web_users');
+      if (userStr != null) {
+        final List decoded = json.decode(userStr);
+        _webUsers.clear();
+        _webUsers.addAll(decoded.map((json) => User.fromMap(Map<String, dynamic>.from(json))).toList());
+      }
       
       _webIdCounter = prefs.getInt('web_id_counter') ?? 100;
       _webDataLoaded = true;
@@ -76,10 +85,12 @@ class DatabaseHelper {
       final categoriesJson = _webCategories.map((c) => c.toMap()).toList();
       final skillsJson = _webSkills.map((s) => s.toMap()).toList();
       final resourcesJson = _webResources.map((r) => r.toMap()).toList();
+      final usersJson = _webUsers.map((u) => u.toMap()).toList();
       
       await prefs.setString('web_categories', json.encode(categoriesJson));
       await prefs.setString('web_skills', json.encode(skillsJson));
       await prefs.setString('web_resources', json.encode(resourcesJson));
+      await prefs.setString('web_users', json.encode(usersJson));
       await prefs.setInt('web_id_counter', _webIdCounter);
     } catch (e) {
       debugPrint('Error menyimpan data SharedPreferences Web: $e');
@@ -102,7 +113,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _createDB,
       onConfigure: _configureDB,
       onUpgrade: _upgradeDB,
@@ -117,10 +128,22 @@ class DatabaseHelper {
 
   /// Membuat tabel-tabel database saat database pertama kali dibuat.
   Future _createDB(Database db, int version) async {
+    // 0. Membuat tabel Pengguna (Users)
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    ''');
+
     // 1. Membuat tabel Kategori Keahlian (SkillCategories)
     await db.execute('''
       CREATE TABLE skill_categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
         name TEXT NOT NULL,
         icon TEXT NOT NULL,
         colorValue INTEGER NOT NULL
@@ -132,6 +155,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE skills (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
         categoryId INTEGER NOT NULL,
         name TEXT NOT NULL,
         description TEXT NOT NULL,
@@ -146,6 +170,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE resources (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
         skillId INTEGER,
         title TEXT NOT NULL,
         url TEXT NOT NULL,
@@ -178,27 +203,59 @@ class DatabaseHelper {
         )
       ''');
     }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          createdAt TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE skill_categories ADD COLUMN userId INTEGER');
+      } catch (e) {
+        debugPrint('Migration: userId already exists in skill_categories: $e');
+      }
+      try {
+        await db.execute('ALTER TABLE skills ADD COLUMN userId INTEGER');
+      } catch (e) {
+        debugPrint('Migration: userId already exists in skills: $e');
+      }
+      try {
+        await db.execute('ALTER TABLE resources ADD COLUMN userId INTEGER');
+      } catch (e) {
+        debugPrint('Migration: userId already exists in resources: $e');
+      }
+    }
   }
 
   /// Memasukkan data kategori default ke dalam database.
   Future _seedDefaultCategories(Database db) async {
     final defaultCategories = [
       SkillCategory(
+        userId: null, // Global
         name: 'Pemrograman',
         icon: 'code',
         colorValue: 0xFF2196F3,
       ), // Biru
       SkillCategory(
+        userId: null, // Global
         name: 'Kebugaran',
         icon: 'fitness_center',
         colorValue: 0xFF4CAF50,
       ), // Hijau
       SkillCategory(
+        userId: null, // Global
         name: 'Bahasa',
         icon: 'translate',
         colorValue: 0xFFFF9800,
       ), // Jingga
       SkillCategory(
+        userId: null, // Global
         name: 'Musik & Seni',
         icon: 'music_note',
         colorValue: 0xFF9C27B0,
@@ -208,6 +265,80 @@ class DatabaseHelper {
     for (var category in defaultCategories) {
       await db.insert('skill_categories', category.toMap());
     }
+  }
+
+  // ==========================================
+  // CRUD & AUTHENTICATION UNTUK TABEL USERS
+  // ==========================================
+
+  /// Create: Mendaftarkan user baru (Register)
+  Future<int> insertUser(User user) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      // Periksa duplikasi email secara case-insensitive
+      final exists = _webUsers.any((u) => u.email.toLowerCase() == user.email.toLowerCase());
+      if (exists) return -1; // Duplikat email
+
+      final newId = _webIdCounter++;
+      final newUser = User(
+        id: newId,
+        name: user.name,
+        email: user.email,
+        password: user.password,
+        createdAt: user.createdAt,
+      );
+      _webUsers.add(newUser);
+      await _saveWebDataToPrefs();
+      return newId;
+    }
+    final db = await instance.database;
+    try {
+      return await db.insert('users', user.toMap());
+    } catch (e) {
+      return -1; // Menangani email UNIQUE constraint error
+    }
+  }
+
+  /// Read: Mengambil user berdasarkan Email
+  Future<User?> getUserByEmail(String email) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final idx = _webUsers.indexWhere((u) => u.email.toLowerCase() == email.toLowerCase());
+      if (idx != -1) return _webUsers[idx];
+      return null;
+    }
+    final db = await instance.database;
+    final result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    }
+    return null;
+  }
+
+  /// Read: Mencocokkan email dan password untuk Login
+  Future<User?> authenticateUser(String email, String password) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final idx = _webUsers.indexWhere(
+        (u) => u.email.toLowerCase() == email.toLowerCase() && u.password == password
+      );
+      if (idx != -1) return _webUsers[idx];
+      return null;
+    }
+    final db = await instance.database;
+    final result = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    }
+    return null;
   }
 
   // ==========================================
@@ -221,6 +352,7 @@ class DatabaseHelper {
       final newId = _webIdCounter++;
       final newCat = SkillCategory(
         id: newId,
+        userId: category.userId,
         name: category.name,
         icon: category.icon,
         colorValue: category.colorValue,
@@ -233,16 +365,21 @@ class DatabaseHelper {
     return await db.insert('skill_categories', category.toMap());
   }
 
-  /// Read: Mengambil semua data kategori dari database.
-  Future<List<SkillCategory>> getAllCategories() async {
+  /// Read: Mengambil semua data kategori milik user aktif (dan default global).
+  Future<List<SkillCategory>> getAllCategories(int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final sorted = List<SkillCategory>.from(_webCategories);
-      sorted.sort((a, b) => a.name.compareTo(b.name));
-      return sorted;
+      final filtered = _webCategories.where((c) => c.userId == null || c.userId == userId).toList();
+      filtered.sort((a, b) => a.name.compareTo(b.name));
+      return filtered;
     }
     final db = await instance.database;
-    final result = await db.query('skill_categories', orderBy: 'name ASC');
+    final result = await db.query(
+      'skill_categories',
+      where: 'userId IS NULL OR userId = ?',
+      whereArgs: [userId],
+      orderBy: 'name ASC',
+    );
     return result.map((json) => SkillCategory.fromMap(json)).toList();
   }
 
@@ -300,6 +437,7 @@ class DatabaseHelper {
       final newId = _webIdCounter++;
       final newSkill = Skill(
         id: newId,
+        userId: skill.userId,
         categoryId: skill.categoryId,
         name: skill.name,
         description: skill.description,
@@ -315,32 +453,37 @@ class DatabaseHelper {
     return await db.insert('skills', skill.toMap());
   }
 
-  /// Read: Mengambil semua data skill tanpa memandang kategori.
-  Future<List<Skill>> getAllSkills() async {
+  /// Read: Mengambil semua data skill milik user aktif.
+  Future<List<Skill>> getAllSkills(int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final sorted = List<Skill>.from(_webSkills);
-      sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return sorted;
+      final filtered = _webSkills.where((s) => s.userId == userId).toList();
+      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return filtered;
     }
     final db = await instance.database;
-    final result = await db.query('skills', orderBy: 'createdAt DESC');
+    final result = await db.query(
+      'skills',
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'createdAt DESC',
+    );
     return result.map((json) => Skill.fromMap(json)).toList();
   }
 
-  /// Read: Mengambil semua skill yang berada di bawah kategori tertentu.
-  Future<List<Skill>> getSkillsByCategoryId(int categoryId) async {
+  /// Read: Mengambil semua skill yang berada di bawah kategori tertentu milik user aktif.
+  Future<List<Skill>> getSkillsByCategoryId(int categoryId, int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final filtered = _webSkills.where((s) => s.categoryId == categoryId).toList();
+      final filtered = _webSkills.where((s) => s.categoryId == categoryId && s.userId == userId).toList();
       filtered.sort((a, b) => a.name.compareTo(b.name));
       return filtered;
     }
     final db = await instance.database;
     final result = await db.query(
       'skills',
-      where: 'categoryId = ?',
-      whereArgs: [categoryId],
+      where: 'categoryId = ? AND userId = ?',
+      whereArgs: [categoryId, userId],
       orderBy: 'name ASC',
     );
     return result.map((json) => Skill.fromMap(json)).toList();
@@ -391,6 +534,7 @@ class DatabaseHelper {
       final newId = _webIdCounter++;
       final newRes = Resource(
         id: newId,
+        userId: resource.userId,
         skillId: resource.skillId,
         title: resource.title,
         url: resource.url,
@@ -407,32 +551,37 @@ class DatabaseHelper {
     return await db.insert('resources', resource.toMap());
   }
 
-  /// Read: Mengambil semua data resource materi dari database.
-  Future<List<Resource>> getAllResources() async {
+  /// Read: Mengambil semua data resource materi milik user aktif.
+  Future<List<Resource>> getAllResources(int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final sorted = List<Resource>.from(_webResources);
-      sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return sorted;
-    }
-    final db = await instance.database;
-    final result = await db.query('resources', orderBy: 'createdAt DESC');
-    return result.map((json) => Resource.fromMap(json)).toList();
-  }
-
-  /// Read: Mengambil data resource materi yang terkait dengan keahlian (skill) tertentu.
-  Future<List<Resource>> getResourcesBySkillId(int skillId) async {
-    if (kIsWeb) {
-      await _loadWebDataFromPrefs();
-      final filtered = _webResources.where((r) => r.skillId == skillId).toList();
+      final filtered = _webResources.where((r) => r.userId == userId).toList();
       filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return filtered;
     }
     final db = await instance.database;
     final result = await db.query(
       'resources',
-      where: 'skillId = ?',
-      whereArgs: [skillId],
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'createdAt DESC',
+    );
+    return result.map((json) => Resource.fromMap(json)).toList();
+  }
+
+  /// Read: Mengambil data resource materi yang terkait dengan keahlian (skill) tertentu milik user aktif.
+  Future<List<Resource>> getResourcesBySkillId(int skillId, int? userId) async {
+    if (kIsWeb) {
+      await _loadWebDataFromPrefs();
+      final filtered = _webResources.where((r) => r.skillId == skillId && r.userId == userId).toList();
+      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return filtered;
+    }
+    final db = await instance.database;
+    final result = await db.query(
+      'resources',
+      where: 'skillId = ? AND userId = ?',
+      whereArgs: [skillId, userId],
       orderBy: 'createdAt DESC',
     );
     return result.map((json) => Resource.fromMap(json)).toList();

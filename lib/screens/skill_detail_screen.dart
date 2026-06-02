@@ -4,6 +4,7 @@ import '../providers/skill_provider.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../widgets/interactive_progress_card.dart';
+import '../providers/progress_provider.dart';
 
 /// Halaman Detail Kategori yang berisi daftar keahlian (Skills) di dalamnya.
 /// Menggunakan gesture Dismissible (Swipe-to-Delete) dan kustom widget InteractiveProgressCard.
@@ -84,148 +85,46 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 12,
-                bottom: 88,
-              ),
-              itemCount:
-                  2 + (filteredSkills.isEmpty ? 1 : filteredSkills.length),
-              itemBuilder: (context, index) {
-                // Widget 1: Header summary card
-                if (index == 0) {
-                  return _buildCategorySummaryHeaderCard(
-                    context,
-                    rawSkills,
-                    categoryColor,
-                  );
-                }
-
-                // Widget 2: Panel Pencarian, Filter & Sortir
-                if (index == 1) {
-                  return _buildFilterPanel(context, categoryColor);
-                }
-
-                // Tampilkan Empty State jika tidak ada skill
-                if (filteredSkills.isEmpty) {
-                  return _buildEmptyState(
-                    context,
-                    theme,
-                    categoryColor,
-                    rawSkills.isEmpty,
-                  );
-                }
-
-                final skill = filteredSkills[index - 2];
-
-                // Menggunakan Gesture Swipe-to-Delete dengan Dismissible
-                return Dismissible(
-                  key: Key('skill_${skill.id}'),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Hapus',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.delete, color: Colors.white),
-                      ],
-                    ),
+          : CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildCategorySummaryHeaderCard(context, rawSkills, categoryColor),
+                      _buildFilterPanel(context, categoryColor),
+                      if (filteredSkills.isEmpty)
+                        _buildEmptyState(context, theme, categoryColor, rawSkills.isEmpty),
+                    ]),
                   ),
-                  confirmDismiss: (direction) async {
-                    return await _showDeleteConfirmDialog(
-                      context,
-                      skill.name,
-                      categoryColor,
-                    );
-                  },
-                  onDismissed: (direction) {
-                    provider.deleteSkill(skill.id!);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Skill "${skill.name}" berhasil dihapus'),
-                        action: SnackBarAction(
-                          label: 'Batal',
-                          textColor: Colors.amber,
-                          onPressed: () {
-                            provider.addSkill(
-                              categoryId: skill.categoryId,
-                              name: skill.name,
-                              description: skill.description,
-                              level: skill.level,
-                              progress: skill.progress,
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                  child: InteractiveProgressCard(
-                    skill: skill,
-                    themeColor: categoryColor,
-                    onProgressChanged: (newLevel, newProgress) {
-                      final updatedSkill = Skill(
-                        id: skill.id,
-                        categoryId: skill.categoryId,
-                        name: skill.name,
-                        description: skill.description,
-                        level: newLevel,
-                        progress: newProgress,
-                        createdAt: skill.createdAt,
-                      );
-                      provider.updateSkill(updatedSkill);
-                    },
-                    onLongPress: () {
-                      _showEditSkillDialog(
-                        context,
-                        provider,
-                        skill,
-                        categoryColor,
-                      );
-                    },
-                    onEdit: () {
-                      _showEditSkillDialog(
-                        context,
-                        provider,
-                        skill,
-                        categoryColor,
-                      );
-                    },
-                    onDelete: () async {
-                      final confirmed = await _showDeleteConfirmDialog(
-                        context,
-                        skill.name,
-                        categoryColor,
-                      );
-                      if (confirmed == true && context.mounted) {
-                        provider.deleteSkill(skill.id!);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Skill "${skill.name}" berhasil dihapus!',
+                ),
+                if (filteredSkills.isNotEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 88),
+                    sliver: context.watch<ProgressProvider>().viewMode == 'Grid'
+                        ? SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: 0.7,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => _buildSkillItem(context, filteredSkills[index], provider, categoryColor),
+                              childCount: filteredSkills.length,
+                            ),
+                          )
+                        : SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: _buildSkillItem(context, filteredSkills[index], provider, categoryColor),
+                              ),
+                              childCount: filteredSkills.length,
                             ),
                           ),
-                        );
-                      }
-                    },
                   ),
-                );
-              },
+              ],
             ),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
@@ -233,6 +132,112 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
         backgroundColor: categoryColor,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildSkillItem(BuildContext context, Skill skill, SkillProvider provider, Color categoryColor) {
+    return Dismissible(
+      key: Key('skill_${skill.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.redAccent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Hapus',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.delete, color: Colors.white),
+          ],
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        return await _showDeleteConfirmDialog(
+          context,
+          skill.name,
+          categoryColor,
+        );
+      },
+      onDismissed: (direction) {
+        provider.deleteSkill(skill.id!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Skill "${skill.name}" berhasil dihapus'),
+            action: SnackBarAction(
+              label: 'Batal',
+              textColor: Colors.amber,
+              onPressed: () {
+                provider.addSkill(
+                  categoryId: skill.categoryId,
+                  name: skill.name,
+                  description: skill.description,
+                  level: skill.level,
+                  progress: skill.progress,
+                );
+              },
+            ),
+          ),
+        );
+      },
+      child: InteractiveProgressCard(
+        skill: skill,
+        themeColor: categoryColor,
+        onProgressChanged: (newLevel, newProgress) {
+          final updatedSkill = Skill(
+            id: skill.id,
+            categoryId: skill.categoryId,
+            name: skill.name,
+            description: skill.description,
+            level: newLevel,
+            progress: newProgress,
+            createdAt: skill.createdAt,
+          );
+          provider.updateSkill(updatedSkill);
+        },
+        onLongPress: () {
+          _showEditSkillDialog(
+            context,
+            provider,
+            skill,
+            categoryColor,
+          );
+        },
+        onEdit: () {
+          _showEditSkillDialog(
+            context,
+            provider,
+            skill,
+            categoryColor,
+          );
+        },
+        onDelete: () async {
+          final confirmed = await _showDeleteConfirmDialog(
+            context,
+            skill.name,
+            categoryColor,
+          );
+          if (confirmed == true && context.mounted) {
+            provider.deleteSkill(skill.id!);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Skill "${skill.name}" berhasil dihapus!',
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/auth_provider.dart';
 import '../providers/skill_provider.dart';
+import '../providers/progress_provider.dart';
 
 /// Layar Detail Profil Pengguna yang mewah, interaktif, dan berdedikasi tinggi.
 class ProfileScreen extends StatelessWidget {
@@ -887,6 +888,62 @@ class ProfileScreen extends StatelessWidget {
                                     ),
                                   );
                                 }
+                              },
+                            ),
+                          ),
+                          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
+                          
+                          // 4. Pengaturan Teks (FontSize)
+                          ListTile(
+                            leading: const Icon(Icons.text_format_rounded, color: Colors.blueGrey),
+                            title: Text(skillProvider.translate('text_size') == 'text_size' ? (skillProvider.defaultLang == 'id' ? 'Ukuran Teks' : 'Text Size') : skillProvider.translate('text_size'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            subtitle: Text(skillProvider.translate('adjust_text_size') == 'adjust_text_size' ? (skillProvider.defaultLang == 'id' ? 'Ubah ukuran font aplikasi' : 'Change app font size') : skillProvider.translate('adjust_text_size'), style: const TextStyle(fontSize: 11)),
+                            trailing: Consumer<ProgressProvider>(
+                              builder: (context, progressProv, child) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.text_decrease),
+                                      onPressed: progressProv.fontSize > 10.0
+                                          ? () => progressProv.updateFontSize(progressProv.fontSize - 2.0)
+                                          : null,
+                                    ),
+                                    Text('${progressProv.fontSize.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    IconButton(
+                                      icon: const Icon(Icons.text_increase),
+                                      onPressed: progressProv.fontSize < 30.0
+                                          ? () => progressProv.updateFontSize(progressProv.fontSize + 2.0)
+                                          : null,
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
+                          
+                          // 5. Pengaturan Tampilan (View Mode)
+                          ListTile(
+                            leading: const Icon(Icons.dashboard_customize_rounded, color: Colors.teal),
+                            title: Text(skillProvider.translate('layout_view') == 'layout_view' ? (skillProvider.defaultLang == 'id' ? 'Tampilan Tata Letak' : 'Layout View') : skillProvider.translate('layout_view'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            subtitle: Text(skillProvider.translate('change_view_mode') == 'change_view_mode' ? (skillProvider.defaultLang == 'id' ? 'Ubah mode List/Grid' : 'Change List/Grid mode') : skillProvider.translate('change_view_mode'), style: const TextStyle(fontSize: 11)),
+                            trailing: Consumer<ProgressProvider>(
+                              builder: (context, progressProv, child) {
+                                return DropdownButton<String>(
+                                  value: progressProv.viewMode,
+                                  underline: const SizedBox(),
+                                  borderRadius: BorderRadius.circular(16),
+                                  items: const [
+                                    DropdownMenuItem(value: 'List', child: Text('List View', style: TextStyle(fontSize: 12))),
+                                    DropdownMenuItem(value: 'Grid', child: Text('Grid View', style: TextStyle(fontSize: 12))),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      progressProv.updateViewMode(val);
+                                    }
+                                  },
+                                );
                               },
                             ),
                           ),

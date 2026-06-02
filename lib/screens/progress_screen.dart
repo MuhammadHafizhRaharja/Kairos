@@ -40,45 +40,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ),
           ),
           actions: [
-            Consumer<ProgressProvider>(
-              builder: (context, provider, child) {
-                return Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.text_decrease),
-                      tooltip: skillProv.translate('decrease_text'),
-                      onPressed: () {
-                        if (provider.fontSize > 10.0) {
-                          provider.updateFontSize(provider.fontSize - 2.0);
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.text_increase),
-                      tooltip: skillProv.translate('increase_text'),
-                      onPressed: () {
-                        if (provider.fontSize < 30.0) {
-                          provider.updateFontSize(provider.fontSize + 2.0);
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        provider.viewMode == 'List'
-                            ? Icons.grid_view_rounded
-                            : Icons.view_list_rounded,
-                      ),
-                      tooltip: skillProv.translate('change_view'),
-                      onPressed: () {
-                        provider.updateViewMode(
-                          provider.viewMode == 'List' ? 'Grid' : 'List',
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
+            // Kontrol ukuran font dan view mode dipindahkan ke Halaman Profil
           ],
           bottom: TabBar(
             indicatorColor: theme.colorScheme.primary,
@@ -469,6 +431,102 @@ class _ChallengesView extends StatelessWidget {
 
     if (challenges.isEmpty) {
       return Center(child: Text(skillProv.translate('no_challenges')));
+    }
+
+    if (provider.viewMode == 'Grid') {
+      return GridView.builder(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: challenges.length,
+        itemBuilder: (context, index) {
+          final challenge = challenges[index];
+          final isCompleted = challenge.isCompleted == 1;
+
+          return Card(
+            margin: EdgeInsets.zero,
+            child: InkWell(
+              onTap: () => _showEditChallengeDialog(context, challenge),
+              onLongPress: () async {
+                final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
+                if (confirm && challenge.id != null) {
+                  provider.deleteChallenge(challenge.id!);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
+                    );
+                  }
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Checkbox(
+                            value: isCompleted,
+                            onChanged: (val) {
+                              if (val != null) {
+                                provider.updateChallenge(
+                                  challenge.copyWith(isCompleted: val ? 1 : 0),
+                                );
+                                if (challenge.skillId != null) {
+                                  final amount = val ? 0.2 : -0.2;
+                                  skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            challenge.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: fontSize,
+                              decoration: isCompleted ? TextDecoration.lineThrough : null,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      challenge.skillId != null
+                          ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                          : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      skillProv.defaultLang == 'id'
+                          ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
+                          : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
+                      style: TextStyle(
+                          fontSize: fontSize * 0.8,
+                          color: isCompleted ? Colors.grey : Colors.orange),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
     }
 
     return ListView.builder(

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/skill_provider.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
+import '../providers/progress_provider.dart';
 
 /// Halaman Modul Resource (Referensi & Materi Belajar) yang sangat estetis dan fungsional.
 /// Menyediakan manajemen materi belajar (CRUD) yang terintegrasi dengan database lokal
@@ -117,15 +118,29 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                 const SizedBox(height: 16),
                 filteredMateri.isEmpty
                     ? _buildEmptyState(theme, selectedFilter)
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: filteredMateri.length,
-                        itemBuilder: (context, index) {
-                          final resource = filteredMateri[index];
-                          return _buildResourceCard(context, provider, theme, resource);
-                        },
-                      ),
+                    : (context.watch<ProgressProvider>().viewMode == 'Grid'
+                        ? GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.75,
+                            ),
+                            itemCount: filteredMateri.length,
+                            itemBuilder: (context, index) {
+                              return _buildResourceCard(context, provider, theme, filteredMateri[index], isGrid: true);
+                            },
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filteredMateri.length,
+                            itemBuilder: (context, index) {
+                              return _buildResourceCard(context, provider, theme, filteredMateri[index], isGrid: false);
+                            },
+                          )),
               ],
             ),
 
@@ -135,15 +150,29 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
               children: [
                 referensiList.isEmpty
                     ? _buildEmptyStateForReferences(theme)
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: referensiList.length,
-                        itemBuilder: (context, index) {
-                          final resource = referensiList[index];
-                          return _buildResourceCard(context, provider, theme, resource);
-                        },
-                      ),
+                    : (context.watch<ProgressProvider>().viewMode == 'Grid'
+                        ? GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.75,
+                            ),
+                            itemCount: referensiList.length,
+                            itemBuilder: (context, index) {
+                              return _buildResourceCard(context, provider, theme, referensiList[index], isGrid: true);
+                            },
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: referensiList.length,
+                            itemBuilder: (context, index) {
+                              return _buildResourceCard(context, provider, theme, referensiList[index], isGrid: false);
+                            },
+                          )),
               ],
             ),
           ],
@@ -377,8 +406,9 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
     BuildContext context,
     SkillProvider provider,
     ThemeData theme,
-    Resource resource,
-  ) {
+    Resource resource, {
+    bool isGrid = false,
+  }) {
     final isReference = resource.resourceType == 'referensi';
 
     // 1. Cari relasi ke Skill
@@ -538,7 +568,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                 const SizedBox(height: 10),
 
                 // Deskripsi jika ada
-                if (resource.description.trim().isNotEmpty) ...[
+                if (resource.description.trim().isNotEmpty && !isGrid) ...[
                   Text(
                     resource.description,
                     style: TextStyle(fontSize: 12, color: theme.hintColor, height: 1.3),
@@ -549,7 +579,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                 ],
 
                 // Relasi Keahlian (Skill) jika ada
-                if (linkedSkill != null) ...[
+                if (linkedSkill != null && !isGrid) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -576,8 +606,11 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                 const SizedBox(height: 10),
 
                 // Baris Bawah: Status Badge / Referensi Badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
+                  runSpacing: 8,
                   children: [
                     // Status Badge / Referensi Badge
                     if (!isReference)
@@ -589,6 +622,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                           border: Border.all(color: _getStatusColor(resource.status).withValues(alpha: 0.2)),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
                               width: 6,
@@ -619,6 +653,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                           border: Border.all(color: theme.colorScheme.secondary.withValues(alpha: 0.2)),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.bookmark_rounded,
@@ -640,6 +675,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                     
                     // Aksi URL
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Launch link
                         TextButton.icon(
@@ -658,7 +694,7 @@ class _ResourceScreenState extends State<ResourceScreen> with SingleTickerProvid
                               await Clipboard.setData(ClipboardData(text: resource.url));
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text('Tautan disalin ke papan klip! 📋'),
                                     behavior: SnackBarBehavior.floating,
                                   ),

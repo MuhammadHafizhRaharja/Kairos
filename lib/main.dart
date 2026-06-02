@@ -61,10 +61,22 @@ class MainApp extends StatelessWidget {
       }
     });
 
+    // Memantau perubahan mode tata letak dan ukuran font global
+    final progressProvider = context.watch<ProgressProvider>();
+    final double textScale = progressProvider.fontSize / 14.0; // Baseline 14.0
+
     return MaterialApp(
       title: 'Kairos - Personal Growth Tracker',
       debugShowCheckedModeBanner: false,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child!,
+        );
+      },
       // Desain estetika mode terang dengan Google Fonts
       theme: ThemeData(
         brightness: Brightness.light,

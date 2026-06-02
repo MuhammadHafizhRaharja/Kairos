@@ -23,19 +23,59 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _getFormattedDate(String lang) {
     final now = DateTime.now();
-    final List<String> daysId = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    final List<String> monthsId = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    final List<String> daysId = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
     ];
-    final List<String> daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final List<String> monthsId = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final List<String> daysEn = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     final List<String> monthsEn = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
 
-    final dayName = lang == 'id' ? daysId[now.weekday - 1] : daysEn[now.weekday - 1];
-    final monthName = lang == 'id' ? monthsId[now.month - 1] : monthsEn[now.month - 1];
+    final dayName = lang == 'id'
+        ? daysId[now.weekday - 1]
+        : daysEn[now.weekday - 1];
+    final monthName = lang == 'id'
+        ? monthsId[now.month - 1]
+        : monthsEn[now.month - 1];
 
     return lang == 'id'
         ? '$dayName, ${now.day} $monthName ${now.year}'
@@ -112,10 +152,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               Expanded(
                                 child: Text(
                                   '$displayName! 👋',
-                                  style: theme.textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 24,
-                                  ),
+                                  style: theme.textTheme.headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 24,
+                                      ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -133,148 +174,171 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                  Row(
-                    children: [
-                      // Button Toggle Dark Mode (Shared Pref: appTheme)
-                      IconButton(
-                        icon: Icon(
-                          isDark
-                              ? Icons.light_mode_rounded
-                              : Icons.dark_mode_rounded,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
-                          side: BorderSide(
-                            color: isDark
-                                ? theme.dividerColor.withValues(alpha: 0.08)
-                                : theme.colorScheme.primary.withValues(alpha: 0.08),
-                            width: 1,
+                    Row(
+                      children: [
+                        // Button Toggle Dark Mode (Shared Pref: appTheme)
+                        IconButton(
+                          icon: Icon(
+                            isDark
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
                           ),
-                          padding: const EdgeInsets.all(12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.04),
-                          elevation: isDark ? 0 : 2,
-                        ),
-                        onPressed: () {
-                          provider.toggleTheme(!provider.isDarkMode);
-                        },
-                      ),
-                      const SizedBox(width: 10),
-                      // Tappable Avatar dengan outline bercahaya
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.5,
-                              ),
-                              width: 2.0,
+                          style: IconButton.styleFrom(
+                            backgroundColor: isDark
+                                ? theme.colorScheme.surfaceContainer
+                                : Colors.white,
+                            side: BorderSide(
+                              color: isDark
+                                  ? theme.dividerColor.withValues(alpha: 0.08)
+                                  : theme.colorScheme.primary.withValues(
+                                      alpha: 0.08,
+                                    ),
+                              width: 1,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                blurRadius: 6,
-                              ),
-                            ],
+                            padding: const EdgeInsets.all(12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            shadowColor: theme.colorScheme.primary.withValues(
+                              alpha: 0.04,
+                            ),
+                            elevation: isDark ? 0 : 2,
                           ),
-                          child: ProfileScreen.buildAvatarWidget(user?.photoPath, displayName, 20, theme),
+                          onPressed: () {
+                            provider.toggleTheme(!provider.isDarkMode);
+                          },
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // 2. MOTIVATIONAL BANNER DENGAN DESAIN PREMIUM GRADIENT
-              _buildMotivationalBanner(theme, provider),
-              const SizedBox(height: 20),
-
-              // 3. GRAFIK RING KEMAJUAN KUSTOM
-              _buildActivityRingsCard(context, provider),
-              const SizedBox(height: 20),
-
-              // 4. KARTU STATISTIK PROGRESS CEPAT
-              _buildStatsCard(context, provider),
-              const SizedBox(height: 20),
-
-              // 5. DIAGRAM BATANG AKTIVITAS MINGGUAN
-              const WeeklyActivityChart(),
-              const SizedBox(height: 24),
-
-              // 6. AKTIVITAS KEAHLIAN TERKINI (Resume belajar dengan navigasi cepat)
-              _buildRecentSkillsSection(context, provider, theme),
-              const SizedBox(height: 24),
-
-              // 7. AKSES FITUR UTAMA (HORIZONTAL GRID DENGAN PREMIUM GRADIENT CARD)
-              Text(
-                provider.translate('nav_menu'),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                        const SizedBox(width: 10),
+                        // Tappable Avatar dengan outline bercahaya
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ProfileScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.5,
+                                ),
+                                width: 2.0,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: ProfileScreen.buildAvatarWidget(
+                              user?.photoPath,
+                              displayName,
+                              20,
+                              theme,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFeatureBarItem(
-                      context: context,
-                      title: provider.translate('nav_skills'),
-                      subtitle: '${provider.skills.length} ${provider.translate('nav_skills')}',
-                      icon: Icons.emoji_events_rounded,
-                      startColor: theme.colorScheme.primary,
-                      endColor: theme.colorScheme.primary.withValues(
-                        alpha: 0.7,
+                const SizedBox(height: 20),
+
+                // 2. MOTIVATIONAL BANNER DENGAN DESAIN PREMIUM GRADIENT
+                _buildMotivationalBanner(theme, provider),
+                const SizedBox(height: 20),
+
+                // 3. GRAFIK RING KEMAJUAN KUSTOM
+                _buildActivityRingsCard(context, provider),
+                const SizedBox(height: 20),
+
+                // 4. KARTU STATISTIK PROGRESS CEPAT
+                _buildStatsCard(context, provider),
+                const SizedBox(height: 20),
+
+                // 5. DIAGRAM BATANG AKTIVITAS MINGGUAN
+                const WeeklyActivityChart(),
+                const SizedBox(height: 24),
+
+                // 6. AKTIVITAS KEAHLIAN TERKINI (Resume belajar dengan navigasi cepat)
+                _buildRecentSkillsSection(context, provider, theme),
+                const SizedBox(height: 24),
+
+                // 7. AKSES FITUR UTAMA (HORIZONTAL GRID DENGAN PREMIUM GRADIENT CARD)
+                Text(
+                  provider.translate('nav_menu'),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildFeatureBarItem(
+                        context: context,
+                        title: provider.translate('nav_skills'),
+                        subtitle:
+                            '${provider.skills.length} ${provider.translate('nav_skills')}',
+                        icon: Icons.emoji_events_rounded,
+                        startColor: theme.colorScheme.primary,
+                        endColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.7,
+                        ),
+                        onTap: () => widget.onNavigate?.call(1),
                       ),
-                      onTap: () => widget.onNavigate?.call(1),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildFeatureBarItem(
-                      context: context,
-                      title: provider.translate('nav_resources'),
-                      subtitle: provider.isNotificationEnabled
-                          ? provider.translate('notifications_active')
-                          : provider.translate('notifications_off'),
-                      icon: Icons.auto_stories_rounded,
-                      startColor: const Color(0xFF4CAF50),
-                      endColor: const Color(0xFF81C784),
-                      onTap: () => widget.onNavigate?.call(2),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildFeatureBarItem(
+                        context: context,
+                        title: provider.translate('nav_resources'),
+                        subtitle: provider.isNotificationEnabled
+                            ? provider.translate('notifications_active')
+                            : provider.translate('notifications_off'),
+                        icon: Icons.auto_stories_rounded,
+                        startColor: const Color(0xFF4CAF50),
+                        endColor: const Color(0xFF81C784),
+                        onTap: () => widget.onNavigate?.call(2),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildFeatureBarItem(
-                      context: context,
-                      title: provider.translate('nav_journal'),
-                      subtitle: provider.translate('font_size_pt', args: [context.watch<ProgressProvider>().fontSize.toInt().toString()]),
-                      icon: Icons.trending_up_rounded,
-                      startColor: const Color(0xFFFF9800),
-                      endColor: const Color(0xFFFFB74D),
-                      onTap: () => widget.onNavigate?.call(3),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildFeatureBarItem(
+                        context: context,
+                        title: provider.translate('nav_journal'),
+                        subtitle: provider.translate(
+                          'font_size_pt',
+                          args: [
+                            context
+                                .watch<ProgressProvider>()
+                                .fontSize
+                                .toInt()
+                                .toString(),
+                          ],
+                        ),
+                        icon: Icons.trending_up_rounded,
+                        startColor: const Color(0xFFFF9800),
+                        endColor: const Color(0xFFFFB74D),
+                        onTap: () => widget.onNavigate?.call(3),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   /// Banner motivasi premium
   Widget _buildMotivationalBanner(ThemeData theme, SkillProvider provider) {
@@ -306,7 +370,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 CircleAvatar(
                   radius: 26,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  child: Icon(Icons.bolt_rounded, color: Colors.amber[300], size: 30),
+                  child: Icon(
+                    Icons.bolt_rounded,
+                    color: Colors.amber[300],
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -404,10 +472,12 @@ class _HomeScreenState extends State<HomeScreen> {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+                color: isDark
+                    ? theme.colorScheme.surfaceContainer
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: isDark 
+                  color: isDark
                       ? theme.dividerColor.withValues(alpha: 0.08)
                       : theme.colorScheme.primary.withValues(alpha: 0.08),
                   width: 1,
@@ -416,7 +486,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? null
                     : [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.04),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.04,
+                          ),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -526,22 +598,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-
   Widget _buildActivityRingsCard(BuildContext context, SkillProvider provider) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final skillProgress = provider.skillProgress;
     final resourceProgress = provider.resourceProgress;
-    final progressLogProgress = context.watch<ProgressProvider>().progressLogProgress;
+    final progressLogProgress = context
+        .watch<ProgressProvider>()
+        .progressLogProgress;
 
     return Container(
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark 
+          color: isDark
               ? theme.dividerColor.withValues(alpha: 0.08)
               : theme.colorScheme.primary.withValues(alpha: 0.08),
           width: 1,
@@ -689,7 +761,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark 
+          color: isDark
               ? theme.dividerColor.withValues(alpha: 0.08)
               : theme.colorScheme.primary.withValues(alpha: 0.08),
           width: 1,
@@ -789,10 +861,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 14.0,
-            horizontal: 8.0,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
           child: Column(
             children: [
               Container(
@@ -815,7 +884,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 3),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 9.5, color: theme.colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 9.5,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

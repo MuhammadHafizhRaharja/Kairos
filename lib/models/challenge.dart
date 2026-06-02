@@ -63,7 +63,9 @@ class Challenge {
       skillId: map['skillId'] as int?,
       title: map['title'] as String? ?? '',
       description: map['description'] as String? ?? '',
-      targetDate: DateTime.parse(map['targetDate'] as String? ?? DateTime.now().toIso8601String()),
+      targetDate: DateTime.parse(
+        map['targetDate'] as String? ?? DateTime.now().toIso8601String(),
+      ),
       isCompleted: map['isCompleted'] as int? ?? 0,
     );
   }

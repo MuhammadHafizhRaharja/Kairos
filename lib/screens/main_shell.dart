@@ -76,10 +76,26 @@ class _MainShellState extends State<MainShell> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.dashboard_rounded, provider.translate('nav_home')),
-                _buildNavItem(1, Icons.emoji_events_rounded, provider.translate('nav_skills')),
-                _buildNavItem(2, Icons.auto_stories_rounded, provider.translate('nav_resources')),
-                _buildNavItem(3, Icons.trending_up_rounded, provider.translate('nav_journal')),
+                _buildNavItem(
+                  0,
+                  Icons.dashboard_rounded,
+                  provider.translate('nav_home'),
+                ),
+                _buildNavItem(
+                  1,
+                  Icons.emoji_events_rounded,
+                  provider.translate('nav_skills'),
+                ),
+                _buildNavItem(
+                  2,
+                  Icons.auto_stories_rounded,
+                  provider.translate('nav_resources'),
+                ),
+                _buildNavItem(
+                  3,
+                  Icons.trending_up_rounded,
+                  provider.translate('nav_journal'),
+                ),
               ],
             ),
           ),

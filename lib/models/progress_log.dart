@@ -69,7 +69,9 @@ class ProgressLog {
       title: map['title'] as String? ?? '',
       note: map['note'] as String? ?? '',
       durationMinutes: map['durationMinutes'] as int? ?? 0,
-      date: DateTime.parse(map['date'] as String? ?? DateTime.now().toIso8601String()),
+      date: DateTime.parse(
+        map['date'] as String? ?? DateTime.now().toIso8601String(),
+      ),
       photoPath: map['photoPath'] as String?,
     );
   }

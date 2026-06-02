@@ -2,10 +2,13 @@
 /// Digunakan untuk mengelompokkan keterampilan yang dilacak.
 class SkillCategory {
   final int? id; // ID unik (auto-increment di SQLite)
-  final int? userId; // ID Pengguna pemilik (null berarti kategori global default)
+  final int?
+  userId; // ID Pengguna pemilik (null berarti kategori global default)
   final String name; // Nama kategori (misal: "Pemrograman", "Olahraga")
-  final String icon; // Nama atau identifier ikon (misal: "code", "fitness_center")
-  final int colorValue; // Nilai warna dalam bentuk integer ARGB (misal: 0xFF4CAF50)
+  final String
+  icon; // Nama atau identifier ikon (misal: "code", "fitness_center")
+  final int
+  colorValue; // Nilai warna dalam bentuk integer ARGB (misal: 0xFF4CAF50)
 
   SkillCategory({
     this.id,

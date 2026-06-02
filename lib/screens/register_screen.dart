@@ -277,7 +277,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.secondary.withValues(alpha: isDark ? 0.25 : 0.12),
+                color: theme.colorScheme.secondary.withValues(
+                  alpha: isDark ? 0.25 : 0.12,
+                ),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),

@@ -47,8 +47,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: Colors.grey,
             tabs: [
-              Tab(text: skillProv.translate('activity_log'), icon: const Icon(Icons.history_edu)),
-              Tab(text: skillProv.translate('challenges'), icon: const Icon(Icons.emoji_events)),
+              Tab(
+                text: skillProv.translate('activity_log'),
+                icon: const Icon(Icons.history_edu),
+              ),
+              Tab(
+                text: skillProv.translate('challenges'),
+                icon: const Icon(Icons.emoji_events),
+              ),
             ],
           ),
         ),
@@ -57,16 +63,15 @@ class _ProgressScreenState extends State<ProgressScreen> {
             const _SkillFrequencyChart(),
             const Expanded(
               child: TabBarView(
-                children: [
-                  _ProgressLogsView(),
-                  _ChallengesView(),
-                ],
+                children: [_ProgressLogsView(), _ChallengesView()],
               ),
             ),
           ],
         ),
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 96.0), // Hindari tertutup navbar melayang
+          padding: const EdgeInsets.only(
+            bottom: 96.0,
+          ), // Hindari tertutup navbar melayang
           child: FloatingActionButton(
             onPressed: () => _showAddDialog(context),
             backgroundColor: theme.colorScheme.primary,
@@ -101,10 +106,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   const SizedBox(height: 16),
                   const Expanded(
                     child: TabBarView(
-                      children: [
-                        _AddLogForm(),
-                        _AddChallengeForm(),
-                      ],
+                      children: [_AddLogForm(), _AddChallengeForm()],
                     ),
                   ),
                 ],
@@ -136,7 +138,8 @@ class _SkillFrequencyChart extends StatelessWidget {
     }
     for (var challenge in provider.challenges) {
       if (challenge.skillId != null) {
-        frequencyMap[challenge.skillId!] = (frequencyMap[challenge.skillId!] ?? 0) + 1;
+        frequencyMap[challenge.skillId!] =
+            (frequencyMap[challenge.skillId!] ?? 0) + 1;
       }
     }
 
@@ -147,7 +150,7 @@ class _SkillFrequencyChart extends StatelessWidget {
     // Urutkan berdasarkan frekuensi menurun
     final sortedEntries = frequencyMap.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
+
     // Ambil top 3
     final topEntries = sortedEntries.take(3).toList();
     final maxFreq = topEntries.first.value;
@@ -158,14 +161,19 @@ class _SkillFrequencyChart extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primaryContainer.withValues(alpha: isDark ? 0.2 : 0.6),
+            theme.colorScheme.primaryContainer.withValues(
+              alpha: isDark ? 0.2 : 0.6,
+            ),
             theme.colorScheme.primary.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.15), width: 1.5),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: theme.colorScheme.primary.withValues(alpha: 0.05),
@@ -185,12 +193,22 @@ class _SkillFrequencyChart extends StatelessWidget {
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.insights_rounded, color: theme.colorScheme.primary, size: 20),
+                child: Icon(
+                  Icons.insights_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
-                skillProv.defaultLang == 'id' ? 'Fokus Keahlian' : 'Skill Focus',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: theme.colorScheme.onSurface),
+                skillProv.defaultLang == 'id'
+                    ? 'Fokus Keahlian'
+                    : 'Skill Focus',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -198,7 +216,13 @@ class _SkillFrequencyChart extends StatelessWidget {
           ...topEntries.map((entry) {
             final skill = skillProv.skills.firstWhere(
               (s) => s.id == entry.key,
-              orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now()),
+              orElse: () => Skill(
+                categoryId: 0,
+                name: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Dihapus'
+                    : 'Deleted Skill',
+                createdAt: DateTime.now(),
+              ),
             );
             final ratio = maxFreq > 0 ? entry.value / maxFreq : 0.0;
 
@@ -210,7 +234,10 @@ class _SkillFrequencyChart extends StatelessWidget {
                     flex: 3,
                     child: Text(
                       skill.name,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -225,7 +252,9 @@ class _SkillFrequencyChart extends StatelessWidget {
                             Container(
                               height: 10,
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.black.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(5),
                               ),
                             ),
@@ -236,12 +265,19 @@ class _SkillFrequencyChart extends StatelessWidget {
                               width: constraints.maxWidth * ratio,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [theme.colorScheme.primary.withValues(alpha: 0.6), theme.colorScheme.primary],
+                                  colors: [
+                                    theme.colorScheme.primary.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    theme.colorScheme.primary,
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(5),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -259,7 +295,11 @@ class _SkillFrequencyChart extends StatelessWidget {
                     child: Text(
                       '${entry.value}',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -288,7 +328,12 @@ class _ProgressLogsView extends StatelessWidget {
 
     if (provider.viewMode == 'Grid') {
       return GridView.builder(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 120,
+        ),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
@@ -300,8 +345,12 @@ class _ProgressLogsView extends StatelessWidget {
           Color skillColor = Theme.of(context).colorScheme.primary;
           if (log.skillId != null) {
             try {
-              final skill = skillProv.skills.firstWhere((s) => s.id == log.skillId);
-              final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+              final skill = skillProv.skills.firstWhere(
+                (s) => s.id == log.skillId,
+              );
+              final cat = skillProv.categories.firstWhere(
+                (c) => c.id == skill.categoryId,
+              );
               skillColor = Color(cat.colorValue);
             } catch (_) {}
           }
@@ -317,14 +366,25 @@ class _ProgressLogsView extends StatelessWidget {
             child: InkWell(
               splashColor: skillColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
-              onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
+              onTap: () => _showLogDetailModal(
+                context,
+                log,
+                skillColor,
+                skillProv,
+                provider,
+              ),
               onLongPress: () async {
-                final confirm = await _showDeleteConfirmationDialog(context, log.title);
+                final confirm = await _showDeleteConfirmationDialog(
+                  context,
+                  log.title,
+                );
                 if (confirm && log.id != null) {
                   provider.deleteProgressLog(log.id!);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('log_deleted'))),
+                      SnackBar(
+                        content: Text(skillProv.translate('log_deleted')),
+                      ),
                     );
                   }
                 }
@@ -337,31 +397,57 @@ class _ProgressLogsView extends StatelessWidget {
                     Text(
                       log.title,
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: fontSize),
+                        fontWeight: FontWeight.bold,
+                        fontSize: fontSize,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       log.skillId != null
-                          ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                          : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                      style: TextStyle(color: skillColor, fontSize: fontSize * 0.8, fontWeight: FontWeight.w600),
+                          ? skillProv.skills
+                                .firstWhere(
+                                  (s) => s.id == log.skillId,
+                                  orElse: () => Skill(
+                                    categoryId: 0,
+                                    name: skillProv.defaultLang == 'id'
+                                        ? 'Keahlian Dihapus'
+                                        : 'Deleted Skill',
+                                    createdAt: DateTime.now(),
+                                  ),
+                                )
+                                .name
+                          : (skillProv.defaultLang == 'id'
+                                ? 'Global'
+                                : 'Global'),
+                      style: TextStyle(
+                        color: skillColor,
+                        fontSize: fontSize * 0.8,
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       DateFormat('dd MMM yyyy').format(log.date),
-                      style: TextStyle(color: Colors.grey, fontSize: fontSize * 0.8),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: fontSize * 0.8,
+                      ),
                     ),
                     const Spacer(),
                     Text(
-                      skillProv.translate('duration_minutes', args: [log.durationMinutes.toString()]),
+                      skillProv.translate(
+                        'duration_minutes',
+                        args: [log.durationMinutes.toString()],
+                      ),
                       style: TextStyle(
-                          color: skillColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: fontSize * 0.9),
+                        color: skillColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: fontSize * 0.9,
+                      ),
                     ),
                   ],
                 ),
@@ -380,8 +466,12 @@ class _ProgressLogsView extends StatelessWidget {
         Color skillColor = Theme.of(context).colorScheme.primary;
         if (log.skillId != null) {
           try {
-            final skill = skillProv.skills.firstWhere((s) => s.id == log.skillId);
-            final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+            final skill = skillProv.skills.firstWhere(
+              (s) => s.id == log.skillId,
+            );
+            final cat = skillProv.categories.firstWhere(
+              (c) => c.id == skill.categoryId,
+            );
             skillColor = Color(cat.colorValue);
           } catch (_) {}
         }
@@ -397,9 +487,18 @@ class _ProgressLogsView extends StatelessWidget {
           child: InkWell(
             splashColor: skillColor.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(16),
-            onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
+            onTap: () => _showLogDetailModal(
+              context,
+              log,
+              skillColor,
+              skillProv,
+              provider,
+            ),
             onLongPress: () async {
-              final confirm = await _showDeleteConfirmationDialog(context, log.title);
+              final confirm = await _showDeleteConfirmationDialog(
+                context,
+                log.title,
+              );
               if (confirm && log.id != null) {
                 provider.deleteProgressLog(log.id!);
                 if (context.mounted) {
@@ -418,42 +517,84 @@ class _ProgressLogsView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(log.title,
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize)),
+                        child: Text(
+                          log.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: fontSize,
+                          ),
+                        ),
                       ),
                       if (log.photoPath != null && log.photoPath!.isNotEmpty)
                         const Padding(
                           padding: EdgeInsets.only(left: 8.0),
-                          child: Icon(Icons.image_rounded, color: Colors.blueGrey, size: 20),
+                          child: Icon(
+                            Icons.image_rounded,
+                            color: Colors.blueGrey,
+                            size: 20,
+                          ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     log.skillId != null
-                        ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                        ? skillProv.skills
+                              .firstWhere(
+                                (s) => s.id == log.skillId,
+                                orElse: () => Skill(
+                                  categoryId: 0,
+                                  name: skillProv.defaultLang == 'id'
+                                      ? 'Keahlian Dihapus'
+                                      : 'Deleted Skill',
+                                  createdAt: DateTime.now(),
+                                ),
+                              )
+                              .name
                         : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                    style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: skillColor,
+                      fontSize: fontSize * 0.85,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text(log.note, style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(
+                    log.note,
+                    style: TextStyle(fontSize: fontSize * 0.9),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         DateFormat('dd MMM yyyy, HH:mm').format(log.date),
-                        style: TextStyle(fontSize: fontSize * 0.8, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: fontSize * 0.8,
+                          color: Colors.grey,
+                        ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: skillColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
-                          style: TextStyle(fontSize: fontSize * 0.8, color: skillColor, fontWeight: FontWeight.bold),
+                          skillProv.translate(
+                            'duration_minutes_short',
+                            args: [log.durationMinutes.toString()],
+                          ),
+                          style: TextStyle(
+                            fontSize: fontSize * 0.8,
+                            color: skillColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -484,7 +625,12 @@ class _ChallengesView extends StatelessWidget {
 
     if (provider.viewMode == 'Grid') {
       return GridView.builder(
-        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 120,
+        ),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
@@ -498,8 +644,12 @@ class _ChallengesView extends StatelessWidget {
           Color skillColor = Theme.of(context).colorScheme.primary;
           if (challenge.skillId != null) {
             try {
-              final skill = skillProv.skills.firstWhere((s) => s.id == challenge.skillId);
-              final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+              final skill = skillProv.skills.firstWhere(
+                (s) => s.id == challenge.skillId,
+              );
+              final cat = skillProv.categories.firstWhere(
+                (c) => c.id == skill.categoryId,
+              );
               skillColor = Color(cat.colorValue);
             } catch (_) {}
           }
@@ -515,14 +665,25 @@ class _ChallengesView extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               splashColor: skillColor.withValues(alpha: 0.2),
-              onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
+              onTap: () => _showChallengeDetailModal(
+                context,
+                challenge,
+                skillColor,
+                skillProv,
+                provider,
+              ),
               onLongPress: () async {
-                final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
+                final confirm = await _showDeleteConfirmationDialog(
+                  context,
+                  challenge.title,
+                );
                 if (confirm && challenge.id != null) {
                   provider.deleteChallenge(challenge.id!);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
+                      SnackBar(
+                        content: Text(skillProv.translate('challenge_deleted')),
+                      ),
                     );
                   }
                 }
@@ -548,7 +709,10 @@ class _ChallengesView extends StatelessWidget {
                                 );
                                 if (challenge.skillId != null) {
                                   final amount = val ? 0.2 : -0.2;
-                                  skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                                  skillProv.incrementSkillProgress(
+                                    challenge.skillId!,
+                                    amount,
+                                  );
                                 }
                               }
                             },
@@ -561,7 +725,9 @@ class _ChallengesView extends StatelessWidget {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: fontSize,
-                              decoration: isCompleted ? TextDecoration.lineThrough : null,
+                              decoration: isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -572,9 +738,26 @@ class _ChallengesView extends StatelessWidget {
                     const Spacer(),
                     Text(
                       challenge.skillId != null
-                          ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                          : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                      style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                          ? skillProv.skills
+                                .firstWhere(
+                                  (s) => s.id == challenge.skillId,
+                                  orElse: () => Skill(
+                                    categoryId: 0,
+                                    name: skillProv.defaultLang == 'id'
+                                        ? 'Keahlian Dihapus'
+                                        : 'Deleted Skill',
+                                    createdAt: DateTime.now(),
+                                  ),
+                                )
+                                .name
+                          : (skillProv.defaultLang == 'id'
+                                ? 'Global'
+                                : 'Global'),
+                      style: TextStyle(
+                        color: skillColor,
+                        fontSize: fontSize * 0.85,
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -584,8 +767,9 @@ class _ChallengesView extends StatelessWidget {
                           ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
                           : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
                       style: TextStyle(
-                          fontSize: fontSize * 0.8,
-                          color: isCompleted ? Colors.green : Colors.orange),
+                        fontSize: fontSize * 0.8,
+                        color: isCompleted ? Colors.green : Colors.orange,
+                      ),
                     ),
                   ],
                 ),
@@ -605,8 +789,12 @@ class _ChallengesView extends StatelessWidget {
         Color skillColor = Theme.of(context).colorScheme.primary;
         if (challenge.skillId != null) {
           try {
-            final skill = skillProv.skills.firstWhere((s) => s.id == challenge.skillId);
-            final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+            final skill = skillProv.skills.firstWhere(
+              (s) => s.id == challenge.skillId,
+            );
+            final cat = skillProv.categories.firstWhere(
+              (c) => c.id == skill.categoryId,
+            );
             skillColor = Color(cat.colorValue);
           } catch (_) {}
         }
@@ -622,14 +810,25 @@ class _ChallengesView extends StatelessWidget {
           child: InkWell(
             splashColor: skillColor.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(16),
-            onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
+            onTap: () => _showChallengeDetailModal(
+              context,
+              challenge,
+              skillColor,
+              skillProv,
+              provider,
+            ),
             onLongPress: () async {
-              final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
+              final confirm = await _showDeleteConfirmationDialog(
+                context,
+                challenge.title,
+              );
               if (confirm && challenge.id != null) {
                 provider.deleteChallenge(challenge.id!);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
+                    SnackBar(
+                      content: Text(skillProv.translate('challenge_deleted')),
+                    ),
                   );
                 }
               }
@@ -649,7 +848,10 @@ class _ChallengesView extends StatelessWidget {
                         );
                         if (challenge.skillId != null) {
                           final amount = val ? 0.2 : -0.2;
-                          skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                          skillProv.incrementSkillProgress(
+                            challenge.skillId!,
+                            amount,
+                          );
                         }
                       }
                     },
@@ -664,34 +866,64 @@ class _ChallengesView extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: fontSize,
-                            decoration: isCompleted ? TextDecoration.lineThrough : null,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           challenge.skillId != null
-                              ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                              : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                          style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                              ? skillProv.skills
+                                    .firstWhere(
+                                      (s) => s.id == challenge.skillId,
+                                      orElse: () => Skill(
+                                        categoryId: 0,
+                                        name: skillProv.defaultLang == 'id'
+                                            ? 'Keahlian Dihapus'
+                                            : 'Deleted Skill',
+                                        createdAt: DateTime.now(),
+                                      ),
+                                    )
+                                    .name
+                              : (skillProv.defaultLang == 'id'
+                                    ? 'Global'
+                                    : 'Global'),
+                          style: TextStyle(
+                            color: skillColor,
+                            fontSize: fontSize * 0.85,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         if (challenge.description.isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          Text(challenge.description,
-                              style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
+                          Text(
+                            challenge.description,
+                            style: TextStyle(fontSize: fontSize * 0.9),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.event_available_rounded, size: 14, color: isCompleted ? Colors.green : Colors.orange),
+                            Icon(
+                              Icons.event_available_rounded,
+                              size: 14,
+                              color: isCompleted ? Colors.green : Colors.orange,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               skillProv.defaultLang == 'id'
                                   ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
                                   : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
                               style: TextStyle(
-                                  fontSize: fontSize * 0.8,
-                                  fontWeight: FontWeight.w600,
-                                  color: isCompleted ? Colors.green : Colors.orange),
+                                fontSize: fontSize * 0.8,
+                                fontWeight: FontWeight.w600,
+                                color: isCompleted
+                                    ? Colors.green
+                                    : Colors.orange,
+                              ),
                             ),
                           ],
                         ),
@@ -745,13 +977,21 @@ class _AddLogFormState extends State<_AddLogForm> {
         if (kIsWeb) {
           bytes = file.bytes;
         } else {
-          bytes = file.bytes ?? (file.path != null ? io.File(file.path!).readAsBytesSync() : null);
+          bytes =
+              file.bytes ??
+              (file.path != null
+                  ? io.File(file.path!).readAsBytesSync()
+                  : null);
         }
         if (bytes != null) {
           if (kIsWeb && bytes.length > 500 * 1024) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ukuran gambar terlalu besar! Maksimal 500 KB.')),
+                const SnackBar(
+                  content: Text(
+                    'Ukuran gambar terlalu besar! Maksimal 500 KB.',
+                  ),
+                ),
               );
             }
             return;
@@ -794,12 +1034,18 @@ class _AddLogFormState extends State<_AddLogForm> {
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Judul Aktivitas' : 'Activity Title',
-                hintText: skillProv.defaultLang == 'id' ? 'Contoh: Belajar Asynchronous Programming' : 'Example: Learn Asynchronous Programming',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Judul Aktivitas'
+                    : 'Activity Title',
+                hintText: skillProv.defaultLang == 'id'
+                    ? 'Contoh: Belajar Asynchronous Programming'
+                    : 'Example: Learn Asynchronous Programming',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Judul tidak boleh kosong' : 'Title cannot be empty';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Judul tidak boleh kosong'
+                      : 'Title cannot be empty';
                 }
                 return null;
               },
@@ -809,7 +1055,9 @@ class _AddLogFormState extends State<_AddLogForm> {
               controller: _noteController,
               decoration: InputDecoration(
                 labelText: skillProv.defaultLang == 'id' ? 'Catatan' : 'Notes',
-                hintText: skillProv.defaultLang == 'id' ? 'Tulis deskripsi progres belajar Anda' : 'Write a description of your learning progress',
+                hintText: skillProv.defaultLang == 'id'
+                    ? 'Tulis deskripsi progres belajar Anda'
+                    : 'Write a description of your learning progress',
               ),
               maxLines: 3,
             ),
@@ -817,17 +1065,25 @@ class _AddLogFormState extends State<_AddLogForm> {
             TextFormField(
               controller: _durationController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Durasi (Menit)' : 'Duration (Minutes)',
-                hintText: skillProv.defaultLang == 'id' ? 'Contoh: 30' : 'Example: 30',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Durasi (Menit)'
+                    : 'Duration (Minutes)',
+                hintText: skillProv.defaultLang == 'id'
+                    ? 'Contoh: 30'
+                    : 'Example: 30',
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi tidak boleh kosong' : 'Duration cannot be empty';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Durasi tidak boleh kosong'
+                      : 'Duration cannot be empty';
                 }
                 final dur = int.tryParse(value);
                 if (dur == null || dur <= 0) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi harus berupa angka positif (> 0)' : 'Duration must be a positive number (> 0)';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Durasi harus berupa angka positif (> 0)'
+                      : 'Duration must be a positive number (> 0)';
                 }
                 return null;
               },
@@ -846,7 +1102,11 @@ class _AddLogFormState extends State<_AddLogForm> {
                 TextButton.icon(
                   onPressed: () => _pickDate(context),
                   icon: const Icon(Icons.calendar_month),
-                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
+                  label: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Pilih Tanggal'
+                        : 'Pick Date',
+                  ),
                 ),
               ],
             ),
@@ -856,10 +1116,16 @@ class _AddLogFormState extends State<_AddLogForm> {
                 Expanded(
                   child: Text(
                     _selectedPhotoPath != null
-                        ? (skillProv.defaultLang == 'id' ? 'Foto terpilih' : 'Photo selected')
-                        : (skillProv.defaultLang == 'id' ? 'Tidak ada foto' : 'No photo selected'),
+                        ? (skillProv.defaultLang == 'id'
+                              ? 'Foto terpilih'
+                              : 'Photo selected')
+                        : (skillProv.defaultLang == 'id'
+                              ? 'Tidak ada foto'
+                              : 'No photo selected'),
                     style: TextStyle(
-                      color: _selectedPhotoPath != null ? Colors.green : Colors.grey,
+                      color: _selectedPhotoPath != null
+                          ? Colors.green
+                          : Colors.grey,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -867,7 +1133,9 @@ class _AddLogFormState extends State<_AddLogForm> {
                 OutlinedButton.icon(
                   onPressed: () => _pickImage(context),
                   icon: const Icon(Icons.image_rounded),
-                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Foto' : 'Pick Photo'),
+                  label: Text(
+                    skillProv.defaultLang == 'id' ? 'Pilih Foto' : 'Pick Photo',
+                  ),
                 ),
                 if (_selectedPhotoPath != null)
                   IconButton(
@@ -880,12 +1148,18 @@ class _AddLogFormState extends State<_AddLogForm> {
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Terkait'
+                    : 'Related Skill',
               ),
               items: [
                 DropdownMenuItem<int?>(
                   value: null,
-                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
+                  child: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Global (Tanpa Keahlian)'
+                        : 'Global (No Skill)',
+                  ),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -906,27 +1180,34 @@ class _AddLogFormState extends State<_AddLogForm> {
                 if (_formKey.currentState!.validate()) {
                   final duration = int.parse(_durationController.text.trim());
                   context.read<ProgressProvider>().addProgressLog(
-                        title: _titleController.text.trim(),
-                        note: _noteController.text.trim(),
-                        durationMinutes: duration,
-                        date: _selectedDate,
-                        photoPath: _selectedPhotoPath,
-                        skillId: _selectedSkillId,
-                      );
+                    title: _titleController.text.trim(),
+                    note: _noteController.text.trim(),
+                    durationMinutes: duration,
+                    date: _selectedDate,
+                    photoPath: _selectedPhotoPath,
+                    skillId: _selectedSkillId,
+                  );
                   if (_selectedSkillId != null) {
                     // Penambahan progres logis: misal 60 menit = 10% (0.1) progress
                     final progressGained = duration / 600.0;
-                    context.read<SkillProvider>().incrementSkillProgress(_selectedSkillId!, progressGained);
+                    context.read<SkillProvider>().incrementSkillProgress(
+                      _selectedSkillId!,
+                      progressGained,
+                    );
                   }
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('add_log_success'))),
+                      SnackBar(
+                        content: Text(skillProv.translate('add_log_success')),
+                      ),
                     );
                   }
                 }
               },
-              child: Text(skillProv.defaultLang == 'id' ? 'Simpan Log' : 'Save Log'),
+              child: Text(
+                skillProv.defaultLang == 'id' ? 'Simpan Log' : 'Save Log',
+              ),
             ),
           ],
         ),
@@ -983,12 +1264,18 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Nama Tantangan' : 'Challenge Name',
-                hintText: skillProv.defaultLang == 'id' ? 'Contoh: Selesaikan 3 Coding Challenge' : 'Example: Solve 3 Coding Challenges',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Nama Tantangan'
+                    : 'Challenge Name',
+                hintText: skillProv.defaultLang == 'id'
+                    ? 'Contoh: Selesaikan 3 Coding Challenge'
+                    : 'Example: Solve 3 Coding Challenges',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Nama tantangan tidak boleh kosong' : 'Challenge name cannot be empty';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Nama tantangan tidak boleh kosong'
+                      : 'Challenge name cannot be empty';
                 }
                 return null;
               },
@@ -997,8 +1284,12 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
             TextFormField(
               controller: _descController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Deskripsi' : 'Description',
-                hintText: skillProv.defaultLang == 'id' ? 'Tulis rincian tantangan Anda' : 'Write the details of your challenge',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Deskripsi'
+                    : 'Description',
+                hintText: skillProv.defaultLang == 'id'
+                    ? 'Tulis rincian tantangan Anda'
+                    : 'Write the details of your challenge',
               ),
               maxLines: 3,
             ),
@@ -1016,7 +1307,11 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
                 TextButton.icon(
                   onPressed: () => _pickDate(context),
                   icon: const Icon(Icons.calendar_month),
-                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
+                  label: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Pilih Tanggal'
+                        : 'Pick Date',
+                  ),
                 ),
               ],
             ),
@@ -1024,12 +1319,18 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Terkait'
+                    : 'Related Skill',
               ),
               items: [
                 DropdownMenuItem<int?>(
                   value: null,
-                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
+                  child: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Global (Tanpa Keahlian)'
+                        : 'Global (No Skill)',
+                  ),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -1049,20 +1350,28 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   context.read<ProgressProvider>().addChallenge(
-                        title: _titleController.text.trim(),
-                        description: _descController.text.trim(),
-                        targetDate: _selectedDate,
-                        skillId: _selectedSkillId,
-                      );
+                    title: _titleController.text.trim(),
+                    description: _descController.text.trim(),
+                    targetDate: _selectedDate,
+                    skillId: _selectedSkillId,
+                  );
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('add_challenge_success'))),
+                      SnackBar(
+                        content: Text(
+                          skillProv.translate('add_challenge_success'),
+                        ),
+                      ),
                     );
                   }
                 }
               },
-              child: Text(skillProv.defaultLang == 'id' ? 'Simpan Tantangan' : 'Save Challenge'),
+              child: Text(
+                skillProv.defaultLang == 'id'
+                    ? 'Simpan Tantangan'
+                    : 'Save Challenge',
+              ),
             ),
           ],
         ),
@@ -1093,7 +1402,9 @@ class _EditLogFormState extends State<_EditLogForm> {
     super.initState();
     _titleController = TextEditingController(text: widget.log.title);
     _noteController = TextEditingController(text: widget.log.note);
-    _durationController = TextEditingController(text: widget.log.durationMinutes.toString());
+    _durationController = TextEditingController(
+      text: widget.log.durationMinutes.toString(),
+    );
     _selectedSkillId = widget.log.skillId;
     _selectedDate = widget.log.date;
     _selectedPhotoPath = widget.log.photoPath;
@@ -1120,13 +1431,21 @@ class _EditLogFormState extends State<_EditLogForm> {
         if (kIsWeb) {
           bytes = file.bytes;
         } else {
-          bytes = file.bytes ?? (file.path != null ? io.File(file.path!).readAsBytesSync() : null);
+          bytes =
+              file.bytes ??
+              (file.path != null
+                  ? io.File(file.path!).readAsBytesSync()
+                  : null);
         }
         if (bytes != null) {
           if (kIsWeb && bytes.length > 500 * 1024) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ukuran gambar terlalu besar! Maksimal 500 KB.')),
+                const SnackBar(
+                  content: Text(
+                    'Ukuran gambar terlalu besar! Maksimal 500 KB.',
+                  ),
+                ),
               );
             }
             return;
@@ -1169,11 +1488,15 @@ class _EditLogFormState extends State<_EditLogForm> {
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Judul Aktivitas' : 'Activity Title',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Judul Aktivitas'
+                    : 'Activity Title',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Judul tidak boleh kosong' : 'Title cannot be empty';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Judul tidak boleh kosong'
+                      : 'Title cannot be empty';
                 }
                 return null;
               },
@@ -1190,16 +1513,22 @@ class _EditLogFormState extends State<_EditLogForm> {
             TextFormField(
               controller: _durationController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Durasi (Menit)' : 'Duration (Minutes)',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Durasi (Menit)'
+                    : 'Duration (Minutes)',
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi tidak boleh kosong' : 'Duration cannot be empty';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Durasi tidak boleh kosong'
+                      : 'Duration cannot be empty';
                 }
                 final dur = int.tryParse(value);
                 if (dur == null || dur <= 0) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi harus berupa angka positif (> 0)' : 'Duration must be a positive number (> 0)';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Durasi harus berupa angka positif (> 0)'
+                      : 'Duration must be a positive number (> 0)';
                 }
                 return null;
               },
@@ -1218,7 +1547,11 @@ class _EditLogFormState extends State<_EditLogForm> {
                 TextButton.icon(
                   onPressed: () => _pickDate(context),
                   icon: const Icon(Icons.calendar_month),
-                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
+                  label: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Pilih Tanggal'
+                        : 'Pick Date',
+                  ),
                 ),
               ],
             ),
@@ -1228,10 +1561,16 @@ class _EditLogFormState extends State<_EditLogForm> {
                 Expanded(
                   child: Text(
                     _selectedPhotoPath != null
-                        ? (skillProv.defaultLang == 'id' ? 'Foto terpilih' : 'Photo selected')
-                        : (skillProv.defaultLang == 'id' ? 'Tidak ada foto' : 'No photo selected'),
+                        ? (skillProv.defaultLang == 'id'
+                              ? 'Foto terpilih'
+                              : 'Photo selected')
+                        : (skillProv.defaultLang == 'id'
+                              ? 'Tidak ada foto'
+                              : 'No photo selected'),
                     style: TextStyle(
-                      color: _selectedPhotoPath != null ? Colors.green : Colors.grey,
+                      color: _selectedPhotoPath != null
+                          ? Colors.green
+                          : Colors.grey,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1239,7 +1578,9 @@ class _EditLogFormState extends State<_EditLogForm> {
                 OutlinedButton.icon(
                   onPressed: () => _pickImage(context),
                   icon: const Icon(Icons.image_rounded),
-                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Foto' : 'Pick Photo'),
+                  label: Text(
+                    skillProv.defaultLang == 'id' ? 'Pilih Foto' : 'Pick Photo',
+                  ),
                 ),
                 if (_selectedPhotoPath != null)
                   IconButton(
@@ -1252,12 +1593,18 @@ class _EditLogFormState extends State<_EditLogForm> {
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Terkait'
+                    : 'Related Skill',
               ),
               items: [
                 DropdownMenuItem<int?>(
                   value: null,
-                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
+                  child: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Global (Tanpa Keahlian)'
+                        : 'Global (No Skill)',
+                  ),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -1284,11 +1631,15 @@ class _EditLogFormState extends State<_EditLogForm> {
                     date: _selectedDate,
                     photoPath: _selectedPhotoPath,
                   );
-                  context.read<ProgressProvider>().updateProgressLog(updatedLog);
+                  context.read<ProgressProvider>().updateProgressLog(
+                    updatedLog,
+                  );
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('edit_log_success'))),
+                      SnackBar(
+                        content: Text(skillProv.translate('edit_log_success')),
+                      ),
                     );
                   }
                 }
@@ -1360,11 +1711,15 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
             TextFormField(
               controller: _titleController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Nama Tantangan' : 'Challenge Name',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Nama Tantangan'
+                    : 'Challenge Name',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Nama tantangan tidak boleh kosong' : 'Challenge name cannot be empty';
+                  return skillProv.defaultLang == 'id'
+                      ? 'Nama tantangan tidak boleh kosong'
+                      : 'Challenge name cannot be empty';
                 }
                 return null;
               },
@@ -1373,7 +1728,9 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
             TextFormField(
               controller: _descController,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Deskripsi' : 'Description',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Deskripsi'
+                    : 'Description',
               ),
               maxLines: 3,
             ),
@@ -1391,7 +1748,11 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
                 TextButton.icon(
                   onPressed: () => _pickDate(context),
                   icon: const Icon(Icons.calendar_month),
-                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
+                  label: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Pilih Tanggal'
+                        : 'Pick Date',
+                  ),
                 ),
               ],
             ),
@@ -1399,12 +1760,18 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
               decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
+                labelText: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Terkait'
+                    : 'Related Skill',
               ),
               items: [
                 DropdownMenuItem<int?>(
                   value: null,
-                  child: Text(skillProv.defaultLang == 'id' ? 'Global (Tanpa Keahlian)' : 'Global (No Skill)'),
+                  child: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Global (Tanpa Keahlian)'
+                        : 'Global (No Skill)',
+                  ),
                 ),
                 ...skills.map((skill) {
                   return DropdownMenuItem<int?>(
@@ -1429,11 +1796,17 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
                     targetDate: _selectedDate,
                     skillId: _selectedSkillId,
                   );
-                  context.read<ProgressProvider>().updateChallenge(updatedChallenge);
+                  context.read<ProgressProvider>().updateChallenge(
+                    updatedChallenge,
+                  );
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('edit_challenge_success'))),
+                      SnackBar(
+                        content: Text(
+                          skillProv.translate('edit_challenge_success'),
+                        ),
+                      ),
                     );
                   }
                 }
@@ -1457,7 +1830,11 @@ void _showEditLogDialog(BuildContext context, ProgressLog log) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(skillProv.defaultLang == 'id' ? 'Edit Log Aktivitas' : 'Edit Activity Log'),
+        title: Text(
+          skillProv.defaultLang == 'id'
+              ? 'Edit Log Aktivitas'
+              : 'Edit Activity Log',
+        ),
         content: SizedBox(
           width: double.maxFinite,
           height: 400,
@@ -1474,7 +1851,9 @@ void _showEditChallengeDialog(BuildContext context, Challenge challenge) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(skillProv.defaultLang == 'id' ? 'Edit Tantangan' : 'Edit Challenge'),
+        title: Text(
+          skillProv.defaultLang == 'id' ? 'Edit Tantangan' : 'Edit Challenge',
+        ),
         content: SizedBox(
           width: double.maxFinite,
           height: 450,
@@ -1485,14 +1864,19 @@ void _showEditChallengeDialog(BuildContext context, Challenge challenge) {
   );
 }
 
-Future<bool> _showDeleteConfirmationDialog(BuildContext context, String title) async {
+Future<bool> _showDeleteConfirmationDialog(
+  BuildContext context,
+  String title,
+) async {
   final skillProv = Provider.of<SkillProvider>(context, listen: false);
   return await showDialog<bool>(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text(skillProv.translate('delete_confirm_title')),
-            content: Text(skillProv.translate('delete_confirm_desc', args: [title])),
+            content: Text(
+              skillProv.translate('delete_confirm_desc', args: [title]),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -1519,7 +1903,18 @@ void _showLogDetailModal(
 ) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final skillName = log.skillId != null
-      ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+      ? skillProv.skills
+            .firstWhere(
+              (s) => s.id == log.skillId,
+              orElse: () => Skill(
+                categoryId: 0,
+                name: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Dihapus'
+                    : 'Deleted Skill',
+                createdAt: DateTime.now(),
+              ),
+            )
+            .name
       : (skillProv.defaultLang == 'id' ? 'Global' : 'Global');
 
   showModalBottomSheet(
@@ -1566,11 +1961,18 @@ void _showLogDetailModal(
                     children: [
                       Text(
                         log.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                       Text(
                         '${skillProv.translate('nav_skills')}: $skillName',
-                        style: TextStyle(color: skillColor, fontWeight: FontWeight.w600, fontSize: 13),
+                        style: TextStyle(
+                          color: skillColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -1589,15 +1991,27 @@ void _showLogDetailModal(
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: log.photoPath!.startsWith('http')
-                    ? Image.network(log.photoPath!, height: 200, width: double.infinity, fit: BoxFit.cover)
-                    : Image.memory(base64Decode(log.photoPath!), height: 200, width: double.infinity, fit: BoxFit.cover),
+                    ? Image.network(
+                        log.photoPath!,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.memory(
+                        base64Decode(log.photoPath!),
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
               ),
               const SizedBox(height: 24),
             ],
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.03),
+                color: isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: skillColor.withValues(alpha: 0.2)),
               ),
@@ -1606,7 +2020,11 @@ void _showLogDetailModal(
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.calendar_month_rounded,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat('EEEE, dd MMM yyyy').format(log.date),
@@ -1617,10 +2035,17 @@ void _showLogDetailModal(
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.timer_rounded, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.timer_rounded,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        skillProv.translate('duration_minutes', args: [log.durationMinutes.toString()]),
+                        skillProv.translate(
+                          'duration_minutes',
+                          args: [log.durationMinutes.toString()],
+                        ),
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -1630,12 +2055,18 @@ void _showLogDetailModal(
             ),
             const SizedBox(height: 24),
             Text(
-              skillProv.defaultLang == 'id' ? 'Catatan Aktivitas' : 'Activity Notes',
+              skillProv.defaultLang == 'id'
+                  ? 'Catatan Aktivitas'
+                  : 'Activity Notes',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              log.note.isEmpty ? (skillProv.defaultLang == 'id' ? 'Tidak ada catatan.' : 'No notes.') : log.note,
+              log.note.isEmpty
+                  ? (skillProv.defaultLang == 'id'
+                        ? 'Tidak ada catatan.'
+                        : 'No notes.')
+                  : log.note,
               style: const TextStyle(height: 1.5),
             ),
             const SizedBox(height: 24),
@@ -1644,7 +2075,9 @@ void _showLogDetailModal(
                 backgroundColor: skillColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.check_rounded),
@@ -1666,7 +2099,18 @@ void _showChallengeDetailModal(
 ) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final skillName = challenge.skillId != null
-      ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+      ? skillProv.skills
+            .firstWhere(
+              (s) => s.id == challenge.skillId,
+              orElse: () => Skill(
+                categoryId: 0,
+                name: skillProv.defaultLang == 'id'
+                    ? 'Keahlian Dihapus'
+                    : 'Deleted Skill',
+                createdAt: DateTime.now(),
+              ),
+            )
+            .name
       : (skillProv.defaultLang == 'id' ? 'Global' : 'Global');
   final isCompleted = challenge.isCompleted == 1;
 
@@ -1704,9 +2148,13 @@ void _showChallengeDetailModal(
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: isCompleted ? Colors.green.withValues(alpha: 0.15) : skillColor.withValues(alpha: 0.15),
+                  backgroundColor: isCompleted
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : skillColor.withValues(alpha: 0.15),
                   child: Icon(
-                    isCompleted ? Icons.check_circle_rounded : Icons.emoji_events_rounded,
+                    isCompleted
+                        ? Icons.check_circle_rounded
+                        : Icons.emoji_events_rounded,
                     color: isCompleted ? Colors.green : skillColor,
                   ),
                 ),
@@ -1717,11 +2165,18 @@ void _showChallengeDetailModal(
                     children: [
                       Text(
                         challenge.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                       Text(
                         '${skillProv.translate('nav_skills')}: $skillName',
-                        style: TextStyle(color: skillColor, fontWeight: FontWeight.w600, fontSize: 13),
+                        style: TextStyle(
+                          color: skillColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -1739,7 +2194,9 @@ void _showChallengeDetailModal(
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.03),
+                color: isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: skillColor.withValues(alpha: 0.2)),
               ),
@@ -1748,7 +2205,11 @@ void _showChallengeDetailModal(
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.event_available_rounded, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.event_available_rounded,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         skillProv.defaultLang == 'id'
@@ -1761,13 +2222,26 @@ void _showChallengeDetailModal(
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(isCompleted ? Icons.task_alt_rounded : Icons.hourglass_top_rounded, size: 16, color: isCompleted ? Colors.green : Colors.orange),
+                      Icon(
+                        isCompleted
+                            ? Icons.task_alt_rounded
+                            : Icons.hourglass_top_rounded,
+                        size: 16,
+                        color: isCompleted ? Colors.green : Colors.orange,
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        isCompleted 
-                            ? (skillProv.defaultLang == 'id' ? 'Tantangan Selesai' : 'Challenge Completed')
-                            : (skillProv.defaultLang == 'id' ? 'Belum Selesai' : 'Not Completed'),
-                        style: TextStyle(fontWeight: FontWeight.bold, color: isCompleted ? Colors.green : Colors.orange),
+                        isCompleted
+                            ? (skillProv.defaultLang == 'id'
+                                  ? 'Tantangan Selesai'
+                                  : 'Challenge Completed')
+                            : (skillProv.defaultLang == 'id'
+                                  ? 'Belum Selesai'
+                                  : 'Not Completed'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isCompleted ? Colors.green : Colors.orange,
+                        ),
                       ),
                     ],
                   ),
@@ -1776,12 +2250,18 @@ void _showChallengeDetailModal(
             ),
             const SizedBox(height: 24),
             Text(
-              skillProv.defaultLang == 'id' ? 'Deskripsi Tantangan' : 'Challenge Description',
+              skillProv.defaultLang == 'id'
+                  ? 'Deskripsi Tantangan'
+                  : 'Challenge Description',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              challenge.description.isEmpty ? (skillProv.defaultLang == 'id' ? 'Tidak ada deskripsi.' : 'No description.') : challenge.description,
+              challenge.description.isEmpty
+                  ? (skillProv.defaultLang == 'id'
+                        ? 'Tidak ada deskripsi.'
+                        : 'No description.')
+                  : challenge.description,
               style: const TextStyle(height: 1.5),
             ),
             const SizedBox(height: 24),
@@ -1790,7 +2270,9 @@ void _showChallengeDetailModal(
                 backgroundColor: skillColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.check_rounded),

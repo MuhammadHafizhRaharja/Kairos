@@ -98,7 +98,9 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.3 : 0.15),
+                color: theme.colorScheme.primary.withValues(
+                  alpha: isDark ? 0.3 : 0.15,
+                ),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -116,7 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.secondary.withValues(alpha: isDark ? 0.25 : 0.12),
+                color: theme.colorScheme.secondary.withValues(
+                  alpha: isDark ? 0.25 : 0.12,
+                ),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),

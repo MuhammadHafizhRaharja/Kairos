@@ -88,6 +88,7 @@ class ProgressProvider extends ChangeNotifier {
     String note = '',
     int durationMinutes = 0,
     required DateTime date,
+    String? photoPath,
   }) async {
     final newLog = ProgressLog(
       userId: _currentUserId,
@@ -96,6 +97,7 @@ class ProgressProvider extends ChangeNotifier {
       note: note,
       durationMinutes: durationMinutes,
       date: date,
+      photoPath: photoPath,
     );
     await _dbHelper.insertProgressLog(newLog);
     await refreshData();

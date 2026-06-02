@@ -6,6 +6,7 @@ class ProgressLog {
   final String note;
   final int durationMinutes;
   final DateTime date;
+  final String? photoPath;
 
   ProgressLog({
     this.id,
@@ -15,6 +16,7 @@ class ProgressLog {
     this.note = '',
     this.durationMinutes = 0,
     required this.date,
+    this.photoPath,
   });
 
   ProgressLog copyWith({
@@ -25,6 +27,7 @@ class ProgressLog {
     String? note,
     int? durationMinutes,
     DateTime? date,
+    String? photoPath,
   }) {
     return ProgressLog(
       id: id ?? this.id,
@@ -34,6 +37,7 @@ class ProgressLog {
       note: note ?? this.note,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       date: date ?? this.date,
+      photoPath: photoPath ?? this.photoPath,
     );
   }
 
@@ -43,6 +47,7 @@ class ProgressLog {
       'note': note,
       'durationMinutes': durationMinutes,
       'date': date.toIso8601String(),
+      'photoPath': photoPath,
     };
     if (id != null) {
       map['id'] = id;
@@ -65,6 +70,7 @@ class ProgressLog {
       note: map['note'] as String? ?? '',
       durationMinutes: map['durationMinutes'] as int? ?? 0,
       date: DateTime.parse(map['date'] as String? ?? DateTime.now().toIso8601String()),
+      photoPath: map['photoPath'] as String?,
     );
   }
 }

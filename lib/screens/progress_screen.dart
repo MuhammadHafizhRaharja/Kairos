@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import '../providers/progress_provider.dart';
 import '../providers/skill_provider.dart';
 import '../models/progress_log.dart';
 import '../models/challenge.dart';
+import '../models/skill.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -192,6 +197,15 @@ class _ProgressLogsView extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      log.skillId != null
+                          ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                          : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.8, fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       DateFormat('dd MMM yyyy').format(log.date),
@@ -229,6 +243,13 @@ class _ProgressLogsView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
+                Text(
+                  log.skillId != null
+                      ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
                 Text(log.note, style: TextStyle(fontSize: fontSize * 0.9)),
                 const SizedBox(height: 4),
                 Text(
@@ -237,9 +258,19 @@ class _ProgressLogsView extends StatelessWidget {
                 ),
               ],
             ),
-            trailing: Chip(
-              label: Text(skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
-                  style: TextStyle(fontSize: fontSize * 0.8)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (log.photoPath != null && log.photoPath!.isNotEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 8.0),
+                    child: Icon(Icons.image_rounded, color: Colors.blueGrey, size: 20),
+                  ),
+                Chip(
+                  label: Text(skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
+                      style: TextStyle(fontSize: fontSize * 0.8)),
+                ),
+              ],
             ),
             onTap: () => _showEditLogDialog(context, log),
             onLongPress: () async {
@@ -291,6 +322,11 @@ class _ChallengesView extends StatelessWidget {
                   provider.updateChallenge(
                     challenge.copyWith(isCompleted: val ? 1 : 0),
                   );
+                  if (challenge.skillId != null) {
+                    // Penambahan progress: 20% (0.2) untuk setiap tantangan yang selesai
+                    final amount = val ? 0.2 : -0.2;
+                    skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                  }
                 }
               },
             ),
@@ -305,6 +341,14 @@ class _ChallengesView extends StatelessWidget {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 4),
+                Text(
+                  challenge.skillId != null
+                      ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
                 if (challenge.description.isNotEmpty) ...[
                   Text(challenge.description,
                       style: TextStyle(fontSize: fontSize * 0.9)),
@@ -355,6 +399,8 @@ class _AddLogFormState extends State<_AddLogForm> {
   final _noteController = TextEditingController();
   final _durationController = TextEditingController();
   int? _selectedSkillId;
+  DateTime _selectedDate = DateTime.now();
+  String? _selectedPhotoPath;
 
   @override
   void dispose() {
@@ -362,6 +408,55 @@ class _AddLogFormState extends State<_AddLogForm> {
     _noteController.dispose();
     _durationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(BuildContext context) async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+      if (result != null) {
+        final file = result.files.single;
+        Uint8List? bytes;
+        if (kIsWeb) {
+          bytes = file.bytes;
+        } else {
+          bytes = file.bytes ?? (file.path != null ? io.File(file.path!).readAsBytesSync() : null);
+        }
+        if (bytes != null) {
+          if (kIsWeb && bytes.length > 500 * 1024) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Ukuran gambar terlalu besar! Maksimal 500 KB.')),
+              );
+            }
+            return;
+          }
+          final base64String = base64Encode(bytes);
+          setState(() {
+            _selectedPhotoPath = base64String;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking file: $e');
+    }
+  }
+
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   @override
@@ -416,6 +511,50 @@ class _AddLogFormState extends State<_AddLogForm> {
               },
             ),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Tanggal: ${DateFormat('dd MMM yyyy').format(_selectedDate)}'
+                        : 'Date: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _pickDate(context),
+                  icon: const Icon(Icons.calendar_month),
+                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedPhotoPath != null
+                        ? (skillProv.defaultLang == 'id' ? 'Foto terpilih' : 'Photo selected')
+                        : (skillProv.defaultLang == 'id' ? 'Tidak ada foto' : 'No photo selected'),
+                    style: TextStyle(
+                      color: _selectedPhotoPath != null ? Colors.green : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _pickImage(context),
+                  icon: const Icon(Icons.image_rounded),
+                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Foto' : 'Pick Photo'),
+                ),
+                if (_selectedPhotoPath != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => setState(() => _selectedPhotoPath = null),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
               decoration: InputDecoration(
@@ -443,13 +582,20 @@ class _AddLogFormState extends State<_AddLogForm> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
+                  final duration = int.parse(_durationController.text.trim());
                   context.read<ProgressProvider>().addProgressLog(
                         title: _titleController.text.trim(),
                         note: _noteController.text.trim(),
-                        durationMinutes: int.parse(_durationController.text.trim()),
-                        date: DateTime.now(),
+                        durationMinutes: duration,
+                        date: _selectedDate,
+                        photoPath: _selectedPhotoPath,
                         skillId: _selectedSkillId,
                       );
+                  if (_selectedSkillId != null) {
+                    // Penambahan progres logis: misal 60 menit = 10% (0.1) progress
+                    final progressGained = duration / 600.0;
+                    context.read<SkillProvider>().incrementSkillProgress(_selectedSkillId!, progressGained);
+                  }
                   Navigator.of(context).pop();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -617,6 +763,8 @@ class _EditLogFormState extends State<_EditLogForm> {
   late final TextEditingController _noteController;
   late final TextEditingController _durationController;
   int? _selectedSkillId;
+  late DateTime _selectedDate;
+  String? _selectedPhotoPath;
 
   @override
   void initState() {
@@ -625,6 +773,8 @@ class _EditLogFormState extends State<_EditLogForm> {
     _noteController = TextEditingController(text: widget.log.note);
     _durationController = TextEditingController(text: widget.log.durationMinutes.toString());
     _selectedSkillId = widget.log.skillId;
+    _selectedDate = widget.log.date;
+    _selectedPhotoPath = widget.log.photoPath;
   }
 
   @override
@@ -633,6 +783,55 @@ class _EditLogFormState extends State<_EditLogForm> {
     _noteController.dispose();
     _durationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(BuildContext context) async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+      if (result != null) {
+        final file = result.files.single;
+        Uint8List? bytes;
+        if (kIsWeb) {
+          bytes = file.bytes;
+        } else {
+          bytes = file.bytes ?? (file.path != null ? io.File(file.path!).readAsBytesSync() : null);
+        }
+        if (bytes != null) {
+          if (kIsWeb && bytes.length > 500 * 1024) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Ukuran gambar terlalu besar! Maksimal 500 KB.')),
+              );
+            }
+            return;
+          }
+          final base64String = base64Encode(bytes);
+          setState(() {
+            _selectedPhotoPath = base64String;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking file: $e');
+    }
+  }
+
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   @override
@@ -684,6 +883,50 @@ class _EditLogFormState extends State<_EditLogForm> {
               },
             ),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    skillProv.defaultLang == 'id'
+                        ? 'Tanggal: ${DateFormat('dd MMM yyyy').format(_selectedDate)}'
+                        : 'Date: ${DateFormat('dd MMM yyyy').format(_selectedDate)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _pickDate(context),
+                  icon: const Icon(Icons.calendar_month),
+                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Tanggal' : 'Pick Date'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedPhotoPath != null
+                        ? (skillProv.defaultLang == 'id' ? 'Foto terpilih' : 'Photo selected')
+                        : (skillProv.defaultLang == 'id' ? 'Tidak ada foto' : 'No photo selected'),
+                    style: TextStyle(
+                      color: _selectedPhotoPath != null ? Colors.green : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _pickImage(context),
+                  icon: const Icon(Icons.image_rounded),
+                  label: Text(skillProv.defaultLang == 'id' ? 'Pilih Foto' : 'Pick Photo'),
+                ),
+                if (_selectedPhotoPath != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => setState(() => _selectedPhotoPath = null),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               initialValue: _selectedSkillId,
               decoration: InputDecoration(
@@ -716,6 +959,8 @@ class _EditLogFormState extends State<_EditLogForm> {
                     note: _noteController.text.trim(),
                     durationMinutes: int.parse(_durationController.text.trim()),
                     skillId: _selectedSkillId,
+                    date: _selectedDate,
+                    photoPath: _selectedPhotoPath,
                   );
                   context.read<ProgressProvider>().updateProgressLog(updatedLog);
                   Navigator.of(context).pop();

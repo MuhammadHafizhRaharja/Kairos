@@ -175,7 +175,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onConfigure: _configureDB,
       onUpgrade: _upgradeDB,
@@ -257,6 +257,7 @@ class DatabaseHelper {
         note TEXT NOT NULL DEFAULT '',
         durationMinutes INTEGER NOT NULL DEFAULT 0,
         date TEXT NOT NULL,
+        photoPath TEXT,
         FOREIGN KEY (skillId) REFERENCES skills (id) ON DELETE SET NULL
       )
     ''');
@@ -369,6 +370,13 @@ class DatabaseHelper {
         await db.execute("ALTER TABLE resources ADD COLUMN resourceType TEXT NOT NULL DEFAULT 'materi'");
       } catch (e) {
         debugPrint('Migration: resourceType already exists in resources: $e');
+      }
+    }
+    if (oldVersion < 9) {
+      try {
+        await db.execute("ALTER TABLE progress_logs ADD COLUMN photoPath TEXT");
+      } catch (e) {
+        debugPrint('Migration: photoPath already exists in progress_logs: $e');
       }
     }
   }
@@ -800,6 +808,7 @@ class DatabaseHelper {
         note: log.note,
         durationMinutes: log.durationMinutes,
         date: log.date,
+        photoPath: log.photoPath,
       );
       _webProgressLogs.add(newLog);
       await _saveWebDataToPrefs();

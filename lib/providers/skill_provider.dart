@@ -253,6 +253,43 @@ class SkillProvider extends ChangeNotifier {
     return _skills.where((skill) => skill.categoryId == categoryId).toList();
   }
 
+  /// Menambah (atau mengurangi) progress dari sebuah skill dan otomatis menaikkan level jika mencapai 1.0 (100%)
+  Future<void> incrementSkillProgress(int skillId, double amount) async {
+    final idx = _skills.indexWhere((s) => s.id == skillId);
+    if (idx != -1) {
+      final skill = _skills[idx];
+      double newProgress = skill.progress + amount;
+      int newLevel = skill.level;
+
+      // Handle level up
+      while (newProgress >= 1.0) {
+        newLevel += 1;
+        newProgress -= 1.0;
+      }
+      
+      // Handle level down if amount is negative
+      while (newProgress < 0.0 && newLevel > 1) {
+        newLevel -= 1;
+        newProgress += 1.0;
+      }
+
+      // Clamp at bottom
+      if (newLevel <= 1 && newProgress < 0.0) {
+        newLevel = 1;
+        newProgress = 0.0;
+      }
+
+      // Max level clamp (e.g., max level 5)
+      if (newLevel >= 5) {
+        newLevel = 5;
+        if (newProgress > 1.0) newProgress = 1.0;
+      }
+
+      final updatedSkill = skill.copyWith(progress: newProgress, level: newLevel);
+      await updateSkill(updatedSkill);
+    }
+  }
+
   // ==========================================
   // OPERASI STATE & CRUD: RESOURCES
   // ==========================================

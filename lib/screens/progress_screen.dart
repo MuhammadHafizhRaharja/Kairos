@@ -90,16 +90,27 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: Column(
           children: [
-            _ProgressLogsView(),
-            _ChallengesView(),
+            const _SkillFrequencyChart(),
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  _ProgressLogsView(),
+                  _ChallengesView(),
+                ],
+              ),
+            ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showAddDialog(context),
-          backgroundColor: theme.colorScheme.primary,
-          child: const Icon(Icons.add, color: Colors.white),
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 96.0), // Hindari tertutup navbar melayang
+          child: FloatingActionButton(
+            onPressed: () => _showAddDialog(context),
+            backgroundColor: theme.colorScheme.primary,
+            elevation: 4,
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
         ),
       ),
     );
@@ -144,6 +155,161 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 }
 
+class _SkillFrequencyChart extends StatelessWidget {
+  const _SkillFrequencyChart();
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<ProgressProvider>();
+    final skillProv = context.watch<SkillProvider>();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Hitung frekuensi keahlian
+    final Map<int, int> frequencyMap = {};
+    for (var log in provider.logs) {
+      if (log.skillId != null) {
+        frequencyMap[log.skillId!] = (frequencyMap[log.skillId!] ?? 0) + 1;
+      }
+    }
+    for (var challenge in provider.challenges) {
+      if (challenge.skillId != null) {
+        frequencyMap[challenge.skillId!] = (frequencyMap[challenge.skillId!] ?? 0) + 1;
+      }
+    }
+
+    if (frequencyMap.isEmpty) {
+      return const SizedBox.shrink(); // Sembunyikan jika tidak ada data
+    }
+
+    // Urutkan berdasarkan frekuensi menurun
+    final sortedEntries = frequencyMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    // Ambil top 3
+    final topEntries = sortedEntries.take(3).toList();
+    final maxFreq = topEntries.first.value;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primaryContainer.withValues(alpha: isDark ? 0.2 : 0.6),
+            theme.colorScheme.primary.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.15), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.insights_rounded, color: theme.colorScheme.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                skillProv.defaultLang == 'id' ? 'Fokus Keahlian' : 'Skill Focus',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: theme.colorScheme.onSurface),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...topEntries.map((entry) {
+            final skill = skillProv.skills.firstWhere(
+              (s) => s.id == entry.key,
+              orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now()),
+            );
+            final ratio = maxFreq > 0 ? entry.value / maxFreq : 0.0;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      skill.name,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 6,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Stack(
+                          children: [
+                            Container(
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                            ),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 1000),
+                              curve: Curves.easeOutQuart,
+                              height: 10,
+                              width: constraints.maxWidth * ratio,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [theme.colorScheme.primary.withValues(alpha: 0.6), theme.colorScheme.primary],
+                                ),
+                                borderRadius: BorderRadius.circular(5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 24,
+                    child: Text(
+                      '${entry.value}',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProgressLogsView extends StatelessWidget {
   const _ProgressLogsView();
 
@@ -160,7 +326,7 @@ class _ProgressLogsView extends StatelessWidget {
 
     if (provider.viewMode == 'Grid') {
       return GridView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
@@ -229,7 +395,7 @@ class _ProgressLogsView extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
       itemCount: logs.length,
       itemBuilder: (context, index) {
         final log = logs[index];
@@ -306,7 +472,7 @@ class _ChallengesView extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
       itemCount: challenges.length,
       itemBuilder: (context, index) {
         final challenge = challenges[index];

@@ -849,7 +849,7 @@ class ProfileScreen extends StatelessWidget {
                           ListTile(
                             leading: Icon(
                               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                              color: Colors.purple,
+                              color: theme.colorScheme.primary,
                             ),
                             title: Text(skillProvider.translate('dark_mode'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                             subtitle: Text(
@@ -865,7 +865,7 @@ class ProfileScreen extends StatelessWidget {
                           
                           // 3. Dropdown Bahasa Default
                           ListTile(
-                            leading: const Icon(Icons.language_rounded, color: Colors.blue),
+                            leading: Icon(Icons.language_rounded, color: theme.colorScheme.secondary),
                             title: Text(skillProvider.translate('main_language'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                             subtitle: Text(skillProvider.translate('language_desc'), style: const TextStyle(fontSize: 11)),
                             trailing: DropdownButton<String>(
@@ -895,7 +895,7 @@ class ProfileScreen extends StatelessWidget {
                           
                           // 4. Pengaturan Teks (FontSize)
                           ListTile(
-                            leading: const Icon(Icons.text_format_rounded, color: Colors.blueGrey),
+                            leading: Icon(Icons.text_format_rounded, color: theme.colorScheme.tertiary),
                             title: Text(skillProvider.translate('text_size') == 'text_size' ? (skillProvider.defaultLang == 'id' ? 'Ukuran Teks' : 'Text Size') : skillProvider.translate('text_size'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                             subtitle: Text(skillProvider.translate('adjust_text_size') == 'adjust_text_size' ? (skillProvider.defaultLang == 'id' ? 'Ubah ukuran font aplikasi' : 'Change app font size') : skillProvider.translate('adjust_text_size'), style: const TextStyle(fontSize: 11)),
                             trailing: Consumer<ProgressProvider>(
@@ -925,7 +925,7 @@ class ProfileScreen extends StatelessWidget {
                           
                           // 5. Pengaturan Tampilan (View Mode)
                           ListTile(
-                            leading: const Icon(Icons.dashboard_customize_rounded, color: Colors.teal),
+                            leading: Icon(Icons.dashboard_customize_rounded, color: theme.colorScheme.primary),
                             title: Text(skillProvider.translate('layout_view') == 'layout_view' ? (skillProvider.defaultLang == 'id' ? 'Tampilan Tata Letak' : 'Layout View') : skillProvider.translate('layout_view'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                             subtitle: Text(skillProvider.translate('change_view_mode') == 'change_view_mode' ? (skillProvider.defaultLang == 'id' ? 'Ubah mode List/Grid' : 'Change List/Grid mode') : skillProvider.translate('change_view_mode'), style: const TextStyle(fontSize: 11)),
                             trailing: Consumer<ProgressProvider>(

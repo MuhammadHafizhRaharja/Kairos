@@ -46,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
               height: 280,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.deepPurple.withValues(alpha: isDark ? 0.3 : 0.15),
+                color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.3 : 0.15),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -64,7 +64,7 @@ class WelcomeScreen extends StatelessWidget {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.blue.withValues(alpha: isDark ? 0.25 : 0.12),
+                color: theme.colorScheme.secondary.withValues(alpha: isDark ? 0.25 : 0.12),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
@@ -134,7 +134,7 @@ class WelcomeScreen extends StatelessWidget {
                     subtitle:
                         'Mulai petualangan belajar baru & set target pertama',
                     icon: Icons.rocket_launch_rounded,
-                    color: Colors.deepPurple,
+                    color: theme.colorScheme.primary,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -156,7 +156,7 @@ class WelcomeScreen extends StatelessWidget {
                     subtitle:
                         'Masuk kembali untuk melanjutkan perkembangan keahlianmu',
                     icon: Icons.lock_open_rounded,
-                    color: Colors.blueGrey,
+                    color: theme.colorScheme.secondary,
                     onTap: () {
                       Navigator.push(
                         context,

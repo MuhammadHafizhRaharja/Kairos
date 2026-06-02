@@ -613,7 +613,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
         child: FloatingActionButton(
           heroTag: null,
           onPressed: () => _showAddCategoryDialog(context, provider),
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Colors.white,
           child: const Icon(Icons.add_rounded),
         ),
@@ -651,7 +651,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Buat Kategori Pertama'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -716,7 +716,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
             color: isDark ? Colors.grey[900] : Colors.grey[100],
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.deepPurple.withValues(alpha: 0.15),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
             ),
           ),
           child: TextField(
@@ -724,10 +724,10 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
             style: const TextStyle(fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Cari kategori atau sub-keahlian...',
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.search_rounded,
                 size: 20,
-                color: Colors.deepPurple,
+                color: Theme.of(context).colorScheme.primary,
               ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
@@ -777,7 +777,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     ),
                   ),
                   selected: isSelected,
-                  selectedColor: Colors.deepPurple,
+                  selectedColor: Theme.of(context).colorScheme.primary,
                   backgroundColor: isDark ? Colors.grey[950] : Colors.grey[200],
                   checkmarkColor: Colors.white,
                   onSelected: (selected) {
@@ -1278,11 +1278,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Nama Kategori',
                         prefixIcon: Icon(
                           Icons.category_rounded,
-                          color: Colors.deepPurple,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -1290,7 +1290,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
                           borderSide: BorderSide(
-                            color: Colors.deepPurple,
+                            color: Theme.of(context).colorScheme.primary,
                             width: 2,
                           ),
                         ),
@@ -1522,11 +1522,11 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Nama Kategori',
                         prefixIcon: Icon(
                           Icons.category_outlined,
-                          color: Colors.deepPurple,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -1534,7 +1534,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(16)),
                           borderSide: BorderSide(
-                            color: Colors.deepPurple,
+                            color: Theme.of(context).colorScheme.primary,
                             width: 2,
                           ),
                         ),

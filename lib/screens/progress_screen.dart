@@ -297,11 +297,27 @@ class _ProgressLogsView extends StatelessWidget {
         itemCount: logs.length,
         itemBuilder: (context, index) {
           final log = logs[index];
+          Color skillColor = Theme.of(context).colorScheme.primary;
+          if (log.skillId != null) {
+            try {
+              final skill = skillProv.skills.firstWhere((s) => s.id == log.skillId);
+              final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+              skillColor = Color(cat.colorValue);
+            } catch (_) {}
+          }
+
           return Card(
+            elevation: 0,
+            color: skillColor.withValues(alpha: 0.08),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
+            ),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _showEditLogDialog(context, log),
+              splashColor: skillColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
               onLongPress: () async {
                 final confirm = await _showDeleteConfirmationDialog(context, log.title);
                 if (confirm && log.id != null) {
@@ -330,7 +346,7 @@ class _ProgressLogsView extends StatelessWidget {
                       log.skillId != null
                           ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
                           : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.8, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: skillColor, fontSize: fontSize * 0.8, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -343,7 +359,7 @@ class _ProgressLogsView extends StatelessWidget {
                     Text(
                       skillProv.translate('duration_minutes', args: [log.durationMinutes.toString()]),
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: skillColor,
                           fontWeight: FontWeight.bold,
                           fontSize: fontSize * 0.9),
                     ),
@@ -361,46 +377,27 @@ class _ProgressLogsView extends StatelessWidget {
       itemCount: logs.length,
       itemBuilder: (context, index) {
         final log = logs[index];
+        Color skillColor = Theme.of(context).colorScheme.primary;
+        if (log.skillId != null) {
+          try {
+            final skill = skillProv.skills.firstWhere((s) => s.id == log.skillId);
+            final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+            skillColor = Color(cat.colorValue);
+          } catch (_) {}
+        }
+
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            title: Text(log.title,
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(
-                  log.skillId != null
-                      ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 4),
-                Text(log.note, style: TextStyle(fontSize: fontSize * 0.9)),
-                const SizedBox(height: 4),
-                Text(
-                  DateFormat('dd MMM yyyy, HH:mm').format(log.date),
-                  style: TextStyle(fontSize: fontSize * 0.8, color: Colors.grey),
-                ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (log.photoPath != null && log.photoPath!.isNotEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
-                    child: Icon(Icons.image_rounded, color: Colors.blueGrey, size: 20),
-                  ),
-                Chip(
-                  label: Text(skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
-                      style: TextStyle(fontSize: fontSize * 0.8)),
-                ),
-              ],
-            ),
-            onTap: () => _showEditLogDialog(context, log),
+          elevation: 0,
+          color: skillColor.withValues(alpha: 0.08),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
+          ),
+          child: InkWell(
+            splashColor: skillColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
             onLongPress: () async {
               final confirm = await _showDeleteConfirmationDialog(context, log.title);
               if (confirm && log.id != null) {
@@ -412,6 +409,58 @@ class _ProgressLogsView extends StatelessWidget {
                 }
               }
             },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(log.title,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize)),
+                      ),
+                      if (log.photoPath != null && log.photoPath!.isNotEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 8.0),
+                          child: Icon(Icons.image_rounded, color: Colors.blueGrey, size: 20),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    log.skillId != null
+                        ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                        : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                    style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(log.note, style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        DateFormat('dd MMM yyyy, HH:mm').format(log.date),
+                        style: TextStyle(fontSize: fontSize * 0.8, color: Colors.grey),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: skillColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
+                          style: TextStyle(fontSize: fontSize * 0.8, color: skillColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -446,10 +495,27 @@ class _ChallengesView extends StatelessWidget {
           final challenge = challenges[index];
           final isCompleted = challenge.isCompleted == 1;
 
+          Color skillColor = Theme.of(context).colorScheme.primary;
+          if (challenge.skillId != null) {
+            try {
+              final skill = skillProv.skills.firstWhere((s) => s.id == challenge.skillId);
+              final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+              skillColor = Color(cat.colorValue);
+            } catch (_) {}
+          }
+
           return Card(
             margin: EdgeInsets.zero,
+            elevation: 0,
+            color: skillColor.withValues(alpha: 0.08),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: () => _showEditChallengeDialog(context, challenge),
+              splashColor: skillColor.withValues(alpha: 0.2),
+              onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
               onLongPress: () async {
                 final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
                 if (confirm && challenge.id != null) {
@@ -474,6 +540,7 @@ class _ChallengesView extends StatelessWidget {
                           height: 24,
                           child: Checkbox(
                             value: isCompleted,
+                            activeColor: Colors.green,
                             onChanged: (val) {
                               if (val != null) {
                                 provider.updateChallenge(
@@ -507,7 +574,7 @@ class _ChallengesView extends StatelessWidget {
                       challenge.skillId != null
                           ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
                           : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -518,7 +585,7 @@ class _ChallengesView extends StatelessWidget {
                           : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
                       style: TextStyle(
                           fontSize: fontSize * 0.8,
-                          color: isCompleted ? Colors.grey : Colors.orange),
+                          color: isCompleted ? Colors.green : Colors.orange),
                     ),
                   ],
                 ),
@@ -535,73 +602,104 @@ class _ChallengesView extends StatelessWidget {
       itemBuilder: (context, index) {
         final challenge = challenges[index];
         final isCompleted = challenge.isCompleted == 1;
+        Color skillColor = Theme.of(context).colorScheme.primary;
+        if (challenge.skillId != null) {
+          try {
+            final skill = skillProv.skills.firstWhere((s) => s.id == challenge.skillId);
+            final cat = skillProv.categories.firstWhere((c) => c.id == skill.categoryId);
+            skillColor = Color(cat.colorValue);
+          } catch (_) {}
+        }
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: Checkbox(
-              value: isCompleted,
-              onChanged: (val) {
-                if (val != null) {
-                  provider.updateChallenge(
-                    challenge.copyWith(isCompleted: val ? 1 : 0),
+          elevation: 0,
+          color: skillColor.withValues(alpha: 0.08),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
+          ),
+          child: InkWell(
+            splashColor: skillColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
+            onLongPress: () async {
+              final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
+              if (confirm && challenge.id != null) {
+                provider.deleteChallenge(challenge.id!);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
                   );
-                  if (challenge.skillId != null) {
-                    // Penambahan progress: 20% (0.2) untuk setiap tantangan yang selesai
-                    final amount = val ? 0.2 : -0.2;
-                    skillProv.incrementSkillProgress(challenge.skillId!, amount);
-                  }
                 }
-              },
-            ),
-            title: Text(
-              challenge.title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: fontSize,
-                decoration: isCompleted ? TextDecoration.lineThrough : null,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(
-                  challenge.skillId != null
-                      ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 4),
-                if (challenge.description.isNotEmpty) ...[
-                  Text(challenge.description,
-                      style: TextStyle(fontSize: fontSize * 0.9)),
-                  const SizedBox(height: 4),
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: isCompleted,
+                    activeColor: Colors.green,
+                    onChanged: (val) {
+                      if (val != null) {
+                        provider.updateChallenge(
+                          challenge.copyWith(isCompleted: val ? 1 : 0),
+                        );
+                        if (challenge.skillId != null) {
+                          final amount = val ? 0.2 : -0.2;
+                          skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                        }
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          challenge.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: fontSize,
+                            decoration: isCompleted ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          challenge.skillId != null
+                              ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+                              : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                          style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                        ),
+                        if (challenge.description.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(challenge.description,
+                              style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        ],
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(Icons.event_available_rounded, size: 14, color: isCompleted ? Colors.green : Colors.orange),
+                            const SizedBox(width: 4),
+                            Text(
+                              skillProv.defaultLang == 'id'
+                                  ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
+                                  : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
+                              style: TextStyle(
+                                  fontSize: fontSize * 0.8,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCompleted ? Colors.green : Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-                Text(
-                  skillProv.defaultLang == 'id'
-                      ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
-                      : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
-                  style: TextStyle(
-                      fontSize: fontSize * 0.8,
-                      color: isCompleted ? Colors.grey : Colors.orange),
-                ),
-              ],
-            ),
-            onTap: () => _showEditChallengeDialog(context, challenge),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () async {
-                final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
-                if (confirm && challenge.id != null) {
-                  provider.deleteChallenge(challenge.id!);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
-                    );
-                  }
-                }
-              },
+              ),
             ),
           ),
         );
@@ -1410,4 +1508,297 @@ Future<bool> _showDeleteConfirmationDialog(BuildContext context, String title) a
         },
       ) ??
       false;
+}
+
+void _showLogDetailModal(
+  BuildContext context,
+  ProgressLog log,
+  Color skillColor,
+  SkillProvider skillProv,
+  ProgressProvider provider,
+) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final skillName = log.skillId != null
+      ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global');
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: skillColor.withValues(alpha: 0.15),
+                  child: Icon(Icons.history_edu, color: skillColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        log.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      Text(
+                        '${skillProv.translate('nav_skills')}: $skillName',
+                        style: TextStyle(color: skillColor, fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showEditLogDialog(context, log);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            if (log.photoPath != null && log.photoPath!.isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: log.photoPath!.startsWith('http')
+                    ? Image.network(log.photoPath!, height: 200, width: double.infinity, fit: BoxFit.cover)
+                    : Image.memory(base64Decode(log.photoPath!), height: 200, width: double.infinity, fit: BoxFit.cover),
+              ),
+              const SizedBox(height: 24),
+            ],
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: skillColor.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        DateFormat('EEEE, dd MMM yyyy').format(log.date),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.timer_rounded, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        skillProv.translate('duration_minutes', args: [log.durationMinutes.toString()]),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              skillProv.defaultLang == 'id' ? 'Catatan Aktivitas' : 'Activity Notes',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              log.note.isEmpty ? (skillProv.defaultLang == 'id' ? 'Tidak ada catatan.' : 'No notes.') : log.note,
+              style: const TextStyle(height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: skillColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.check_rounded),
+              label: Text(skillProv.defaultLang == 'id' ? 'Tutup' : 'Close'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+void _showChallengeDetailModal(
+  BuildContext context,
+  Challenge challenge,
+  Color skillColor,
+  SkillProvider skillProv,
+  ProgressProvider provider,
+) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final skillName = challenge.skillId != null
+      ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
+      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global');
+  final isCompleted = challenge.isCompleted == 1;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: isCompleted ? Colors.green.withValues(alpha: 0.15) : skillColor.withValues(alpha: 0.15),
+                  child: Icon(
+                    isCompleted ? Icons.check_circle_rounded : Icons.emoji_events_rounded,
+                    color: isCompleted ? Colors.green : skillColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        challenge.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      Text(
+                        '${skillProv.translate('nav_skills')}: $skillName',
+                        style: TextStyle(color: skillColor, fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showEditChallengeDialog(context, challenge);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: skillColor.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.event_available_rounded, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        skillProv.defaultLang == 'id'
+                            ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
+                            : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(isCompleted ? Icons.task_alt_rounded : Icons.hourglass_top_rounded, size: 16, color: isCompleted ? Colors.green : Colors.orange),
+                      const SizedBox(width: 8),
+                      Text(
+                        isCompleted 
+                            ? (skillProv.defaultLang == 'id' ? 'Tantangan Selesai' : 'Challenge Completed')
+                            : (skillProv.defaultLang == 'id' ? 'Belum Selesai' : 'Not Completed'),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: isCompleted ? Colors.green : Colors.orange),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              skillProv.defaultLang == 'id' ? 'Deskripsi Tantangan' : 'Challenge Description',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              challenge.description.isEmpty ? (skillProv.defaultLang == 'id' ? 'Tidak ada deskripsi.' : 'No description.') : challenge.description,
+              style: const TextStyle(height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: skillColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.check_rounded),
+              label: Text(skillProv.defaultLang == 'id' ? 'Tutup' : 'Close'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

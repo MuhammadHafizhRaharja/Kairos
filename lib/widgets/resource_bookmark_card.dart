@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:any_link_preview/any_link_preview.dart';
 import 'package:lottie/lottie.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
@@ -302,7 +301,6 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
       child: GestureDetector(
         onDoubleTap: _handleDoubleTap,
         onLongPress: widget.onEdit,
-        onTap: _openLink,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -457,57 +455,35 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      if (hasUrl && !widget.isGrid) ...[
+                      // ── Tombol Buka Materi ──
+                      if (hasUrl) ...[
                         const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: AnyLinkPreview(
-                            link: widget.resource.url,
-                            displayDirection:
-                                UIDirection.uiDirectionHorizontal,
-                            showMultimedia: true,
-                            bodyMaxLines: 2,
-                            bodyTextOverflow: TextOverflow.ellipsis,
-                            titleStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                            bodyStyle: TextStyle(
-                              color: theme.hintColor,
-                              fontSize: 11,
-                            ),
-                            errorWidget: Container(
-                              padding: const EdgeInsets.all(8),
-                              color:
-                                  theme.colorScheme.surfaceContainerHighest,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.link_rounded,
-                                    color: theme.hintColor,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      widget.resource.url,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.colorScheme.primary,
-                                        decoration:
-                                            TextDecoration.underline,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.tonal(
+                            onPressed: _openLink,
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            cache: const Duration(days: 7),
-                            backgroundColor:
-                                theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: 12,
-                            removeElevation: true,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.open_in_new_rounded, size: 16),
+                                const SizedBox(width: 6),
+                                Text(
+                                  widget.provider.defaultLang == 'en'
+                                      ? 'Open Material'
+                                      : 'Buka Materi',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],

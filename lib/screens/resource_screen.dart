@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 import '../providers/skill_provider.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
 import '../providers/progress_provider.dart';
+import '../widgets/resource_bookmark_card.dart';
 
 /// Halaman Modul Resource (Referensi & Materi Belajar) yang sangat estetis dan fungsional.
 /// Menyediakan manajemen materi belajar (CRUD) yang terintegrasi dengan database lokal
@@ -526,564 +526,36 @@ class _ResourceScreenState extends State<ResourceScreen>
     Resource resource, {
     bool isGrid = false,
   }) {
-    final isReference = resource.resourceType == 'referensi';
-
-    // 1. Cari relasi ke Skill
     Skill? linkedSkill;
-    Color skillColor = theme.colorScheme.primary;
     if (resource.skillId != null) {
       try {
         linkedSkill = provider.skills.firstWhere(
           (s) => s.id == resource.skillId,
         );
-        final parentCat = provider.categories.firstWhere(
-          (c) => c.id == linkedSkill!.categoryId,
-        );
-        skillColor = Color(parentCat.colorValue);
       } catch (_) {
         linkedSkill = null;
       }
     }
 
-    return Dismissible(
-      key: Key('resource_${resource.id}'),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.error.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Icon(Icons.delete_rounded, color: Colors.white),
-      ),
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (dialogCtx) => AlertDialog(
-            title: Text(
-              provider.translate('delete_confirm_title'),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              provider.translate('delete_confirm_desc', args: [resource.title]),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogCtx, false),
-                child: Text(provider.translate('cancel')),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(dialogCtx, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.error,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(provider.translate('delete')),
-              ),
-            ],
-          ),
-        );
-      },
-      onDismissed: (direction) {
-        if (resource.id != null) {
-          provider.deleteResource(resource.id!);
-          final typeWord = provider.translate(
-            isReference ? 'referensi' : 'materi',
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                provider.translate(
-                  'deleted_success',
-                  args: ['$typeWord "${resource.title}"'],
-                ),
-              ),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        }
-      },
-      child: GestureDetector(
-        // Double Tap Shortcut: Ganti status dengan memutar nilai status 0 -> 1 -> 2 -> 0 (hanya untuk materi)
-        onDoubleTap: isReference
-            ? null
-            : () {
-                final nextStatus = (resource.status + 1) % 3;
-                final updatedResource = Resource(
-                  id: resource.id,
-                  userId: resource.userId,
-                  skillId: resource.skillId,
-                  title: resource.title,
-                  url: resource.url,
-                  description: resource.description,
-                  category: resource.category,
-                  status: nextStatus,
-                  resourceType: resource.resourceType,
-                  createdAt: resource.createdAt,
-                );
-                provider.updateResource(updatedResource);
-
-                String statusWord = nextStatus == 0
-                    ? provider.translate('status_unread_icon')
-                    : (nextStatus == 1
-                          ? provider.translate('status_reading_icon')
-                          : provider.translate('status_completed_icon'));
-                ScaffoldMessenger.of(context).clearSnackBars();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      provider.translate(
-                        'status_changed',
-                        args: [resource.title, statusWord],
-                      ),
-                    ),
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
-        // Long Press Shortcut: langsung edit bottom sheet
-        onLongPress: () => _showAddEditResourceBottomSheet(
+    return ResourceBookmarkCard(
+      resource: resource,
+      provider: provider,
+      linkedSkill: linkedSkill,
+      isGrid: isGrid,
+      onEdit: () {
+        _showAddEditResourceBottomSheet(
           context,
           provider,
           resource: resource,
           type: resource.resourceType,
-        ),
-        child: Card(
-          elevation: 0.5,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.05)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Baris Atas: Kategori Icon + Judul + Popup Options
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: theme.colorScheme.primary.withValues(
-                        alpha: 0.1,
-                      ),
-                      child: Icon(
-                        _getCategoryIcon(resource.category),
-                        color: theme.colorScheme.primary,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            resource.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.5,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getLocalizedCategoryName(
-                              resource.category,
-                              provider.defaultLang,
-                            ),
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: theme.hintColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      icon: Icon(
-                        Icons.more_vert_rounded,
-                        color: theme.hintColor,
-                        size: 20,
-                      ),
-                      onSelected: (val) {
-                        if (val == 'edit') {
-                          _showAddEditResourceBottomSheet(
-                            context,
-                            provider,
-                            resource: resource,
-                            type: resource.resourceType,
-                          );
-                        } else if (val == 'delete') {
-                          _confirmDelete(context, provider, resource, theme);
-                        } else if (val == 'status') {
-                          _showStatusQuickSelect(
-                            context,
-                            provider,
-                            resource,
-                            theme,
-                          );
-                        }
-                      },
-                      itemBuilder: (popCtx) => [
-                        if (!isReference)
-                          PopupMenuItem(
-                            value: 'status',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.rule_rounded, size: 16),
-                                const SizedBox(width: 8),
-                                Text(
-                                  provider.translate('change_status'),
-                                  style: const TextStyle(fontSize: 12.5),
-                                ),
-                              ],
-                            ),
-                          ),
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.edit_rounded, size: 16),
-                              const SizedBox(width: 8),
-                              Text(
-                                provider.translate('edit_details'),
-                                style: const TextStyle(fontSize: 12.5),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.delete_rounded,
-                                color: Colors.red,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                provider.translate('delete'),
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 12.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                // Deskripsi jika ada
-                if (resource.description.trim().isNotEmpty && !isGrid) ...[
-                  Text(
-                    resource.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.hintColor,
-                      height: 1.3,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                ],
-
-                // Relasi Keahlian (Skill) jika ada
-                if (linkedSkill != null && !isGrid) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: skillColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: skillColor.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.emoji_events_rounded,
-                          color: skillColor,
-                          size: 12,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${provider.translate('nav_skills')}: ${linkedSkill.name}',
-                          style: TextStyle(
-                            color: skillColor,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-
-                const Divider(height: 1),
-                const SizedBox(height: 10),
-
-                // Baris Bawah: Status Badge / Referensi Badge
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 4,
-                  runSpacing: 8,
-                  children: [
-                    // Status Badge / Referensi Badge
-                    if (!isReference)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(
-                            resource.status,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _getStatusColor(
-                              resource.status,
-                            ).withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(resource.status),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _getStatusText(resource.status, provider),
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: _getStatusColor(resource.status),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.secondary.withValues(
-                              alpha: 0.2,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.bookmark_rounded,
-                              size: 12,
-                              color: theme.colorScheme.secondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              provider.translate('referensi'),
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: theme.colorScheme.secondary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Aksi URL
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Launch link
-                        TextButton.icon(
-                          onPressed: () async {
-                            final rawUrl = resource.url.trim();
-                            // Tambahkan prefix http:// jika tidak ada skema lengkap
-                            String validUrl = rawUrl;
-                            if (!rawUrl.startsWith('http://') &&
-                                !rawUrl.startsWith('https://')) {
-                              validUrl = 'https://$rawUrl';
-                            }
-                            final Uri uri = Uri.parse(validUrl);
-                            try {
-                              await launchUrl(
-                                uri,
-                                mode: LaunchMode.externalApplication,
-                              );
-                            } catch (e) {
-                              // Fallback jika gagal membuka link
-                              await Clipboard.setData(
-                                ClipboardData(text: resource.url),
-                              );
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Tautan disalin ke papan klip! 📋',
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          icon: const Icon(Icons.open_in_new_rounded, size: 14),
-                          label: Text(
-                            provider.translate('open'),
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            backgroundColor: theme.colorScheme.primary
-                                .withValues(alpha: 0.08),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Menampilkan menu selection status cepat
-  void _showStatusQuickSelect(
-    BuildContext context,
-    SkillProvider provider,
-    Resource resource,
-    ThemeData theme,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetCtx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                provider.translate('choose_reading_status'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildQuickStatusItem(
-                context,
-                provider,
-                resource,
-                0,
-                provider.translate('status_unread_icon'),
-                Colors.grey,
-              ),
-              const Divider(height: 1),
-              _buildQuickStatusItem(
-                context,
-                provider,
-                resource,
-                1,
-                provider.translate('status_reading_icon'),
-                const Color(0xFFFF9800),
-              ),
-              const Divider(height: 1),
-              _buildQuickStatusItem(
-                context,
-                provider,
-                resource,
-                2,
-                provider.translate('status_completed_icon'),
-                const Color(0xFF4CAF50),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStatusItem(
-    BuildContext context,
-    SkillProvider provider,
-    Resource resource,
-    int targetStatus,
-    String label,
-    Color color,
-  ) {
-    final isSelected = resource.status == targetStatus;
-    return ListTile(
-      leading: Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-      trailing: isSelected
-          ? Icon(
-              Icons.check_circle_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            )
-          : null,
-      onTap: () {
-        final updated = Resource(
+        );
+      },
+      onDelete: () {
+        _confirmDelete(context, provider, resource, theme);
+      },
+      onStatusChangeRequested: () {
+        final nextStatus = (resource.status + 1) % 3;
+        final updatedResource = Resource(
           id: resource.id,
           userId: resource.userId,
           skillId: resource.skillId,
@@ -1091,14 +563,35 @@ class _ResourceScreenState extends State<ResourceScreen>
           url: resource.url,
           description: resource.description,
           category: resource.category,
-          status: targetStatus,
+          status: nextStatus,
+          resourceType: resource.resourceType,
           createdAt: resource.createdAt,
         );
-        provider.updateResource(updated);
-        Navigator.pop(context);
+        provider.updateResource(updatedResource);
+
+        String statusWord = nextStatus == 0
+            ? provider.translate('status_unread_icon')
+            : (nextStatus == 1
+                  ? provider.translate('status_reading_icon')
+                  : provider.translate('status_completed_icon'));
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              provider.translate(
+                'status_changed',
+                args: [resource.title, statusWord],
+              ),
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
+          ),
+        );
       },
     );
   }
+
+
 
   /// Dialog konfirmasi hapus manual dari PopupMenu
   void _confirmDelete(
@@ -1276,6 +769,20 @@ class _ResourceScreenState extends State<ResourceScreen>
                                       ? 'Link / URL Materi'
                                       : 'Material Link / URL'),
                             prefixIcon: const Icon(Icons.link_rounded),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.attach_file_rounded),
+                              tooltip: provider.defaultLang == 'id'
+                                  ? 'Pilih File Lokal'
+                                  : 'Pick Local File',
+                              onPressed: () async {
+                                final result = await FilePicker.pickFiles(
+                                  type: FileType.any,
+                                );
+                                if (result != null && result.files.single.path != null) {
+                                  urlController.text = 'file://${result.files.single.path}';
+                                }
+                              },
+                            ),
                             hintText: 'https://...',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -1288,10 +795,11 @@ class _ResourceScreenState extends State<ResourceScreen>
                                   : 'Link cannot be empty';
                             }
                             if (!val.trim().startsWith('http://') &&
-                                !val.trim().startsWith('https://')) {
+                                !val.trim().startsWith('https://') &&
+                                !val.trim().startsWith('file://')) {
                               return provider.defaultLang == 'id'
-                                  ? 'Gunakan format URL yang valid (dimulai http/https)'
-                                  : 'Use valid URL format (starting with http/https)';
+                                  ? 'Gunakan format URL yang valid (dimulai http/https/file)'
+                                  : 'Use valid URL format (starting with http/https/file)';
                             }
                             return null;
                           },
@@ -1592,20 +1100,6 @@ class _ResourceScreenState extends State<ResourceScreen>
     );
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Video':
-        return Icons.video_library_rounded;
-      case 'Artikel':
-        return Icons.article_rounded;
-      case 'Buku':
-        return Icons.menu_book_rounded;
-      case 'Dokumentasi':
-        return Icons.description_rounded;
-      default:
-        return Icons.link_rounded;
-    }
-  }
 
   Widget _buildChoiceStatusChip(
     int statusValue,
@@ -1639,27 +1133,5 @@ class _ResourceScreenState extends State<ResourceScreen>
       }
     }
     return cat;
-  }
-
-  Color _getStatusColor(int status) {
-    switch (status) {
-      case 2:
-        return const Color(0xFF4CAF50); // Hijau (Selesai)
-      case 1:
-        return const Color(0xFFFF9800); // Jingga (Membaca)
-      default:
-        return Colors.grey; // Abu-abu (Belum)
-    }
-  }
-
-  String _getStatusText(int status, SkillProvider provider) {
-    switch (status) {
-      case 2:
-        return provider.translate('filter_completed');
-      case 1:
-        return provider.translate('filter_reading');
-      default:
-        return provider.translate('filter_unread');
-    }
   }
 }

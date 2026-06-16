@@ -392,52 +392,113 @@ class _ResourceScreenState extends State<ResourceScreen>
     );
   }
 
-  /// Chips untuk filter status resources
+  /// Chips untuk filter status resources (dengan animasi transisi)
   Widget _buildFilterChips(ThemeData theme, SkillProvider provider) {
     final filters = [
-      {'key': 'Semua', 'label': provider.translate('filter_all')},
-      {'key': 'Belum Dibaca', 'label': provider.translate('filter_unread')},
-      {'key': 'Sedang Dibaca', 'label': provider.translate('filter_reading')},
-      {'key': 'Selesai', 'label': provider.translate('filter_completed')},
+      {
+        'key': 'Semua',
+        'label': provider.translate('filter_all'),
+        'icon': Icons.select_all_rounded,
+      },
+      {
+        'key': 'Belum Dibaca',
+        'label': provider.translate('filter_unread'),
+        'icon': Icons.radio_button_unchecked_rounded,
+      },
+      {
+        'key': 'Sedang Dibaca',
+        'label': provider.translate('filter_reading'),
+        'icon': Icons.chrome_reader_mode_rounded,
+      },
+      {
+        'key': 'Selesai',
+        'label': provider.translate('filter_completed'),
+        'icon': Icons.check_circle_rounded,
+      },
     ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: filters.map((f) {
-          final filterKey = f['key']!;
-          final filterLabel = f['label']!;
+          final filterKey = f['key'] as String;
+          final filterLabel = f['label'] as String;
+          final filterIcon = f['icon'] as IconData;
           final isSelected = provider.selectedFilter == filterKey;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              label: Text(
-                filterLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            child: AnimatedScale(
+              scale: isSelected ? 1.08 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                decoration: BoxDecoration(
                   color: isSelected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: InkWell(
+                  onTap: () => provider.updateSelectedFilter(filterKey),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, anim) =>
+                          FadeTransition(opacity: anim, child: child),
+                      child: Row(
+                        key: ValueKey('$filterKey-$isSelected'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            filterIcon,
+                            size: 14,
+                            color: isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.hintColor,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            filterLabel,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              selected: isSelected,
-              selectedColor: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surfaceContainer,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              onSelected: (val) {
-                if (val) {
-                  provider.updateSelectedFilter(filterKey);
-                }
-              },
             ),
           );
         }).toList(),
       ),
     );
   }
+
 
   Widget _buildEmptyState(ThemeData theme, String selectedFilter) {
     return Consumer<SkillProvider>(

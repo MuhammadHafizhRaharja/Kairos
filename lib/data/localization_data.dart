@@ -18,14 +18,15 @@ class AppLocalizations {
       // Home Screen
       'hello': 'Hello',
       'focus_consistent': 'Focus & Consistent',
-      'quote_body': 'Small steps every day accumulate big changes. What skill do you want to hone today?',
+      'quote_body':
+          'Small steps every day accumulate big changes. What skill do you want to hone today?',
       'progress_rings': 'Progress Rings',
       'skill_module': 'Skill Module',
       'resource_module': 'Resource Module',
       'progress_module': 'Progress Log',
       'categories': 'Categories',
       'active_skills': 'Active Skills',
-      'weekly_activity': 'Weekly Activity',
+      'weekly_activity': 'Weekly Learning Activity',
       'recent_activity': 'Recent Skill Activity',
       'tracked_since': 'Tracked since: {0}',
       'nav_menu': 'Feature Navigation Menu',
@@ -47,7 +48,8 @@ class AppLocalizations {
       'language_desc': 'Reference language for articles/materials',
       'logout_active_session': 'Log Out of Active Session',
       'logout_session': 'Log Out Session',
-      'logout_confirm': 'Are you sure you want to log out of your account? All your learning achievements remain safely stored.',
+      'logout_confirm':
+          'Are you sure you want to log out of your account? All your learning achievements remain safely stored.',
       'logout': 'Log Out',
       'logout_success': 'You have successfully logged out! See you soon! 👋',
       'edit_profile_info': 'Edit Profile & Info',
@@ -66,7 +68,8 @@ class AppLocalizations {
       'web_image_url': 'Web Image URL/Link',
       'or_choose_archetype': 'Or Choose Archetype Character',
       'classic': 'Classic',
-      'profile_updated': 'Profile & Account Information successfully updated! 💖',
+      'profile_updated':
+          'Profile & Account Information successfully updated! 💖',
       'notification_active': 'Learning notification active! 🔔',
       'notification_inactive': 'Learning notification inactive! 🔕',
       'lang_changed': 'Reference language changed to: {0} 🌐',
@@ -87,10 +90,12 @@ class AppLocalizations {
       'filter_reading': 'Reading',
       'filter_completed': 'Completed',
       'no_material': 'No Materials',
-      'no_material_desc': 'No learning materials registered yet. Add your study material links!',
+      'no_material_desc':
+          'No learning materials registered yet. Add your study material links!',
       'no_material_status': 'No materials with status: {0}',
       'no_reference': 'No References',
-      'no_reference_desc': 'No additional references yet. Add useful reference links!',
+      'no_reference_desc':
+          'No additional references yet. Add useful reference links!',
       'delete_confirm_title': 'Delete?',
       'delete_confirm_desc': 'Are you sure you want to delete "{0}"?',
       'deleted_success': '"{0}" successfully deleted',
@@ -143,14 +148,15 @@ class AppLocalizations {
       // Home Screen
       'hello': 'Halo',
       'focus_consistent': 'Fokus & Konsisten',
-      'quote_body': 'Langkah kecil setiap hari akan mengakumulasi perubahan besar. Keahlian apa yang ingin kamu asah hari ini?',
+      'quote_body':
+          'Langkah kecil setiap hari akan mengakumulasi perubahan besar. Keahlian apa yang ingin kamu asah hari ini?',
       'progress_rings': 'Cincin Kemajuan',
       'skill_module': 'Modul Skill',
       'resource_module': 'Modul Resource',
       'progress_module': 'Modul Progress',
       'categories': 'Kategori',
       'active_skills': 'Keahlian Aktif',
-      'weekly_activity': 'Aktivitas Mingguan',
+      'weekly_activity': 'Aktivitas Belajar Mingguan',
       'recent_activity': 'Aktivitas Keahlian Terkini',
       'tracked_since': 'Dilacak sejak: {0}',
       'nav_menu': 'Menu Navigasi Fitur',
@@ -172,9 +178,11 @@ class AppLocalizations {
       'language_desc': 'Bahasa rujukan untuk artikel/materi',
       'logout_active_session': 'Keluar dari Sesi Aktif',
       'logout_session': 'Keluar Sesi',
-      'logout_confirm': 'Apakah Anda yakin ingin keluar dari akun Anda? Seluruh pencapaian belajarmu tetap tersimpan dengan aman.',
+      'logout_confirm':
+          'Apakah Anda yakin ingin keluar dari akun Anda? Seluruh pencapaian belajarmu tetap tersimpan dengan aman.',
       'logout': 'Keluar',
-      'logout_success': 'Anda telah berhasil keluar akun! Sampai jumpa lagi! 👋',
+      'logout_success':
+          'Anda telah berhasil keluar akun! Sampai jumpa lagi! 👋',
       'edit_profile_info': 'Edit Profil & Informasi',
       'edit_profile': 'Ubah Profil & Informasi',
       'full_name': 'Nama Lengkap',
@@ -186,7 +194,8 @@ class AppLocalizations {
       'use_own_photo': 'Gunakan Foto Anda Sendiri',
       'custom_photo_active': 'Foto kustom Anda aktif!',
       'using_archetype': 'Menggunakan archetype/klasik.',
-      'choose_small_photo': 'Pilih foto kecil (< 1MB) agar penyimpanan tetap awet.',
+      'choose_small_photo':
+          'Pilih foto kecil (< 1MB) agar penyimpanan tetap awet.',
       'choose_file_device': 'Pilih File dari Perangkat',
       'web_image_url': 'Tautan/URL Gambar Web',
       'or_choose_archetype': 'Atau Pilih Karakter Archetype',
@@ -212,10 +221,12 @@ class AppLocalizations {
       'filter_reading': 'Sedang Dibaca',
       'filter_completed': 'Selesai',
       'no_material': 'Tidak Ada Materi',
-      'no_material_desc': 'Belum ada materi belajar terdaftar. Tambahkan tautan materi belajar Anda!',
+      'no_material_desc':
+          'Belum ada materi belajar terdaftar. Tambahkan tautan materi belajar Anda!',
       'no_material_status': 'Tidak ada materi dengan status: {0}',
       'no_reference': 'Tidak Ada Referensi',
-      'no_reference_desc': 'Belum ada referensi tambahan. Tambahkan tautan referensi yang berguna!',
+      'no_reference_desc':
+          'Belum ada referensi tambahan. Tambahkan tautan referensi yang berguna!',
       'delete_confirm_title': 'Hapus?',
       'delete_confirm_desc': 'Apakah Anda yakin ingin menghapus "{0}"?',
       'deleted_success': '"{0}" berhasil dihapus',
@@ -249,11 +260,12 @@ class AppLocalizations {
       'add_challenge_success': 'Tantangan baru berhasil ditambahkan!',
       'edit_log_success': 'Log progres berhasil diperbarui!',
       'edit_challenge_success': 'Tantangan berhasil diperbarui!',
-    }
+    },
   };
 
   static String translate(String lang, String key, {List<String>? args}) {
-    String value = _localizedValues[lang]?[key] ?? _localizedValues['id']?[key] ?? key;
+    String value =
+        _localizedValues[lang]?[key] ?? _localizedValues['id']?[key] ?? key;
     if (args != null && args.isNotEmpty) {
       for (int i = 0; i < args.length; i++) {
         value = value.replaceAll('{$i}', args[i]);

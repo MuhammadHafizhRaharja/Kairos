@@ -4,7 +4,8 @@ class Skill {
   final int? id; // ID unik (auto-increment di SQLite)
   final int? userId; // ID Pengguna pemilik keahlian ini
   final int categoryId; // Foreign key yang menghubungkan ke tabel SkillCategory
-  final String name; // Nama keahlian (misal: "State Management", "Tembakan Bebas")
+  final String
+  name; // Nama keahlian (misal: "State Management", "Tembakan Bebas")
   final String description; // Deskripsi detail keahlian
   final int level; // Tingkat kemahiran saat ini (misal: 1 s.d. 5)
   final double progress; // Persentase progres keahlian (rentang 0.0 s.d. 1.0)
@@ -53,7 +54,8 @@ class Skill {
       'description': description,
       'level': level,
       'progress': progress,
-      'createdAt': createdAt.toIso8601String(), // Menyimpan DateTime sebagai String format ISO 8601
+      'createdAt': createdAt
+          .toIso8601String(), // Menyimpan DateTime sebagai String format ISO 8601
     };
     if (id != null) {
       map['id'] = id;

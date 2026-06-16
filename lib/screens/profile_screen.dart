@@ -14,28 +14,57 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   /// Render helper untuk avatar pengguna yang fleksibel dan premium
-  static Widget buildAvatarWidget(String? photoPath, String name, double radius, ThemeData theme) {
+  static Widget buildAvatarWidget(
+    String? photoPath,
+    String name,
+    double radius,
+    ThemeData theme,
+  ) {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'K';
-    
+
     // Check if it's a predefined archetype first
     if (photoPath == 'coder') {
-      return _avatarContainer(radius, [Colors.blue, Colors.cyan], Icons.code_rounded);
+      return _avatarContainer(radius, [
+        Colors.blue,
+        Colors.cyan,
+      ], Icons.code_rounded);
     } else if (photoPath == 'athlete') {
-      return _avatarContainer(radius, [Colors.green, Colors.teal], Icons.fitness_center_rounded);
+      return _avatarContainer(radius, [
+        Colors.green,
+        Colors.teal,
+      ], Icons.fitness_center_rounded);
     } else if (photoPath == 'polyglot') {
-      return _avatarContainer(radius, [Colors.orange, Colors.amber], Icons.translate_rounded);
+      return _avatarContainer(radius, [
+        Colors.orange,
+        Colors.amber,
+      ], Icons.translate_rounded);
     } else if (photoPath == 'artist') {
-      return _avatarContainer(radius, [Colors.red, Colors.pink], Icons.music_note_rounded);
+      return _avatarContainer(radius, [
+        Colors.red,
+        Colors.pink,
+      ], Icons.music_note_rounded);
     } else if (photoPath == 'explorer') {
-      return _avatarContainer(radius, [Colors.purple, Colors.deepPurple], Icons.rocket_launch_rounded);
+      return _avatarContainer(radius, [
+        Colors.purple,
+        Colors.deepPurple,
+      ], Icons.rocket_launch_rounded);
     } else if (photoPath == 'scholar') {
-      return _avatarContainer(radius, [Colors.teal, Colors.cyan], Icons.menu_book_rounded);
+      return _avatarContainer(radius, [
+        Colors.teal,
+        Colors.cyan,
+      ], Icons.menu_book_rounded);
     } else if (photoPath == 'gamer') {
-      return _avatarContainer(radius, [Colors.pink, Colors.purple], Icons.sports_esports_rounded);
+      return _avatarContainer(radius, [
+        Colors.pink,
+        Colors.purple,
+      ], Icons.sports_esports_rounded);
     } else if (photoPath == 'minimal') {
-      return _avatarContainer(radius, [Colors.blueGrey, Colors.grey], Icons.person_rounded);
+      return _avatarContainer(radius, [
+        Colors.blueGrey,
+        Colors.grey,
+      ], Icons.person_rounded);
     }
-    
+
     // Custom photo (Base64 string or Image URL)
     if (photoPath != null && photoPath.isNotEmpty) {
       try {
@@ -46,7 +75,7 @@ class ProfileScreen extends StatelessWidget {
             backgroundImage: NetworkImage(photoPath),
           );
         }
-        
+
         // Clean base64 string
         String cleanBase64 = photoPath;
         if (photoPath.contains(',')) {
@@ -62,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
         debugPrint('Error decoding base64 image: $e');
       }
     }
-    
+
     // Fallback: Initial Avatar
     return CircleAvatar(
       radius: radius,
@@ -78,7 +107,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  static Widget _avatarContainer(double radius, List<Color> colors, IconData icon) {
+  static Widget _avatarContainer(
+    double radius,
+    List<Color> colors,
+    IconData icon,
+  ) {
     return Container(
       width: radius * 2,
       height: radius * 2,
@@ -90,15 +123,15 @@ class ProfileScreen extends StatelessWidget {
           colors: colors,
         ),
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: radius,
-      ),
+      child: Icon(icon, color: Colors.white, size: radius),
     );
   }
 
-  void _showLogoutDialog(BuildContext context, AuthProvider authProvider, ThemeData theme) {
+  void _showLogoutDialog(
+    BuildContext context,
+    AuthProvider authProvider,
+    ThemeData theme,
+  ) {
     final skillProvider = Provider.of<SkillProvider>(context, listen: false);
     showDialog(
       context: context,
@@ -106,12 +139,17 @@ class ProfileScreen extends StatelessWidget {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             title: Row(
               children: [
                 Icon(Icons.logout_rounded, color: theme.colorScheme.error),
                 const SizedBox(width: 8),
-                Text(skillProvider.translate('logout_session'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  skillProvider.translate('logout_session'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             content: Text(
@@ -121,23 +159,30 @@ class ProfileScreen extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(skillProvider.translate('cancel'), style: TextStyle(color: theme.hintColor)),
+                child: Text(
+                  skillProvider.translate('cancel'),
+                  style: TextStyle(color: theme.hintColor),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.error,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () async {
                   Navigator.pop(ctx); // Tutup dialog
                   Navigator.pop(context); // Tutup halaman profil
                   await authProvider.logout(); // Bersihkan sesi aktif
-                  
+
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(skillProvider.translate('logout_success')),
+                        content: Text(
+                          skillProvider.translate('logout_success'),
+                        ),
                         backgroundColor: Colors.blueGrey,
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -153,7 +198,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showEditProfileBottomSheet(BuildContext context, AuthProvider authProvider, ThemeData theme) {
+  void _showEditProfileBottomSheet(
+    BuildContext context,
+    AuthProvider authProvider,
+    ThemeData theme,
+  ) {
     final user = authProvider.currentUser;
     if (user == null) return;
 
@@ -161,32 +210,75 @@ class ProfileScreen extends StatelessWidget {
     final emailController = TextEditingController(text: user.email);
     final phoneController = TextEditingController(text: user.phone ?? '');
     final urlController = TextEditingController(
-      text: (user.photoPath != null && user.photoPath!.startsWith('http')) ? user.photoPath : ''
+      text: (user.photoPath != null && user.photoPath!.startsWith('http'))
+          ? user.photoPath
+          : '',
     );
-    
+
     String? tempSelectedAvatar = user.photoPath;
     final formKey = GlobalKey<FormState>();
 
     final avatars = [
-      {'id': 'coder', 'icon': Icons.code_rounded, 'color': Colors.blue, 'label': 'Tech Coder'},
-      {'id': 'athlete', 'icon': Icons.fitness_center_rounded, 'color': Colors.green, 'label': 'Athlete'},
-      {'id': 'polyglot', 'icon': Icons.translate_rounded, 'color': Colors.orange, 'label': 'Polyglot'},
-      {'id': 'artist', 'icon': Icons.music_note_rounded, 'color': Colors.red, 'label': 'Artist'},
-      {'id': 'explorer', 'icon': Icons.rocket_launch_rounded, 'color': Colors.purple, 'label': 'Explorer'},
-      {'id': 'scholar', 'icon': Icons.menu_book_rounded, 'color': Colors.teal, 'label': 'Scholar'},
-      {'id': 'gamer', 'icon': Icons.sports_esports_rounded, 'color': Colors.pink, 'label': 'Gamer'},
-      {'id': 'minimal', 'icon': Icons.person_rounded, 'color': Colors.blueGrey, 'label': 'Minimalist'},
+      {
+        'id': 'coder',
+        'icon': Icons.code_rounded,
+        'color': Colors.blue,
+        'label': 'Tech Coder',
+      },
+      {
+        'id': 'athlete',
+        'icon': Icons.fitness_center_rounded,
+        'color': Colors.green,
+        'label': 'Athlete',
+      },
+      {
+        'id': 'polyglot',
+        'icon': Icons.translate_rounded,
+        'color': Colors.orange,
+        'label': 'Polyglot',
+      },
+      {
+        'id': 'artist',
+        'icon': Icons.music_note_rounded,
+        'color': Colors.red,
+        'label': 'Artist',
+      },
+      {
+        'id': 'explorer',
+        'icon': Icons.rocket_launch_rounded,
+        'color': Colors.purple,
+        'label': 'Explorer',
+      },
+      {
+        'id': 'scholar',
+        'icon': Icons.menu_book_rounded,
+        'color': Colors.teal,
+        'label': 'Scholar',
+      },
+      {
+        'id': 'gamer',
+        'icon': Icons.sports_esports_rounded,
+        'color': Colors.pink,
+        'label': 'Gamer',
+      },
+      {
+        'id': 'minimal',
+        'icon': Icons.person_rounded,
+        'color': Colors.blueGrey,
+        'label': 'Minimalist',
+      },
     ];
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (sheetCtx) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
-            
             Future<void> pickCustomImage() async {
               try {
                 final result = await FilePicker.pickFiles(
@@ -197,19 +289,25 @@ class ProfileScreen extends StatelessWidget {
                 if (result != null) {
                   final file = result.files.single;
                   Uint8List? bytes;
-                  
+
                   if (kIsWeb) {
                     bytes = file.bytes;
                   } else {
-                    bytes = file.bytes ?? (file.path != null ? io.File(file.path!).readAsBytesSync() : null);
+                    bytes =
+                        file.bytes ??
+                        (file.path != null
+                            ? io.File(file.path!).readAsBytesSync()
+                            : null);
                   }
-                  
+
                   if (bytes != null) {
                     if (kIsWeb && bytes.length > 500 * 1024) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Ukuran gambar terlalu besar! Maksimal 500 KB untuk versi Web. ⚠️'),
+                            content: Text(
+                              'Ukuran gambar terlalu besar! Maksimal 500 KB untuk versi Web. ⚠️',
+                            ),
                             backgroundColor: Colors.orange,
                             behavior: SnackBarBehavior.floating,
                           ),
@@ -229,7 +327,10 @@ class ProfileScreen extends StatelessWidget {
               }
             }
 
-            final skillProvider = Provider.of<SkillProvider>(context, listen: false);
+            final skillProvider = Provider.of<SkillProvider>(
+              context,
+              listen: false,
+            );
 
             return SafeArea(
               child: Padding(
@@ -251,7 +352,10 @@ class ProfileScreen extends StatelessWidget {
                             width: 40,
                             height: 5,
                             margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[400],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                         Row(
@@ -259,7 +363,10 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             Text(
                               skillProvider.translate('edit_profile'),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.close_rounded),
@@ -275,10 +382,14 @@ class ProfileScreen extends StatelessWidget {
                           decoration: InputDecoration(
                             labelText: skillProvider.translate('full_name'),
                             prefixIcon: const Icon(Icons.person_rounded),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           validator: (val) {
-                            if (val == null || val.trim().isEmpty) return skillProvider.translate('name_empty');
+                            if (val == null || val.trim().isEmpty) {
+                              return skillProvider.translate('name_empty');
+                            }
                             return null;
                           },
                           textCapitalization: TextCapitalization.words,
@@ -292,11 +403,17 @@ class ProfileScreen extends StatelessWidget {
                           decoration: InputDecoration(
                             labelText: skillProvider.translate('email_account'),
                             prefixIcon: const Icon(Icons.email_rounded),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           validator: (val) {
-                            if (val == null || val.trim().isEmpty) return skillProvider.translate('email_empty');
-                            if (!val.contains('@')) return skillProvider.translate('email_invalid');
+                            if (val == null || val.trim().isEmpty) {
+                              return skillProvider.translate('email_empty');
+                            }
+                            if (!val.contains('@')) {
+                              return skillProvider.translate('email_invalid');
+                            }
                             return null;
                           },
                         ),
@@ -309,7 +426,9 @@ class ProfileScreen extends StatelessWidget {
                           decoration: InputDecoration(
                             labelText: skillProvider.translate('phone_number'),
                             prefixIcon: const Icon(Icons.phone_rounded),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -322,18 +441,27 @@ class ProfileScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
+                            border: Border.all(
+                              color: theme.dividerColor.withValues(alpha: 0.1),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.photo_library_rounded, color: theme.colorScheme.primary, size: 20),
+                                  Icon(
+                                    Icons.photo_library_rounded,
+                                    color: theme.colorScheme.primary,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     skillProvider.translate('use_own_photo'),
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -347,42 +475,108 @@ class ProfileScreen extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
+                                        color:
+                                            (tempSelectedAvatar != null &&
+                                                tempSelectedAvatar!
+                                                    .isNotEmpty &&
+                                                ![
+                                                  'coder',
+                                                  'athlete',
+                                                  'polyglot',
+                                                  'artist',
+                                                  'explorer',
+                                                  'scholar',
+                                                  'gamer',
+                                                  'minimal',
+                                                ].contains(tempSelectedAvatar))
                                             ? theme.colorScheme.primary
-                                            : Colors.grey.withValues(alpha: 0.3),
+                                            : Colors.grey.withValues(
+                                                alpha: 0.3,
+                                              ),
                                         width: 2,
                                       ),
                                     ),
                                     child: ClipOval(
-                                      child: (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty)
-                                          ? buildAvatarWidget(tempSelectedAvatar, '', 30, theme)
+                                      child:
+                                          (tempSelectedAvatar != null &&
+                                              tempSelectedAvatar!.isNotEmpty)
+                                          ? buildAvatarWidget(
+                                              tempSelectedAvatar,
+                                              '',
+                                              30,
+                                              theme,
+                                            )
                                           : Container(
-                                              color: Colors.grey.withValues(alpha: 0.1),
-                                              child: const Icon(Icons.person_rounded, color: Colors.grey),
+                                              color: Colors.grey.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              child: const Icon(
+                                                Icons.person_rounded,
+                                                color: Colors.grey,
+                                              ),
                                             ),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
-                                              ? skillProvider.translate('custom_photo_active')
-                                              : skillProvider.translate('using_archetype'),
+                                          (tempSelectedAvatar != null &&
+                                                  tempSelectedAvatar!
+                                                      .isNotEmpty &&
+                                                  ![
+                                                    'coder',
+                                                    'athlete',
+                                                    'polyglot',
+                                                    'artist',
+                                                    'explorer',
+                                                    'scholar',
+                                                    'gamer',
+                                                    'minimal',
+                                                  ].contains(
+                                                    tempSelectedAvatar,
+                                                  ))
+                                              ? skillProvider.translate(
+                                                  'custom_photo_active',
+                                                )
+                                              : skillProvider.translate(
+                                                  'using_archetype',
+                                                ),
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
-                                            color: (tempSelectedAvatar != null && tempSelectedAvatar!.isNotEmpty && !['coder','athlete','polyglot','artist','explorer','scholar','gamer','minimal'].contains(tempSelectedAvatar))
+                                            color:
+                                                (tempSelectedAvatar != null &&
+                                                    tempSelectedAvatar!
+                                                        .isNotEmpty &&
+                                                    ![
+                                                      'coder',
+                                                      'athlete',
+                                                      'polyglot',
+                                                      'artist',
+                                                      'explorer',
+                                                      'scholar',
+                                                      'gamer',
+                                                      'minimal',
+                                                    ].contains(
+                                                      tempSelectedAvatar,
+                                                    ))
                                                 ? Colors.green
                                                 : theme.hintColor,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          skillProvider.translate('choose_small_photo'),
-                                          style: const TextStyle(fontSize: 10, height: 1.3),
+                                          skillProvider.translate(
+                                            'choose_small_photo',
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            height: 1.3,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -390,31 +584,55 @@ class ProfileScreen extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              
+
                               // Cara 1: File Picker
                               OutlinedButton.icon(
                                 onPressed: pickCustomImage,
-                                icon: const Icon(Icons.cloud_upload_rounded, size: 16),
-                                label: Text(skillProvider.translate('choose_file_device')),
+                                icon: const Icon(
+                                  Icons.cloud_upload_rounded,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  skillProvider.translate('choose_file_device'),
+                                ),
                                 style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 10),
-                              Center(child: Text(skillProvider.translate('or'), style: const TextStyle(fontSize: 11, color: Colors.grey))),
+                              Center(
+                                child: Text(
+                                  skillProvider.translate('or'),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
                               const SizedBox(height: 10),
-                              
+
                               // Cara 2: Paste URL Gambar
                               TextFormField(
                                 controller: urlController,
                                 decoration: InputDecoration(
-                                  labelText: skillProvider.translate('web_image_url'),
+                                  labelText: skillProvider.translate(
+                                    'web_image_url',
+                                  ),
                                   hintText: 'https://example.com/profile.jpg',
                                   prefixIcon: const Icon(Icons.link_rounded),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
                                 style: const TextStyle(fontSize: 12),
                                 onChanged: (val) {
@@ -431,7 +649,10 @@ class ProfileScreen extends StatelessWidget {
                         // Pilihan Avatar Archetype
                         Text(
                           skillProvider.translate('or_choose_archetype'),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 10),
 
@@ -439,17 +660,20 @@ class ProfileScreen extends StatelessWidget {
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 0.95,
-                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 0.95,
+                              ),
                           itemCount: avatars.length + 1,
                           itemBuilder: (gridCtx, index) {
                             if (index == 0) {
                               // Pilihan Avatar Klasik (Inisial Nama)
-                              final isSelected = tempSelectedAvatar == null || tempSelectedAvatar == '';
+                              final isSelected =
+                                  tempSelectedAvatar == null ||
+                                  tempSelectedAvatar == '';
                               return GestureDetector(
                                 onTap: () {
                                   setSheetState(() {
@@ -461,26 +685,43 @@ class ProfileScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                                      color: isSelected
+                                          ? theme.colorScheme.primary
+                                          : Colors.transparent,
                                       width: 2.5,
                                     ),
-                                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                    color: theme
+                                        .colorScheme
+                                        .surfaceContainerHighest
+                                        .withValues(alpha: 0.3),
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       CircleAvatar(
                                         radius: 18,
-                                        backgroundColor: theme.colorScheme.primaryContainer,
+                                        backgroundColor:
+                                            theme.colorScheme.primaryContainer,
                                         child: Text(
-                                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'K',
-                                          style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold, fontSize: 12),
+                                          user.name.isNotEmpty
+                                              ? user.name[0].toUpperCase()
+                                              : 'K',
+                                          style: TextStyle(
+                                            color: theme
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         skillProvider.translate('classic'),
-                                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         textAlign: TextAlign.center,
                                       ),
                                     ],
@@ -507,10 +748,15 @@ class ProfileScreen extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                                    color: isSelected
+                                        ? theme.colorScheme.primary
+                                        : Colors.transparent,
                                     width: 2.5,
                                   ),
-                                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                  color: theme
+                                      .colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.3),
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -521,15 +767,25 @@ class ProfileScreen extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         gradient: LinearGradient(
-                                          colors: [color, color.withValues(alpha: 0.7)],
+                                          colors: [
+                                            color,
+                                            color.withValues(alpha: 0.7),
+                                          ],
                                         ),
                                       ),
-                                      child: Icon(icon, color: Colors.white, size: 18),
+                                      child: Icon(
+                                        icon,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       label,
-                                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -561,7 +817,11 @@ class ProfileScreen extends StatelessWidget {
                                 if (errMsg == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(skillProvider.translate('profile_updated')),
+                                      content: Text(
+                                        skillProvider.translate(
+                                          'profile_updated',
+                                        ),
+                                      ),
                                       behavior: SnackBarBehavior.floating,
                                     ),
                                   );
@@ -584,7 +844,9 @@ class ProfileScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             backgroundColor: theme.colorScheme.primary,
                             foregroundColor: theme.colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         ),
                       ],
@@ -603,12 +865,12 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     final authProvider = context.watch<AuthProvider>();
     final skillProvider = context.watch<SkillProvider>();
-    
+
     final user = authProvider.currentUser;
-    
+
     // Formatting date
     final String formattedDate = user != null
         ? '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year}'
@@ -620,10 +882,16 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.colorScheme.onSurface),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: theme.colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(skillProvider.translate('user_profile'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          skillProvider.translate('user_profile'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         centerTitle: true,
       ),
       body: Stack(
@@ -636,7 +904,9 @@ class ProfileScreen extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: isDark
                     ? [
-                        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        theme.colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
                         theme.colorScheme.surface,
                       ]
                     : [
@@ -646,7 +916,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Lingkaran Hiasan Blur
           Positioned(
             top: -50,
@@ -672,7 +942,7 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const SizedBox(height: 12),
-                  
+
                   // A. HEAD SHOT & GLOWING AVATAR CARD
                   Center(
                     child: Column(
@@ -682,21 +952,30 @@ class ProfileScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.4,
+                              ),
                               width: 3.0,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 blurRadius: 16,
                                 spreadRadius: 2,
                               ),
                             ],
                           ),
-                          child: buildAvatarWidget(user?.photoPath, user?.name ?? '', 46, theme),
+                          child: buildAvatarWidget(
+                            user?.photoPath,
+                            user?.name ?? '',
+                            46,
+                            theme,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Nama Lengkap Pengguna
                         Text(
                           user?.name ?? 'Pengguna Kairos',
@@ -707,7 +986,7 @@ class ProfileScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 4),
-                        
+
                         // Email Pengguna
                         Text(
                           user?.email ?? 'user@kairos.app',
@@ -716,14 +995,18 @@ class ProfileScreen extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        
+
                         // Nomor Telepon Pengguna (Jika ada)
                         if (user?.phone != null && user!.phone!.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.phone_rounded, size: 14, color: theme.colorScheme.primary),
+                              Icon(
+                                Icons.phone_rounded,
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 user.phone!,
@@ -738,85 +1021,124 @@ class ProfileScreen extends StatelessWidget {
 
                         // Tombol Edit Profil
                         TextButton.icon(
-                          onPressed: () => _showEditProfileBottomSheet(context, authProvider, theme),
+                          onPressed: () => _showEditProfileBottomSheet(
+                            context,
+                            authProvider,
+                            theme,
+                          ),
                           icon: const Icon(Icons.edit_rounded, size: 14),
-                          label: Text(skillProvider.translate('edit_profile_info'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          label: Text(
+                            skillProvider.translate('edit_profile_info'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           style: TextButton.styleFrom(
                             foregroundColor: theme.colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            backgroundColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.08),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        
+
                         // Joined Chip
                         Chip(
-                          avatar: Icon(Icons.calendar_today_rounded, size: 12, color: theme.colorScheme.primary),
-                          label: Text(
-                            skillProvider.translate('joined', args: [formattedDate]),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          avatar: Icon(
+                            Icons.calendar_today_rounded,
+                            size: 12,
+                            color: theme.colorScheme.primary,
                           ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+                          label: Text(
+                            skillProvider.translate(
+                              'joined',
+                              args: [formattedDate],
+                            ),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 0,
+                          ),
+                          backgroundColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
                           side: BorderSide.none,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 28),
-                  
+
                   // B. SECTION STATISTIK AKTIF (Visual Riil)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       skillProvider.translate('learning_achievements'),
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   Row(
                     children: [
                       _buildStatCard(
-                        theme, 
-                        Icons.dashboard_customize_rounded, 
-                        skillProvider.translate('categories'), 
+                        theme,
+                        Icons.dashboard_customize_rounded,
+                        skillProvider.translate('categories'),
                         '${skillProvider.categories.length}',
                         theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 12),
                       _buildStatCard(
-                        theme, 
-                        Icons.workspace_premium_rounded, 
-                        skillProvider.translate('nav_skills'), 
+                        theme,
+                        Icons.workspace_premium_rounded,
+                        skillProvider.translate('nav_skills'),
                         '${skillProvider.skills.length}',
                         theme.colorScheme.secondary,
                       ),
                       const SizedBox(width: 12),
                       _buildStatCard(
-                        theme, 
-                        Icons.menu_book_rounded, 
-                        skillProvider.translate('nav_resources'), 
+                        theme,
+                        Icons.menu_book_rounded,
+                        skillProvider.translate('nav_resources'),
                         '${skillProvider.resources.length}',
                         Colors.orange,
                       ),
                     ],
                   ),
                   const SizedBox(height: 28),
-                  
+
                   // C. SECTION PREFERENSI & SETELAN
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       skillProvider.translate('preferences_settings'),
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                               Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 0,
                     color: theme.colorScheme.surfaceContainerLow,
                     child: Padding(
@@ -825,9 +1147,21 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           // 1. Switch Notifikasi
                           ListTile(
-                            leading: Icon(Icons.notifications_active_outlined, color: theme.colorScheme.primary),
-                            title: Text(skillProvider.translate('daily_notifications'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: Text(skillProvider.translate('periodic_reminders'), style: const TextStyle(fontSize: 11)),
+                            leading: Icon(
+                              Icons.notifications_active_outlined,
+                              color: theme.colorScheme.primary,
+                            ),
+                            title: Text(
+                              skillProvider.translate('daily_notifications'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              skillProvider.translate('periodic_reminders'),
+                              style: const TextStyle(fontSize: 11),
+                            ),
                             trailing: Switch(
                               value: skillProvider.isNotificationEnabled,
                               onChanged: (val) {
@@ -835,7 +1169,15 @@ class ProfileScreen extends StatelessWidget {
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(val ? skillProvider.translate('notification_active') : skillProvider.translate('notification_inactive')),
+                                    content: Text(
+                                      val
+                                          ? skillProvider.translate(
+                                              'notification_active',
+                                            )
+                                          : skillProvider.translate(
+                                              'notification_inactive',
+                                            ),
+                                    ),
                                     duration: const Duration(seconds: 1),
                                     behavior: SnackBarBehavior.floating,
                                   ),
@@ -843,46 +1185,96 @@ class ProfileScreen extends StatelessWidget {
                               },
                             ),
                           ),
-                          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
-                          
+                          Divider(
+                            height: 1,
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
+
                           // 2. Switch Mode Gelap
                           ListTile(
                             leading: Icon(
-                              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                              isDark
+                                  ? Icons.light_mode_rounded
+                                  : Icons.dark_mode_rounded,
                               color: theme.colorScheme.primary,
                             ),
-                            title: Text(skillProvider.translate('dark_mode'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            title: Text(
+                              skillProvider.translate('dark_mode'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             subtitle: Text(
-                              isDark ? skillProvider.translate('dark_theme_active') : skillProvider.translate('light_theme_active'),
+                              isDark
+                                  ? skillProvider.translate('dark_theme_active')
+                                  : skillProvider.translate(
+                                      'light_theme_active',
+                                    ),
                               style: const TextStyle(fontSize: 11),
                             ),
                             trailing: Switch(
                               value: skillProvider.isDarkMode,
-                              onChanged: (val) => skillProvider.toggleTheme(val),
+                              onChanged: (val) =>
+                                  skillProvider.toggleTheme(val),
                             ),
                           ),
-                          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
-                          
+                          Divider(
+                            height: 1,
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
+
                           // 3. Dropdown Bahasa Default
                           ListTile(
-                            leading: Icon(Icons.language_rounded, color: theme.colorScheme.secondary),
-                            title: Text(skillProvider.translate('main_language'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: Text(skillProvider.translate('language_desc'), style: const TextStyle(fontSize: 11)),
+                            leading: Icon(
+                              Icons.language_rounded,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            title: Text(
+                              skillProvider.translate('main_language'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              skillProvider.translate('language_desc'),
+                              style: const TextStyle(fontSize: 11),
+                            ),
                             trailing: DropdownButton<String>(
                               value: skillProvider.defaultLang,
                               underline: const SizedBox(),
                               borderRadius: BorderRadius.circular(16),
                               items: const [
-                                DropdownMenuItem(value: 'id', child: Text('Indonesia (ID)', style: TextStyle(fontSize: 12))),
-                                DropdownMenuItem(value: 'en', child: Text('English (EN)', style: TextStyle(fontSize: 12))),
+                                DropdownMenuItem(
+                                  value: 'id',
+                                  child: Text(
+                                    'Indonesia (ID)',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'en',
+                                  child: Text(
+                                    'English (EN)',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
                               ],
                               onChanged: (val) {
                                 if (val != null) {
                                   skillProvider.updateDefaultLang(val);
-                                  ScaffoldMessenger.of(context).clearSnackBars();
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).clearSnackBars();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(skillProvider.translate('lang_changed', args: [val.toUpperCase()])),
+                                      content: Text(
+                                        skillProvider.translate(
+                                          'lang_changed',
+                                          args: [val.toUpperCase()],
+                                        ),
+                                      ),
                                       duration: const Duration(seconds: 1),
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -891,13 +1283,38 @@ class ProfileScreen extends StatelessWidget {
                               },
                             ),
                           ),
-                          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
-                          
+                          Divider(
+                            height: 1,
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
+
                           // 4. Pengaturan Teks (FontSize)
                           ListTile(
-                            leading: Icon(Icons.text_format_rounded, color: theme.colorScheme.tertiary),
-                            title: Text(skillProvider.translate('text_size') == 'text_size' ? (skillProvider.defaultLang == 'id' ? 'Ukuran Teks' : 'Text Size') : skillProvider.translate('text_size'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: Text(skillProvider.translate('adjust_text_size') == 'adjust_text_size' ? (skillProvider.defaultLang == 'id' ? 'Ubah ukuran font aplikasi' : 'Change app font size') : skillProvider.translate('adjust_text_size'), style: const TextStyle(fontSize: 11)),
+                            leading: Icon(
+                              Icons.text_format_rounded,
+                              color: theme.colorScheme.tertiary,
+                            ),
+                            title: Text(
+                              skillProvider.translate('text_size') ==
+                                      'text_size'
+                                  ? (skillProvider.defaultLang == 'id'
+                                        ? 'Ukuran Teks'
+                                        : 'Text Size')
+                                  : skillProvider.translate('text_size'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              skillProvider.translate('adjust_text_size') ==
+                                      'adjust_text_size'
+                                  ? (skillProvider.defaultLang == 'id'
+                                        ? 'Ubah ukuran font aplikasi'
+                                        : 'Change app font size')
+                                  : skillProvider.translate('adjust_text_size'),
+                              style: const TextStyle(fontSize: 11),
+                            ),
                             trailing: Consumer<ProgressProvider>(
                               builder: (context, progressProv, child) {
                                 return Row(
@@ -906,14 +1323,23 @@ class ProfileScreen extends StatelessWidget {
                                     IconButton(
                                       icon: const Icon(Icons.text_decrease),
                                       onPressed: progressProv.fontSize > 10.0
-                                          ? () => progressProv.updateFontSize(progressProv.fontSize - 2.0)
+                                          ? () => progressProv.updateFontSize(
+                                              progressProv.fontSize - 2.0,
+                                            )
                                           : null,
                                     ),
-                                    Text('${progressProv.fontSize.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text(
+                                      '${progressProv.fontSize.toInt()}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                     IconButton(
                                       icon: const Icon(Icons.text_increase),
                                       onPressed: progressProv.fontSize < 30.0
-                                          ? () => progressProv.updateFontSize(progressProv.fontSize + 2.0)
+                                          ? () => progressProv.updateFontSize(
+                                              progressProv.fontSize + 2.0,
+                                            )
                                           : null,
                                     ),
                                   ],
@@ -921,13 +1347,38 @@ class ProfileScreen extends StatelessWidget {
                               },
                             ),
                           ),
-                          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
-                          
+                          Divider(
+                            height: 1,
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
+
                           // 5. Pengaturan Tampilan (View Mode)
                           ListTile(
-                            leading: Icon(Icons.dashboard_customize_rounded, color: theme.colorScheme.primary),
-                            title: Text(skillProvider.translate('layout_view') == 'layout_view' ? (skillProvider.defaultLang == 'id' ? 'Tampilan Tata Letak' : 'Layout View') : skillProvider.translate('layout_view'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            subtitle: Text(skillProvider.translate('change_view_mode') == 'change_view_mode' ? (skillProvider.defaultLang == 'id' ? 'Ubah mode List/Grid' : 'Change List/Grid mode') : skillProvider.translate('change_view_mode'), style: const TextStyle(fontSize: 11)),
+                            leading: Icon(
+                              Icons.dashboard_customize_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            title: Text(
+                              skillProvider.translate('layout_view') ==
+                                      'layout_view'
+                                  ? (skillProvider.defaultLang == 'id'
+                                        ? 'Tampilan Tata Letak'
+                                        : 'Layout View')
+                                  : skillProvider.translate('layout_view'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              skillProvider.translate('change_view_mode') ==
+                                      'change_view_mode'
+                                  ? (skillProvider.defaultLang == 'id'
+                                        ? 'Ubah mode List/Grid'
+                                        : 'Change List/Grid mode')
+                                  : skillProvider.translate('change_view_mode'),
+                              style: const TextStyle(fontSize: 11),
+                            ),
                             trailing: Consumer<ProgressProvider>(
                               builder: (context, progressProv, child) {
                                 return DropdownButton<String>(
@@ -935,8 +1386,20 @@ class ProfileScreen extends StatelessWidget {
                                   underline: const SizedBox(),
                                   borderRadius: BorderRadius.circular(16),
                                   items: const [
-                                    DropdownMenuItem(value: 'List', child: Text('List View', style: TextStyle(fontSize: 12))),
-                                    DropdownMenuItem(value: 'Grid', child: Text('Grid View', style: TextStyle(fontSize: 12))),
+                                    DropdownMenuItem(
+                                      value: 'List',
+                                      child: Text(
+                                        'List View',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Grid',
+                                      child: Text(
+                                        'Grid View',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
                                   ],
                                   onChanged: (val) {
                                     if (val != null) {
@@ -952,23 +1415,34 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // D. TOMBOL LOGOUT PREMIUM
                   SizedBox(
                     width: double.infinity,
                     height: 54,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.4), width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        side: BorderSide(
+                          color: theme.colorScheme.error.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         foregroundColor: theme.colorScheme.error,
-                        backgroundColor: theme.colorScheme.error.withValues(alpha: 0.03),
+                        backgroundColor: theme.colorScheme.error.withValues(
+                          alpha: 0.03,
+                        ),
                       ),
-                      onPressed: () => _showLogoutDialog(context, authProvider, theme),
+                      onPressed: () =>
+                          _showLogoutDialog(context, authProvider, theme),
                       icon: const Icon(Icons.logout_rounded, size: 18),
                       label: Text(
                         skillProvider.translate('logout_active_session'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.3),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.3,
+                        ),
                       ),
                     ),
                   ),
@@ -982,7 +1456,13 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(ThemeData theme, IconData icon, String label, String value, Color color) {
+  Widget _buildStatCard(
+    ThemeData theme,
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),

@@ -4,7 +4,8 @@ class User {
   final String email;
   final String password;
   final DateTime createdAt;
-  final String? photoPath; // Path atau nama archetype avatar terpilih / Base64 string
+  final String?
+  photoPath; // Path atau nama archetype avatar terpilih / Base64 string
   final String? phone; // Nomor telepon pengguna
 
   User({

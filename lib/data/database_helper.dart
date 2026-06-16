@@ -32,45 +32,88 @@ class DatabaseHelper {
     if (_webDataLoaded) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       final catStr = prefs.getString('web_categories');
       if (catStr != null) {
         final List decoded = json.decode(catStr);
         _webCategories.clear();
-        _webCategories.addAll(decoded.map((json) => SkillCategory.fromMap(Map<String, dynamic>.from(json))).toList());
+        _webCategories.addAll(
+          decoded
+              .map(
+                (json) =>
+                    SkillCategory.fromMap(Map<String, dynamic>.from(json)),
+              )
+              .toList(),
+        );
       } else {
         // Seed default categories jika pertama kali dibuka (userId = null / global)
         _webCategories.clear();
         _webCategories.addAll([
-          SkillCategory(id: 1, userId: null, name: 'Pemrograman', icon: 'code', colorValue: 0xFF2196F3),
-          SkillCategory(id: 2, userId: null, name: 'Kebugaran', icon: 'fitness_center', colorValue: 0xFF4CAF50),
-          SkillCategory(id: 3, userId: null, name: 'Bahasa', icon: 'translate', colorValue: 0xFFFF9800),
-          SkillCategory(id: 4, userId: null, name: 'Musik & Seni', icon: 'music_note', colorValue: 0xFF9C27B0),
+          SkillCategory(
+            id: 1,
+            userId: null,
+            name: 'Pemrograman',
+            icon: 'code',
+            colorValue: 0xFF2196F3,
+          ),
+          SkillCategory(
+            id: 2,
+            userId: null,
+            name: 'Kebugaran',
+            icon: 'fitness_center',
+            colorValue: 0xFF4CAF50,
+          ),
+          SkillCategory(
+            id: 3,
+            userId: null,
+            name: 'Bahasa',
+            icon: 'translate',
+            colorValue: 0xFFFF9800,
+          ),
+          SkillCategory(
+            id: 4,
+            userId: null,
+            name: 'Musik & Seni',
+            icon: 'music_note',
+            colorValue: 0xFF9C27B0,
+          ),
         ]);
         // Simpan langsung data awal
         final categoriesJson = _webCategories.map((c) => c.toMap()).toList();
         await prefs.setString('web_categories', json.encode(categoriesJson));
       }
-      
+
       final skillStr = prefs.getString('web_skills');
       if (skillStr != null) {
         final List decoded = json.decode(skillStr);
         _webSkills.clear();
-        _webSkills.addAll(decoded.map((json) => Skill.fromMap(Map<String, dynamic>.from(json))).toList());
+        _webSkills.addAll(
+          decoded
+              .map((json) => Skill.fromMap(Map<String, dynamic>.from(json)))
+              .toList(),
+        );
       }
-      
+
       final resStr = prefs.getString('web_resources');
       if (resStr != null) {
         final List decoded = json.decode(resStr);
         _webResources.clear();
-        _webResources.addAll(decoded.map((json) => Resource.fromMap(Map<String, dynamic>.from(json))).toList());
+        _webResources.addAll(
+          decoded
+              .map((json) => Resource.fromMap(Map<String, dynamic>.from(json)))
+              .toList(),
+        );
       }
 
       final userStr = prefs.getString('web_users');
       if (userStr != null) {
         final List decoded = json.decode(userStr);
         _webUsers.clear();
-        _webUsers.addAll(decoded.map((json) => User.fromMap(Map<String, dynamic>.from(json))).toList());
+        _webUsers.addAll(
+          decoded
+              .map((json) => User.fromMap(Map<String, dynamic>.from(json)))
+              .toList(),
+        );
 
         // Self-healing: if any stored user photoPath is too large (> 500,000 characters),
         // we reset it to null to prevent QuotaExceededErrors on subsequent saves or loading.
@@ -93,22 +136,34 @@ class DatabaseHelper {
         if (cleaned) {
           final usersJson = _webUsers.map((u) => u.toMap()).toList();
           await prefs.setString('web_users', json.encode(usersJson));
-          debugPrint('Self-healed: Removed exceptionally large base64 avatars from SharedPreferences.');
+          debugPrint(
+            'Self-healed: Removed exceptionally large base64 avatars from SharedPreferences.',
+          );
         }
       }
-      
+
       final logStr = prefs.getString('web_progress_logs');
       if (logStr != null) {
         final List decoded = json.decode(logStr);
         _webProgressLogs.clear();
-        _webProgressLogs.addAll(decoded.map((json) => ProgressLog.fromMap(Map<String, dynamic>.from(json))).toList());
+        _webProgressLogs.addAll(
+          decoded
+              .map(
+                (json) => ProgressLog.fromMap(Map<String, dynamic>.from(json)),
+              )
+              .toList(),
+        );
       }
 
       final challengeStr = prefs.getString('web_challenges');
       if (challengeStr != null) {
         final List decoded = json.decode(challengeStr);
         _webChallenges.clear();
-        _webChallenges.addAll(decoded.map((json) => Challenge.fromMap(Map<String, dynamic>.from(json))).toList());
+        _webChallenges.addAll(
+          decoded
+              .map((json) => Challenge.fromMap(Map<String, dynamic>.from(json)))
+              .toList(),
+        );
       }
 
       _webIdCounter = prefs.getInt('web_id_counter') ?? 100;
@@ -123,7 +178,7 @@ class DatabaseHelper {
     if (!kIsWeb) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Self-healing: ensure any large custom profile pictures are cleaned before saving to prevent QuotaExceededError
       for (int i = 0; i < _webUsers.length; i++) {
         final u = _webUsers[i];
@@ -146,7 +201,7 @@ class DatabaseHelper {
       final usersJson = _webUsers.map((u) => u.toMap()).toList();
       final logsJson = _webProgressLogs.map((l) => l.toMap()).toList();
       final challengesJson = _webChallenges.map((c) => c.toMap()).toList();
-      
+
       await prefs.setString('web_categories', json.encode(categoriesJson));
       await prefs.setString('web_skills', json.encode(skillsJson));
       await prefs.setString('web_resources', json.encode(resourcesJson));
@@ -310,7 +365,9 @@ class DatabaseHelper {
     }
     if (oldVersion < 4) {
       try {
-        await db.execute('ALTER TABLE skill_categories ADD COLUMN userId INTEGER');
+        await db.execute(
+          'ALTER TABLE skill_categories ADD COLUMN userId INTEGER',
+        );
       } catch (e) {
         debugPrint('Migration: userId already exists in skill_categories: $e');
       }
@@ -367,7 +424,9 @@ class DatabaseHelper {
     }
     if (oldVersion < 8) {
       try {
-        await db.execute("ALTER TABLE resources ADD COLUMN resourceType TEXT NOT NULL DEFAULT 'materi'");
+        await db.execute(
+          "ALTER TABLE resources ADD COLUMN resourceType TEXT NOT NULL DEFAULT 'materi'",
+        );
       } catch (e) {
         debugPrint('Migration: resourceType already exists in resources: $e');
       }
@@ -424,7 +483,9 @@ class DatabaseHelper {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
       // Periksa duplikasi email secara case-insensitive
-      final exists = _webUsers.any((u) => u.email.toLowerCase() == user.email.toLowerCase());
+      final exists = _webUsers.any(
+        (u) => u.email.toLowerCase() == user.email.toLowerCase(),
+      );
       if (exists) return -1; // Duplikat email
 
       final newId = _webIdCounter++;
@@ -453,7 +514,9 @@ class DatabaseHelper {
   Future<User?> getUserByEmail(String email) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final idx = _webUsers.indexWhere((u) => u.email.toLowerCase() == email.toLowerCase());
+      final idx = _webUsers.indexWhere(
+        (u) => u.email.toLowerCase() == email.toLowerCase(),
+      );
       if (idx != -1) return _webUsers[idx];
       return null;
     }
@@ -474,7 +537,9 @@ class DatabaseHelper {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
       final idx = _webUsers.indexWhere(
-        (u) => u.email.toLowerCase() == email.toLowerCase() && u.password == password
+        (u) =>
+            u.email.toLowerCase() == email.toLowerCase() &&
+            u.password == password,
       );
       if (idx != -1) return _webUsers[idx];
       return null;
@@ -540,7 +605,9 @@ class DatabaseHelper {
   Future<List<SkillCategory>> getAllCategories(int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final filtered = _webCategories.where((c) => c.userId == null || c.userId == userId).toList();
+      final filtered = _webCategories
+          .where((c) => c.userId == null || c.userId == userId)
+          .toList();
       filtered.sort((a, b) => a.name.compareTo(b.name));
       return filtered;
     }
@@ -585,7 +652,9 @@ class DatabaseHelper {
       _webSkills.removeWhere((s) => s.categoryId == id);
       // Cascade delete resources
       final skillIds = _webSkills.map((s) => s.id).toSet();
-      _webResources.removeWhere((r) => r.skillId != null && !skillIds.contains(r.skillId));
+      _webResources.removeWhere(
+        (r) => r.skillId != null && !skillIds.contains(r.skillId),
+      );
       await _saveWebDataToPrefs();
       return 1;
     }
@@ -646,7 +715,9 @@ class DatabaseHelper {
   Future<List<Skill>> getSkillsByCategoryId(int categoryId, int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final filtered = _webSkills.where((s) => s.categoryId == categoryId && s.userId == userId).toList();
+      final filtered = _webSkills
+          .where((s) => s.categoryId == categoryId && s.userId == userId)
+          .toList();
       filtered.sort((a, b) => a.name.compareTo(b.name));
       return filtered;
     }
@@ -745,7 +816,9 @@ class DatabaseHelper {
   Future<List<Resource>> getResourcesBySkillId(int skillId, int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final filtered = _webResources.where((r) => r.skillId == skillId && r.userId == userId).toList();
+      final filtered = _webResources
+          .where((r) => r.skillId == skillId && r.userId == userId)
+          .toList();
       filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return filtered;
     }
@@ -821,7 +894,9 @@ class DatabaseHelper {
   Future<List<ProgressLog>> getAllProgressLogs(int? userId) async {
     if (kIsWeb) {
       await _loadWebDataFromPrefs();
-      final filtered = _webProgressLogs.where((l) => l.userId == userId).toList();
+      final filtered = _webProgressLogs
+          .where((l) => l.userId == userId)
+          .toList();
       filtered.sort((a, b) => b.date.compareTo(a.date));
       return filtered;
     }
@@ -847,7 +922,12 @@ class DatabaseHelper {
       return 0;
     }
     final db = await instance.database;
-    return await db.update('progress_logs', log.toMap(), where: 'id = ?', whereArgs: [log.id]);
+    return await db.update(
+      'progress_logs',
+      log.toMap(),
+      where: 'id = ?',
+      whereArgs: [log.id],
+    );
   }
 
   Future<int> deleteProgressLog(int id) async {
@@ -915,7 +995,12 @@ class DatabaseHelper {
       return 0;
     }
     final db = await instance.database;
-    return await db.update('challenges', challenge.toMap(), where: 'id = ?', whereArgs: [challenge.id]);
+    return await db.update(
+      'challenges',
+      challenge.toMap(),
+      where: 'id = ?',
+      whereArgs: [challenge.id],
+    );
   }
 
   Future<int> deleteChallenge(int id) async {

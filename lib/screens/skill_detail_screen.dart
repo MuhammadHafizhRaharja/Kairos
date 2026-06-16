@@ -91,26 +91,46 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                   padding: const EdgeInsets.only(left: 16, right: 16, top: 12),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      _buildCategorySummaryHeaderCard(context, rawSkills, categoryColor),
+                      _buildCategorySummaryHeaderCard(
+                        context,
+                        rawSkills,
+                        categoryColor,
+                      ),
                       _buildFilterPanel(context, categoryColor),
                       if (filteredSkills.isEmpty)
-                        _buildEmptyState(context, theme, categoryColor, rawSkills.isEmpty),
+                        _buildEmptyState(
+                          context,
+                          theme,
+                          categoryColor,
+                          rawSkills.isEmpty,
+                        ),
                     ]),
                   ),
                 ),
                 if (filteredSkills.isNotEmpty)
                   SliverPadding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 88),
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 88,
+                    ),
                     sliver: context.watch<ProgressProvider>().viewMode == 'Grid'
                         ? SliverGrid(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 16,
-                              crossAxisSpacing: 16,
-                              childAspectRatio: 0.7,
-                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                  childAspectRatio: 0.7,
+                                ),
                             delegate: SliverChildBuilderDelegate(
-                              (context, index) => _buildSkillItem(context, filteredSkills[index], provider, categoryColor),
+                              (context, index) => _buildSkillItem(
+                                context,
+                                filteredSkills[index],
+                                provider,
+                                categoryColor,
+                                true,
+                              ),
                               childCount: filteredSkills.length,
                             ),
                           )
@@ -118,7 +138,13 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) => Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
-                                child: _buildSkillItem(context, filteredSkills[index], provider, categoryColor),
+                                child: _buildSkillItem(
+                                  context,
+                                  filteredSkills[index],
+                                  provider,
+                                  categoryColor,
+                                  false,
+                                ),
                               ),
                               childCount: filteredSkills.length,
                             ),
@@ -136,10 +162,18 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
     );
   }
 
-  Widget _buildSkillItem(BuildContext context, Skill skill, SkillProvider provider, Color categoryColor) {
+  Widget _buildSkillItem(
+    BuildContext context,
+    Skill skill,
+    SkillProvider provider,
+    Color categoryColor,
+    bool isGridView,
+  ) {
     return Dismissible(
       key: Key('skill_${skill.id}'),
-      direction: DismissDirection.endToStart,
+      direction: isGridView
+          ? DismissDirection.none
+          : DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -206,20 +240,10 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
           provider.updateSkill(updatedSkill);
         },
         onLongPress: () {
-          _showEditSkillDialog(
-            context,
-            provider,
-            skill,
-            categoryColor,
-          );
+          _showEditSkillDialog(context, provider, skill, categoryColor);
         },
         onEdit: () {
-          _showEditSkillDialog(
-            context,
-            provider,
-            skill,
-            categoryColor,
-          );
+          _showEditSkillDialog(context, provider, skill, categoryColor);
         },
         onDelete: () async {
           final confirmed = await _showDeleteConfirmDialog(
@@ -231,9 +255,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
             provider.deleteSkill(skill.id!);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  'Skill "${skill.name}" berhasil dihapus!',
-                ),
+                content: Text('Skill "${skill.name}" berhasil dihapus!'),
               ),
             );
           }

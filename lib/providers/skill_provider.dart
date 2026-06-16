@@ -59,7 +59,7 @@ class SkillProvider extends ChangeNotifier {
     double progress = 0.3;
     if (_isNotificationEnabled) progress += 0.1;
     if (_defaultLang == 'id') progress += 0.1;
-    
+
     if (_resources.isNotEmpty) {
       final completed = _resources.where((r) => r.status == 2).length;
       progress += (completed / _resources.length) * 0.45;
@@ -71,7 +71,7 @@ class SkillProvider extends ChangeNotifier {
   Future<void> setUserId(int? userId) async {
     if (_currentUserId == userId) return;
     _currentUserId = userId;
-    
+
     if (userId == null) {
       _categories = [];
       _skills = [];
@@ -266,7 +266,7 @@ class SkillProvider extends ChangeNotifier {
         newLevel += 1;
         newProgress -= 1.0;
       }
-      
+
       // Handle level down if amount is negative
       while (newProgress < 0.0 && newLevel > 1) {
         newLevel -= 1;
@@ -285,7 +285,10 @@ class SkillProvider extends ChangeNotifier {
         if (newProgress > 1.0) newProgress = 1.0;
       }
 
-      final updatedSkill = skill.copyWith(progress: newProgress, level: newLevel);
+      final updatedSkill = skill.copyWith(
+        progress: newProgress,
+        level: newLevel,
+      );
       await updateSkill(updatedSkill);
     }
   }

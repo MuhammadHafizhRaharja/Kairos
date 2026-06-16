@@ -21,7 +21,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('logged_in_user_email');
-      
+
       if (email != null) {
         final user = await _dbHelper.getUserByEmail(email);
         if (user != null) {
@@ -53,7 +53,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       final resultId = await _dbHelper.insertUser(newUser);
-      
+
       if (resultId == -1) {
         return 'Email sudah terdaftar. Gunakan email lain!';
       }
@@ -61,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
       // Berhasil registrasi, langsung set session
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('logged_in_user_email', email);
-      
+
       _currentUser = newUser.copyWith(id: resultId);
       _isLoggedIn = true;
       notifyListeners();
@@ -78,11 +78,11 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       final user = await _dbHelper.authenticateUser(email, password);
-      
+
       if (user != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('logged_in_user_email', user.email);
-        
+
         _currentUser = user;
         _isLoggedIn = true;
         notifyListeners();
@@ -103,7 +103,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('logged_in_user_email');
-      
+
       _currentUser = null;
       _isLoggedIn = false;
       notifyListeners();
@@ -136,11 +136,13 @@ class AuthProvider extends ChangeNotifier {
       final updatedUser = _currentUser!.copyWith(
         name: name,
         email: email,
-        password: (password != null && password.trim().isNotEmpty) ? password : _currentUser!.password,
+        password: (password != null && password.trim().isNotEmpty)
+            ? password
+            : _currentUser!.password,
         photoPath: photoPath,
         phone: phone,
       );
-      
+
       final result = await _dbHelper.updateUser(updatedUser);
       if (result > 0) {
         // Update session di SharedPreferences agar tidak ter-logout

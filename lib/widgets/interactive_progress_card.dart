@@ -126,6 +126,579 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
     }
   }
 
+  void _handleSheetDragUpdate(
+    DragUpdateDetails details,
+    double sheetWidth,
+    StateSetter setSheetState,
+  ) {
+    if (sheetWidth <= 0) return;
+    setSheetState(() {
+      _isDragging = true;
+      final double delta = details.delta.dx / sheetWidth;
+      _localProgress = (_localProgress + delta).clamp(0.0, 1.0);
+
+      if (_localProgress >= 1.0) {
+        _localLevel += 1;
+        _localProgress = 0.0;
+        _triggerLevelUpAnim = true;
+        Feedback.forLongPress(context);
+      }
+    });
+    setState(() {});
+  }
+
+  void _handleSheetDragEnd(StateSetter setSheetState) {
+    setSheetState(() {
+      _isDragging = false;
+    });
+    setState(() {});
+    widget.onProgressChanged(_localLevel, _localProgress);
+  }
+
+  void _showGridDetailBottomSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalCtx) {
+        return StatefulBuilder(
+          builder: (modalCtx, setSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.65,
+              minChildSize: 0.4,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (modalCtx, scrollController) {
+                return SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 16.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Drag Handle Pill
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+
+                      // Upper Row: Title & Level badge
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.skill.name,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Dilacak sejak: ${DateFormat('dd MMM yyyy').format(widget.skill.createdAt)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.hintColor.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Level badge
+                          TweenAnimationBuilder<double>(
+                            key: ValueKey(
+                              '${_localLevel}_$_triggerLevelUpAnim',
+                            ),
+                            tween: Tween<double>(
+                              begin: _triggerLevelUpAnim ? 0.7 : 1.0,
+                              end: 1.0,
+                            ),
+                            duration: const Duration(milliseconds: 600),
+                            curve: Curves.elasticOut,
+                            onEnd: () {
+                              if (_triggerLevelUpAnim) {
+                                setSheetState(() {
+                                  _triggerLevelUpAnim = false;
+                                });
+                                setState(() {});
+                              }
+                            },
+                            builder: (context, scale, child) {
+                              return Transform.scale(
+                                scale: scale,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _triggerLevelUpAnim
+                                        ? Colors.amber
+                                        : widget.themeColor.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: _triggerLevelUpAnim
+                                          ? Colors.orange
+                                          : widget.themeColor.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _triggerLevelUpAnim
+                                            ? Icons.emoji_events
+                                            : Icons.trending_up,
+                                        size: 14,
+                                        color: _triggerLevelUpAnim
+                                            ? Colors.white
+                                            : (isDark
+                                                  ? Colors.white
+                                                  : widget.themeColor),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Lvl $_localLevel',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: _triggerLevelUpAnim
+                                              ? Colors.white
+                                              : (isDark
+                                                    ? Colors.white
+                                                    : widget.themeColor),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1),
+                      const SizedBox(height: 20),
+
+                      // Interactive Drag Bar
+                      LayoutBuilder(
+                        builder: (context, boxConstraints) {
+                          final sheetWidth = boxConstraints.maxWidth;
+                          return GestureDetector(
+                            onHorizontalDragUpdate: (details) =>
+                                _handleSheetDragUpdate(
+                                  details,
+                                  sheetWidth,
+                                  setSheetState,
+                                ),
+                            onHorizontalDragEnd: (_) =>
+                                _handleSheetDragEnd(setSheetState),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Progres: ${(_localProgress * 100).round()}%',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: _isDragging
+                                            ? widget.themeColor
+                                            : theme.hintColor,
+                                      ),
+                                    ),
+                                    if (_isDragging)
+                                      Text(
+                                        'Menyesuaikan...',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: widget.themeColor,
+                                        ),
+                                      )
+                                    else
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.swipe_left_alt,
+                                            size: 14,
+                                            color: theme.hintColor.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Geser untuk mengubah',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: theme.hintColor.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.grey[800]
+                                        : Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      FractionallySizedBox(
+                                        widthFactor: _localProgress > 0.0
+                                            ? _localProgress
+                                            : 0.001,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                widget.themeColor.withValues(
+                                                  alpha: 0.7,
+                                                ),
+                                                widget.themeColor,
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            boxShadow: _isDragging
+                                                ? [
+                                                    BoxShadow(
+                                                      color: widget.themeColor
+                                                          .withValues(
+                                                            alpha: 0.4,
+                                                          ),
+                                                      blurRadius: 4,
+                                                      offset: const Offset(
+                                                        0,
+                                                        2,
+                                                      ),
+                                                    ),
+                                                  ]
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_isDragging && _localProgress > 0.02)
+                                        Align(
+                                          alignment: Alignment(
+                                            _localProgress * 2 - 1,
+                                            0,
+                                          ),
+                                          child: Container(
+                                            width: 10,
+                                            height: 10,
+                                            margin: const EdgeInsets.symmetric(
+                                              horizontal: 3,
+                                            ),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Description
+                      if (widget.skill.description.isNotEmpty) ...[
+                        Text(
+                          'Catatan & Deskripsi:',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: widget.themeColor,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.skill.description,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.4,
+                            color: theme.textTheme.bodyMedium?.color
+                                ?.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
+                      // Motivation Message
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: widget.themeColor.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: widget.themeColor.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _localLevel >= 5
+                                  ? Icons.emoji_events
+                                  : Icons.lightbulb_outline_rounded,
+                              color: _localLevel >= 5
+                                  ? Colors.amber
+                                  : widget.themeColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _getMotivationalMessage(_localLevel),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: theme.textTheme.bodyMedium?.color
+                                      ?.withValues(alpha: 0.8),
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Quick actions
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Aksi Cepat:',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _buildQuickButton(
+                                icon: Icons.remove,
+                                label: '-10%',
+                                onPressed: () {
+                                  setSheetState(() {
+                                    _localProgress -= 0.1;
+                                    if (_localProgress < 0.0) {
+                                      if (_localLevel > 1) {
+                                        _localLevel -= 1;
+                                        _localProgress = 0.9;
+                                      } else {
+                                        _localProgress = 0.0;
+                                      }
+                                    }
+                                  });
+                                  setState(() {});
+                                  widget.onProgressChanged(
+                                    _localLevel,
+                                    _localProgress,
+                                  );
+                                },
+                                color: Colors.redAccent,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildQuickButton(
+                                icon: Icons.add,
+                                label: '+10%',
+                                onPressed: () {
+                                  setSheetState(() {
+                                    _localProgress += 0.1;
+                                    if (_localProgress >= 1.0) {
+                                      _localLevel += 1;
+                                      _localProgress = 0.0;
+                                      _triggerLevelUpAnim = true;
+                                      Feedback.forLongPress(context);
+                                    }
+                                  });
+                                  setState(() {});
+                                  widget.onProgressChanged(
+                                    _localLevel,
+                                    _localProgress,
+                                  );
+                                },
+                                color: Colors.green,
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.emoji_events_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Level Up',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  setSheetState(() {
+                                    _localLevel += 1;
+                                    _localProgress = 0.0;
+                                    _triggerLevelUpAnim = true;
+                                    Feedback.forLongPress(context);
+                                  });
+                                  setState(() {});
+                                  widget.onProgressChanged(
+                                    _localLevel,
+                                    _localProgress,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      const Divider(height: 1),
+                      const SizedBox(height: 20),
+
+                      // Edit / Delete Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.edit_rounded,
+                              size: 16,
+                              color: widget.themeColor,
+                            ),
+                            label: Text(
+                              'Ubah',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(modalCtx);
+                              widget.onEdit();
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.redAccent),
+                              backgroundColor: Colors.redAccent.withValues(
+                                alpha: 0.05,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 16,
+                              color: Colors.redAccent,
+                            ),
+                            label: const Text(
+                              'Hapus',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(modalCtx);
+                              widget.onDelete();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -134,7 +707,135 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardWidth = constraints.maxWidth;
+        final isGridView = cardWidth < 240;
 
+        if (isGridView) {
+          return Card(
+            elevation: 2,
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: widget.themeColor.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: InkWell(
+              onTap: () => _showGridDetailBottomSheet(context),
+              onLongPress: widget.onLongPress,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    colors: [
+                      widget.themeColor.withValues(alpha: isDark ? 0.04 : 0.02),
+                      widget.themeColor.withValues(alpha: isDark ? 0.12 : 0.06),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Expanded(
+                        child: Text(
+                          widget.skill.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Level text
+                      Text(
+                        'Lvl $_localLevel',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: widget.themeColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Progress percentage text
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Progres: ${(_localProgress * 100).round()}%',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Static Progress Bar
+                      Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Stack(
+                          children: [
+                            FractionallySizedBox(
+                              widthFactor: _localProgress > 0.0
+                                  ? _localProgress
+                                  : 0.001,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      widget.themeColor.withValues(alpha: 0.7),
+                                      widget.themeColor,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Helper text
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.touch_app_outlined,
+                            size: 11,
+                            color: theme.hintColor.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Ketuk untuk detail',
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: theme.hintColor.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Original list-view layout
         return Card(
           elevation: _isDragging ? 6 : (_isExpanded ? 4 : 2),
           margin: const EdgeInsets.symmetric(vertical: 8),

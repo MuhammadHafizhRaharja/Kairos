@@ -4,11 +4,14 @@ class Resource {
   final int? id; // ID unik (auto-increment di SQLite)
   final int? userId; // ID Pengguna pemilik materi belajar ini
   final int? skillId; // ID Keahlian yang terhubung (opsional, nullable)
-  final String title; // Judul materi (misal: "Dokumentasi Flutter", "Tips Clean Code")
+  final String
+  title; // Judul materi (misal: "Dokumentasi Flutter", "Tips Clean Code")
   final String url; // Tautan/Link web materi
   final String description; // Deskripsi singkat atau catatan belajar
-  final String category; // Kategori materi (misal: Video, Artikel, Buku, Dokumentasi, Lainnya)
-  final int status; // Status membaca (0 = Belum Dibaca, 1 = Sedang Dibaca, 2 = Selesai)
+  final String
+  category; // Kategori materi (misal: Video, Artikel, Buku, Dokumentasi, Lainnya)
+  final int
+  status; // Status membaca (0 = Belum Dibaca, 1 = Sedang Dibaca, 2 = Selesai)
   final String resourceType; // Jenis resource ('materi' atau 'referensi')
   final DateTime createdAt; // Tanggal ditambahkan
 
@@ -62,7 +65,8 @@ class Resource {
       'category': category,
       'status': status,
       'resourceType': resourceType,
-      'createdAt': createdAt.toIso8601String(), // Menyimpan DateTime sebagai String format ISO 8601
+      'createdAt': createdAt
+          .toIso8601String(), // Menyimpan DateTime sebagai String format ISO 8601
     };
     if (id != null) {
       map['id'] = id;
@@ -89,7 +93,9 @@ class Resource {
       category: map['category'] as String? ?? 'Lainnya',
       status: map['status'] as int? ?? 0,
       resourceType: map['resourceType'] as String? ?? 'materi',
-      createdAt: DateTime.parse(map['createdAt'] as String? ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        map['createdAt'] as String? ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

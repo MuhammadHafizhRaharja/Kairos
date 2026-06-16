@@ -5,11 +5,16 @@ import 'dart:convert';
 import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../providers/progress_provider.dart';
 import '../providers/skill_provider.dart';
 import '../models/progress_log.dart';
 import '../models/challenge.dart';
 import '../models/skill.dart';
+import '../widgets/interactive_duration_slider.dart';
+import '../widgets/progress_heatmap_calendar.dart';
+import '../widgets/celebration_dialog.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -26,7 +31,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final skillProv = context.watch<SkillProvider>();
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
@@ -39,9 +44,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          actions: [
-            // Kontrol ukuran font dan view mode dipindahkan ke Halaman Profil
-          ],
           bottom: TabBar(
             indicatorColor: theme.colorScheme.primary,
             labelColor: theme.colorScheme.primary,
@@ -49,24 +51,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
             tabs: [
               Tab(text: skillProv.translate('activity_log'), icon: const Icon(Icons.history_edu)),
               Tab(text: skillProv.translate('challenges'), icon: const Icon(Icons.emoji_events)),
+              Tab(
+                text: skillProv.defaultLang == 'id' ? 'Analitik' : 'Analytics',
+                icon: const Icon(Icons.insights_rounded),
+              ),
             ],
           ),
         ),
-        body: Column(
+        body: const TabBarView(
           children: [
-            const _SkillFrequencyChart(),
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  _ProgressLogsView(),
-                  _ChallengesView(),
-                ],
-              ),
-            ),
+            _ProgressLogsView(),
+            _ChallengesView(),
+            _AnalyticsView(),
           ],
         ),
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 96.0), // Hindari tertutup navbar melayang
+          padding: const EdgeInsets.only(bottom: 96.0),
           child: FloatingActionButton(
             onPressed: () => _showAddDialog(context),
             backgroundColor: theme.colorScheme.primary,
@@ -89,7 +89,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
             title: Text(skillProv.translate('add_new')),
             content: SizedBox(
               width: double.maxFinite,
-              height: 400,
+              height: 480,
               child: Column(
                 children: [
                   TabBar(
@@ -117,6 +117,326 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 }
 
+// =============================================================================
+// TAB 3: ANALITIK (NEW - Assessment 3)
+// =============================================================================
+class _AnalyticsView extends StatelessWidget {
+  const _AnalyticsView();
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<ProgressProvider>();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final streak = provider.calculateCurrentStreak();
+    final challengeStats = provider.getChallengeStats();
+    final last7Days = provider.getLast7DaysDuration();
+    final totalLogs = provider.logs.length;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 16, bottom: 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // === Stat Cards Row ===
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    icon: Icons.local_fire_department_rounded,
+                    iconColor: Colors.orange,
+                    label: 'Streak',
+                    value: '$streak hari',
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    icon: Icons.history_edu_rounded,
+                    iconColor: theme.colorScheme.primary,
+                    label: 'Total Log',
+                    value: '$totalLogs',
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    context,
+                    icon: Icons.emoji_events_rounded,
+                    iconColor: Colors.amber,
+                    label: 'Selesai',
+                    value: '${challengeStats['completed']}/${challengeStats['total']}',
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // === Grafik Garis 7 Hari (fl_chart) ===
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.12)),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.show_chart_rounded,
+                            color: theme.colorScheme.primary, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Durasi Belajar 7 Hari Terakhir',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 200,
+                    child: last7Days.every((e) => e.value == 0)
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.bar_chart_rounded,
+                                    size: 48,
+                                    color: theme.hintColor.withValues(alpha: 0.3)),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Belum ada data minggu ini',
+                                  style: TextStyle(color: theme.hintColor),
+                                ),
+                              ],
+                            ),
+                          )
+                        : LineChart(
+                            LineChartData(
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                horizontalInterval: 30,
+                                getDrawingHorizontalLine: (value) => FlLine(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.06)
+                                      : Colors.black.withValues(alpha: 0.05),
+                                  strokeWidth: 1,
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 1,
+                                    getTitlesWidget: (value, meta) {
+                                      final index = value.toInt();
+                                      if (index < 0 || index >= last7Days.length) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      final day = last7Days[index].key;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Text(
+                                          DateFormat('E').format(day).substring(0, 2),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? Colors.white54 : Colors.black45,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 40,
+                                    getTitlesWidget: (value, meta) {
+                                      return Text(
+                                        '${value.toInt()}m',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: isDark ? Colors.white38 : Colors.black38,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: List.generate(
+                                    last7Days.length,
+                                    (i) => FlSpot(i.toDouble(), last7Days[i].value),
+                                  ),
+                                  isCurved: true,
+                                  curveSmoothness: 0.35,
+                                  color: theme.colorScheme.primary,
+                                  barWidth: 3,
+                                  isStrokeCapRound: true,
+                                  dotData: FlDotData(
+                                    show: true,
+                                    getDotPainter: (spot, percent, bar, index) {
+                                      return FlDotCirclePainter(
+                                        radius: 4,
+                                        color: theme.colorScheme.primary,
+                                        strokeWidth: 2,
+                                        strokeColor: Colors.white,
+                                      );
+                                    },
+                                  ),
+                                  belowBarData: BarAreaData(
+                                    show: true,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        theme.colorScheme.primary.withValues(alpha: 0.3),
+                                        theme.colorScheme.primary.withValues(alpha: 0.0),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              lineTouchData: LineTouchData(
+                                touchTooltipData: LineTouchTooltipData(
+                                  getTooltipColor: (spot) =>
+                                      theme.colorScheme.primary.withValues(alpha: 0.9),
+                                  getTooltipItems: (spots) {
+                                    return spots.map((spot) {
+                                      return LineTooltipItem(
+                                        '${spot.y.toInt()} menit',
+                                        const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      );
+                                    }).toList();
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // === Heatmap Calendar (Custom Widget) ===
+          const ProgressHeatmapCalendar(),
+
+          const SizedBox(height: 24),
+
+          // === Skill Focus Chart ===
+          const _SkillFrequencyChart(),
+
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required bool isDark,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: iconColor.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? Colors.white54 : Colors.black45,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// SKILL FREQUENCY CHART (Moved from original)
+// =============================================================================
 class _SkillFrequencyChart extends StatelessWidget {
   const _SkillFrequencyChart();
 
@@ -127,7 +447,6 @@ class _SkillFrequencyChart extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Hitung frekuensi keahlian
     final Map<int, int> frequencyMap = {};
     for (var log in provider.logs) {
       if (log.skillId != null) {
@@ -141,19 +460,16 @@ class _SkillFrequencyChart extends StatelessWidget {
     }
 
     if (frequencyMap.isEmpty) {
-      return const SizedBox.shrink(); // Sembunyikan jika tidak ada data
+      return const SizedBox.shrink();
     }
 
-    // Urutkan berdasarkan frekuensi menurun
     final sortedEntries = frequencyMap.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
-    // Ambil top 3
-    final topEntries = sortedEntries.take(3).toList();
+    final topEntries = sortedEntries.take(5).toList();
     final maxFreq = topEntries.first.value;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -166,13 +482,6 @@ class _SkillFrequencyChart extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.15), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,13 +548,6 @@ class _SkillFrequencyChart extends StatelessWidget {
                                   colors: [theme.colorScheme.primary.withValues(alpha: 0.6), theme.colorScheme.primary],
                                 ),
                                 borderRadius: BorderRadius.circular(5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
                             ),
                           ],
@@ -272,6 +574,9 @@ class _SkillFrequencyChart extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// TAB 1: PROGRESS LOGS (Dengan Slidable)
+// =============================================================================
 class _ProgressLogsView extends StatelessWidget {
   const _ProgressLogsView();
 
@@ -318,17 +623,6 @@ class _ProgressLogsView extends StatelessWidget {
               splashColor: skillColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
               onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
-              onLongPress: () async {
-                final confirm = await _showDeleteConfirmationDialog(context, log.title);
-                if (confirm && log.id != null) {
-                  provider.deleteProgressLog(log.id!);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('log_deleted'))),
-                    );
-                  }
-                }
-              },
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -336,16 +630,15 @@ class _ProgressLogsView extends StatelessWidget {
                   children: [
                     Text(
                       log.title,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: fontSize),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       log.skillId != null
-                          ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                          : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                          ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: 'Deleted', createdAt: DateTime.now())).name
+                          : 'Global',
                       style: TextStyle(color: skillColor, fontSize: fontSize * 0.8, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -358,10 +651,7 @@ class _ProgressLogsView extends StatelessWidget {
                     const Spacer(),
                     Text(
                       skillProv.translate('duration_minutes', args: [log.durationMinutes.toString()]),
-                      style: TextStyle(
-                          color: skillColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: fontSize * 0.9),
+                      style: TextStyle(color: skillColor, fontWeight: FontWeight.bold, fontSize: fontSize * 0.9),
                     ),
                   ],
                 ),
@@ -372,6 +662,7 @@ class _ProgressLogsView extends StatelessWidget {
       );
     }
 
+    // List View dengan Slidable
     return ListView.builder(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
       itemCount: logs.length,
@@ -386,79 +677,117 @@ class _ProgressLogsView extends StatelessWidget {
           } catch (_) {}
         }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
-          color: skillColor.withValues(alpha: 0.08),
-          shape: RoundedRectangleBorder(
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
-          ),
-          child: InkWell(
-            splashColor: skillColor.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
-            onLongPress: () async {
-              final confirm = await _showDeleteConfirmationDialog(context, log.title);
-              if (confirm && log.id != null) {
-                provider.deleteProgressLog(log.id!);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(skillProv.translate('log_deleted'))),
-                  );
-                }
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: Slidable(
+              key: ValueKey(log.id),
+              endActionPane: ActionPane(
+                motion: const BehindMotion(),
+                extentRatio: 0.25,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(log.title,
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize)),
-                      ),
-                      if (log.photoPath != null && log.photoPath!.isNotEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8.0),
-                          child: Icon(Icons.image_rounded, color: Colors.blueGrey, size: 20),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    log.skillId != null
-                        ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                        : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                    style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(log.note, style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        DateFormat('dd MMM yyyy, HH:mm').format(log.date),
-                        style: TextStyle(fontSize: fontSize * 0.8, color: Colors.grey),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: skillColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
-                          style: TextStyle(fontSize: fontSize * 0.8, color: skillColor, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                  SlidableAction(
+                    onPressed: (context) async {
+                      final confirm = await _showDeleteConfirmationDialog(context, log.title);
+                      if (confirm && log.id != null) {
+                        provider.deleteProgressLog(log.id!);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(skillProv.translate('log_deleted'))),
+                          );
+                        }
+                      }
+                    },
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete_rounded,
+                    label: skillProv.defaultLang == 'id' ? 'Hapus' : 'Delete',
+                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(16)),
                   ),
                 ],
+              ),
+              startActionPane: ActionPane(
+                motion: const BehindMotion(),
+                extentRatio: 0.25,
+                children: [
+                  SlidableAction(
+                    onPressed: (context) {
+                      _showEditLogDialog(context, log);
+                    },
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    icon: Icons.edit_rounded,
+                    label: 'Edit',
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                  ),
+                ],
+              ),
+              child: Card(
+                margin: EdgeInsets.zero,
+                elevation: 0,
+                color: skillColor.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
+                ),
+                child: InkWell(
+                  splashColor: skillColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _showLogDetailModal(context, log, skillColor, skillProv, provider),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(log.title,
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize)),
+                            ),
+                            if (log.photoPath != null && log.photoPath!.isNotEmpty)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8.0),
+                                child: Icon(Icons.image_rounded, color: Colors.blueGrey, size: 20),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          log.skillId != null
+                              ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: 'Deleted', createdAt: DateTime.now())).name
+                              : 'Global',
+                          style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(log.note, style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              DateFormat('dd MMM yyyy, HH:mm').format(log.date),
+                              style: TextStyle(fontSize: fontSize * 0.8, color: Colors.grey),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: skillColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                skillProv.translate('duration_minutes_short', args: [log.durationMinutes.toString()]),
+                                style: TextStyle(fontSize: fontSize * 0.8, color: skillColor, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -468,6 +797,9 @@ class _ProgressLogsView extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// TAB 2: CHALLENGES (Dengan Slidable + Celebration)
+// =============================================================================
 class _ChallengesView extends StatelessWidget {
   const _ChallengesView();
 
@@ -516,17 +848,6 @@ class _ChallengesView extends StatelessWidget {
             child: InkWell(
               splashColor: skillColor.withValues(alpha: 0.2),
               onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
-              onLongPress: () async {
-                final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
-                if (confirm && challenge.id != null) {
-                  provider.deleteChallenge(challenge.id!);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
-                    );
-                  }
-                }
-              },
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -550,6 +871,12 @@ class _ChallengesView extends StatelessWidget {
                                   final amount = val ? 0.2 : -0.2;
                                   skillProv.incrementSkillProgress(challenge.skillId!, amount);
                                 }
+                                if (val) {
+                                  CelebrationDialog.show(context,
+                                    title: '🎉 Tantangan Selesai!',
+                                    message: '"${challenge.title}" berhasil diselesaikan!',
+                                  );
+                                }
                               }
                             },
                           ),
@@ -572,8 +899,8 @@ class _ChallengesView extends StatelessWidget {
                     const Spacer(),
                     Text(
                       challenge.skillId != null
-                          ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                          : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
+                          ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: 'Deleted', createdAt: DateTime.now())).name
+                          : 'Global',
                       style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -596,6 +923,7 @@ class _ChallengesView extends StatelessWidget {
       );
     }
 
+    // List View dengan Slidable
     return ListView.builder(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
       itemCount: challenges.length,
@@ -611,94 +939,153 @@ class _ChallengesView extends StatelessWidget {
           } catch (_) {}
         }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
-          color: skillColor.withValues(alpha: 0.08),
-          shape: RoundedRectangleBorder(
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
-          ),
-          child: InkWell(
-            splashColor: skillColor.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
-            onLongPress: () async {
-              final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
-              if (confirm && challenge.id != null) {
-                provider.deleteChallenge(challenge.id!);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
-                  );
-                }
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: Slidable(
+              key: ValueKey(challenge.id),
+              endActionPane: ActionPane(
+                motion: const BehindMotion(),
+                extentRatio: 0.25,
                 children: [
-                  Checkbox(
-                    value: isCompleted,
-                    activeColor: Colors.green,
-                    onChanged: (val) {
-                      if (val != null) {
-                        provider.updateChallenge(
-                          challenge.copyWith(isCompleted: val ? 1 : 0),
-                        );
-                        if (challenge.skillId != null) {
-                          final amount = val ? 0.2 : -0.2;
-                          skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                  SlidableAction(
+                    onPressed: (context) async {
+                      final confirm = await _showDeleteConfirmationDialog(context, challenge.title);
+                      if (confirm && challenge.id != null) {
+                        provider.deleteChallenge(challenge.id!);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(skillProv.translate('challenge_deleted'))),
+                          );
                         }
                       }
                     },
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete_rounded,
+                    label: skillProv.defaultLang == 'id' ? 'Hapus' : 'Delete',
+                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(16)),
                   ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Column(
+                ],
+              ),
+              startActionPane: ActionPane(
+                motion: const BehindMotion(),
+                extentRatio: 0.25,
+                children: [
+                  SlidableAction(
+                    onPressed: (context) {
+                      if (!isCompleted) {
+                        provider.updateChallenge(
+                          challenge.copyWith(isCompleted: 1),
+                        );
+                        if (challenge.skillId != null) {
+                          skillProv.incrementSkillProgress(challenge.skillId!, 0.2);
+                        }
+                        CelebrationDialog.show(context,
+                          title: '🎉 Tantangan Selesai!',
+                          message: '"${challenge.title}" berhasil diselesaikan!',
+                        );
+                      } else {
+                        _showEditChallengeDialog(context, challenge);
+                      }
+                    },
+                    backgroundColor: isCompleted
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.green,
+                    foregroundColor: Colors.white,
+                    icon: isCompleted ? Icons.edit_rounded : Icons.check_rounded,
+                    label: isCompleted ? 'Edit' : (skillProv.defaultLang == 'id' ? 'Selesai' : 'Done'),
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                  ),
+                ],
+              ),
+              child: Card(
+                margin: EdgeInsets.zero,
+                elevation: 0,
+                color: skillColor.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: skillColor.withValues(alpha: 0.3)),
+                ),
+                child: InkWell(
+                  splashColor: skillColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _showChallengeDetailModal(context, challenge, skillColor, skillProv, provider),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          challenge.title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: fontSize,
-                            decoration: isCompleted ? TextDecoration.lineThrough : null,
+                        Checkbox(
+                          value: isCompleted,
+                          activeColor: Colors.green,
+                          onChanged: (val) {
+                            if (val != null) {
+                              provider.updateChallenge(
+                                challenge.copyWith(isCompleted: val ? 1 : 0),
+                              );
+                              if (challenge.skillId != null) {
+                                final amount = val ? 0.2 : -0.2;
+                                skillProv.incrementSkillProgress(challenge.skillId!, amount);
+                              }
+                              if (val) {
+                                CelebrationDialog.show(context,
+                                  title: '🎉 Tantangan Selesai!',
+                                  message: '"${challenge.title}" berhasil diselesaikan!',
+                                );
+                              }
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                challenge.title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: fontSize,
+                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                challenge.skillId != null
+                                    ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: 'Deleted', createdAt: DateTime.now())).name
+                                    : 'Global',
+                                style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
+                              ),
+                              if (challenge.description.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(challenge.description,
+                                    style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
+                              ],
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(Icons.event_available_rounded, size: 14, color: isCompleted ? Colors.green : Colors.orange),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    skillProv.defaultLang == 'id'
+                                        ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
+                                        : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
+                                    style: TextStyle(
+                                        fontSize: fontSize * 0.8,
+                                        fontWeight: FontWeight.w600,
+                                        color: isCompleted ? Colors.green : Colors.orange),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          challenge.skillId != null
-                              ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-                              : (skillProv.defaultLang == 'id' ? 'Global' : 'Global'),
-                          style: TextStyle(color: skillColor, fontSize: fontSize * 0.85, fontWeight: FontWeight.w600),
-                        ),
-                        if (challenge.description.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(challenge.description,
-                              style: TextStyle(fontSize: fontSize * 0.9), maxLines: 2, overflow: TextOverflow.ellipsis),
-                        ],
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Icon(Icons.event_available_rounded, size: 14, color: isCompleted ? Colors.green : Colors.orange),
-                            const SizedBox(width: 4),
-                            Text(
-                              skillProv.defaultLang == 'id'
-                                  ? 'Tenggat: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}'
-                                  : 'Due: ${DateFormat('dd MMM yyyy').format(challenge.targetDate)}',
-                              style: TextStyle(
-                                  fontSize: fontSize * 0.8,
-                                  fontWeight: FontWeight.w600,
-                                  color: isCompleted ? Colors.green : Colors.orange),
-                            ),
-                          ],
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -708,6 +1095,9 @@ class _ChallengesView extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// ADD LOG FORM (Dengan InteractiveDurationSlider)
+// =============================================================================
 class _AddLogForm extends StatefulWidget {
   const _AddLogForm();
 
@@ -719,7 +1109,7 @@ class _AddLogFormState extends State<_AddLogForm> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _noteController = TextEditingController();
-  final _durationController = TextEditingController();
+  int _durationMinutes = 30;
   int? _selectedSkillId;
   DateTime _selectedDate = DateTime.now();
   String? _selectedPhotoPath;
@@ -728,7 +1118,6 @@ class _AddLogFormState extends State<_AddLogForm> {
   void dispose() {
     _titleController.dispose();
     _noteController.dispose();
-    _durationController.dispose();
     super.dispose();
   }
 
@@ -785,6 +1174,7 @@ class _AddLogFormState extends State<_AddLogForm> {
   Widget build(BuildContext context) {
     final skills = context.watch<SkillProvider>().skills;
     final skillProv = context.watch<SkillProvider>();
+    final theme = Theme.of(context);
 
     return Form(
       key: _formKey,
@@ -813,26 +1203,24 @@ class _AddLogFormState extends State<_AddLogForm> {
               ),
               maxLines: 3,
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _durationController,
-              decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Durasi (Menit)' : 'Duration (Minutes)',
-                hintText: skillProv.defaultLang == 'id' ? 'Contoh: 30' : 'Example: 30',
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi tidak boleh kosong' : 'Duration cannot be empty';
-                }
-                final dur = int.tryParse(value);
-                if (dur == null || dur <= 0) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi harus berupa angka positif (> 0)' : 'Duration must be a positive number (> 0)';
-                }
-                return null;
+            const SizedBox(height: 16),
+            // === Interactive Duration Slider (Custom Widget + Art + Gesture) ===
+            Text(
+              skillProv.defaultLang == 'id' ? 'Durasi Belajar' : 'Study Duration',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            InteractiveDurationSlider(
+              initialMinutes: _durationMinutes,
+              maxMinutes: 180,
+              accentColor: theme.colorScheme.primary,
+              onChanged: (minutes) {
+                setState(() {
+                  _durationMinutes = minutes;
+                });
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -877,8 +1265,7 @@ class _AddLogFormState extends State<_AddLogForm> {
               ],
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              initialValue: _selectedSkillId,
+            DropdownButtonFormField<int?>(initialValue: _selectedSkillId,
               decoration: InputDecoration(
                 labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
@@ -904,18 +1291,16 @@ class _AddLogFormState extends State<_AddLogForm> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  final duration = int.parse(_durationController.text.trim());
                   context.read<ProgressProvider>().addProgressLog(
                         title: _titleController.text.trim(),
                         note: _noteController.text.trim(),
-                        durationMinutes: duration,
+                        durationMinutes: _durationMinutes,
                         date: _selectedDate,
                         photoPath: _selectedPhotoPath,
                         skillId: _selectedSkillId,
                       );
                   if (_selectedSkillId != null) {
-                    // Penambahan progres logis: misal 60 menit = 10% (0.1) progress
-                    final progressGained = duration / 600.0;
+                    final progressGained = _durationMinutes / 600.0;
                     context.read<SkillProvider>().incrementSkillProgress(_selectedSkillId!, progressGained);
                   }
                   Navigator.of(context).pop();
@@ -935,6 +1320,9 @@ class _AddLogFormState extends State<_AddLogForm> {
   }
 }
 
+// =============================================================================
+// ADD CHALLENGE FORM
+// =============================================================================
 class _AddChallengeForm extends StatefulWidget {
   const _AddChallengeForm();
 
@@ -1021,8 +1409,7 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
               ],
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              initialValue: _selectedSkillId,
+            DropdownButtonFormField<int?>(initialValue: _selectedSkillId,
               decoration: InputDecoration(
                 labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
@@ -1071,6 +1458,9 @@ class _AddChallengeFormState extends State<_AddChallengeForm> {
   }
 }
 
+// =============================================================================
+// EDIT LOG FORM
+// =============================================================================
 class _EditLogForm extends StatefulWidget {
   final ProgressLog log;
   const _EditLogForm({required this.log});
@@ -1083,7 +1473,7 @@ class _EditLogFormState extends State<_EditLogForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _noteController;
-  late final TextEditingController _durationController;
+  late int _durationMinutes;
   int? _selectedSkillId;
   late DateTime _selectedDate;
   String? _selectedPhotoPath;
@@ -1093,7 +1483,7 @@ class _EditLogFormState extends State<_EditLogForm> {
     super.initState();
     _titleController = TextEditingController(text: widget.log.title);
     _noteController = TextEditingController(text: widget.log.note);
-    _durationController = TextEditingController(text: widget.log.durationMinutes.toString());
+    _durationMinutes = widget.log.durationMinutes;
     _selectedSkillId = widget.log.skillId;
     _selectedDate = widget.log.date;
     _selectedPhotoPath = widget.log.photoPath;
@@ -1103,7 +1493,6 @@ class _EditLogFormState extends State<_EditLogForm> {
   void dispose() {
     _titleController.dispose();
     _noteController.dispose();
-    _durationController.dispose();
     super.dispose();
   }
 
@@ -1160,6 +1549,7 @@ class _EditLogFormState extends State<_EditLogForm> {
   Widget build(BuildContext context) {
     final skills = context.watch<SkillProvider>().skills;
     final skillProv = context.watch<SkillProvider>();
+    final theme = Theme.of(context);
 
     return Form(
       key: _formKey,
@@ -1186,25 +1576,24 @@ class _EditLogFormState extends State<_EditLogForm> {
               ),
               maxLines: 3,
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _durationController,
-              decoration: InputDecoration(
-                labelText: skillProv.defaultLang == 'id' ? 'Durasi (Menit)' : 'Duration (Minutes)',
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi tidak boleh kosong' : 'Duration cannot be empty';
-                }
-                final dur = int.tryParse(value);
-                if (dur == null || dur <= 0) {
-                  return skillProv.defaultLang == 'id' ? 'Durasi harus berupa angka positif (> 0)' : 'Duration must be a positive number (> 0)';
-                }
-                return null;
+            const SizedBox(height: 16),
+            // Interactive Duration Slider for editing too
+            Text(
+              skillProv.defaultLang == 'id' ? 'Durasi Belajar' : 'Study Duration',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            InteractiveDurationSlider(
+              initialMinutes: _durationMinutes.clamp(5, 180),
+              maxMinutes: 180,
+              accentColor: theme.colorScheme.primary,
+              onChanged: (minutes) {
+                setState(() {
+                  _durationMinutes = minutes;
+                });
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -1249,8 +1638,7 @@ class _EditLogFormState extends State<_EditLogForm> {
               ],
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              initialValue: _selectedSkillId,
+            DropdownButtonFormField<int?>(initialValue: _selectedSkillId,
               decoration: InputDecoration(
                 labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
@@ -1279,7 +1667,7 @@ class _EditLogFormState extends State<_EditLogForm> {
                   final updatedLog = widget.log.copyWith(
                     title: _titleController.text.trim(),
                     note: _noteController.text.trim(),
-                    durationMinutes: int.parse(_durationController.text.trim()),
+                    durationMinutes: _durationMinutes,
                     skillId: _selectedSkillId,
                     date: _selectedDate,
                     photoPath: _selectedPhotoPath,
@@ -1302,6 +1690,9 @@ class _EditLogFormState extends State<_EditLogForm> {
   }
 }
 
+// =============================================================================
+// EDIT CHALLENGE FORM
+// =============================================================================
 class _EditChallengeForm extends StatefulWidget {
   final Challenge challenge;
   const _EditChallengeForm({required this.challenge});
@@ -1396,8 +1787,7 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
               ],
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              initialValue: _selectedSkillId,
+            DropdownButtonFormField<int?>(initialValue: _selectedSkillId,
               decoration: InputDecoration(
                 labelText: skillProv.defaultLang == 'id' ? 'Keahlian Terkait' : 'Related Skill',
               ),
@@ -1448,7 +1838,7 @@ class _EditChallengeFormState extends State<_EditChallengeForm> {
 }
 
 // =============================================================================
-// PEMBANTU DIALOG (EDIT & KONFIRMASI HAPUS)
+// DIALOG HELPERS
 // =============================================================================
 
 void _showEditLogDialog(BuildContext context, ProgressLog log) {
@@ -1460,7 +1850,7 @@ void _showEditLogDialog(BuildContext context, ProgressLog log) {
         title: Text(skillProv.defaultLang == 'id' ? 'Edit Log Aktivitas' : 'Edit Activity Log'),
         content: SizedBox(
           width: double.maxFinite,
-          height: 400,
+          height: 500,
           child: _EditLogForm(log: log),
         ),
       );
@@ -1519,8 +1909,8 @@ void _showLogDetailModal(
 ) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final skillName = log.skillId != null
-      ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global');
+      ? skillProv.skills.firstWhere((s) => s.id == log.skillId, orElse: () => Skill(categoryId: 0, name: 'Deleted', createdAt: DateTime.now())).name
+      : 'Global';
 
   showModalBottomSheet(
     context: context,
@@ -1564,10 +1954,7 @@ void _showLogDetailModal(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        log.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
+                      Text(log.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       Text(
                         '${skillProv.translate('nav_skills')}: $skillName',
                         style: TextStyle(color: skillColor, fontWeight: FontWeight.w600, fontSize: 13),
@@ -1608,10 +1995,7 @@ void _showLogDetailModal(
                     children: [
                       const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey),
                       const SizedBox(width: 8),
-                      Text(
-                        DateFormat('EEEE, dd MMM yyyy').format(log.date),
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
+                      Text(DateFormat('EEEE, dd MMM yyyy').format(log.date), style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1666,8 +2050,8 @@ void _showChallengeDetailModal(
 ) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final skillName = challenge.skillId != null
-      ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: skillProv.defaultLang == 'id' ? 'Keahlian Dihapus' : 'Deleted Skill', createdAt: DateTime.now())).name
-      : (skillProv.defaultLang == 'id' ? 'Global' : 'Global');
+      ? skillProv.skills.firstWhere((s) => s.id == challenge.skillId, orElse: () => Skill(categoryId: 0, name: 'Deleted', createdAt: DateTime.now())).name
+      : 'Global';
   final isCompleted = challenge.isCompleted == 1;
 
   showModalBottomSheet(
@@ -1715,10 +2099,7 @@ void _showChallengeDetailModal(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        challenge.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
+                      Text(challenge.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       Text(
                         '${skillProv.translate('nav_skills')}: $skillName',
                         style: TextStyle(color: skillColor, fontWeight: FontWeight.w600, fontSize: 13),
@@ -1764,7 +2145,7 @@ void _showChallengeDetailModal(
                       Icon(isCompleted ? Icons.task_alt_rounded : Icons.hourglass_top_rounded, size: 16, color: isCompleted ? Colors.green : Colors.orange),
                       const SizedBox(width: 8),
                       Text(
-                        isCompleted 
+                        isCompleted
                             ? (skillProv.defaultLang == 'id' ? 'Tantangan Selesai' : 'Challenge Completed')
                             : (skillProv.defaultLang == 'id' ? 'Belum Selesai' : 'Not Completed'),
                         style: TextStyle(fontWeight: FontWeight.bold, color: isCompleted ? Colors.green : Colors.orange),

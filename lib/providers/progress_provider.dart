@@ -157,4 +157,93 @@ class ProgressProvider extends ChangeNotifier {
     notifyListeners();
     await _prefsHelper.setViewMode(mode);
   }
+
+  // ==========================================
+  // ANALYTICS & GAMIFICATION
+  // ==========================================
+
+  /// Menghitung jumlah hari berturut-turut pengguna mengisi jurnal (streak).
+  int calculateCurrentStreak() {
+    if (_logs.isEmpty) return 0;
+
+    // Kumpulkan tanggal unik (buang jam/menit/detik)
+    final uniqueDays = _logs
+        .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a)); // Urutkan dari terbaru
+
+    if (uniqueDays.isEmpty) return 0;
+
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    // Streak harus dimulai dari hari ini atau kemarin
+    if (uniqueDays.first != today && uniqueDays.first != yesterday) return 0;
+
+    int streak = 1;
+    for (int i = 1; i < uniqueDays.length; i++) {
+      final diff = uniqueDays[i - 1].difference(uniqueDays[i]).inDays;
+      if (diff == 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  /// Menghitung total jam belajar per keahlian di minggu berjalan.
+  Map<int?, double> getTotalHoursThisWeek() {
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final weekStart = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+
+    final Map<int?, double> hoursMap = {};
+    for (var log in _logs) {
+      final logDate = DateTime(log.date.year, log.date.month, log.date.day);
+      if (logDate.isAfter(weekStart.subtract(const Duration(days: 1)))) {
+        final key = log.skillId;
+        hoursMap[key] = (hoursMap[key] ?? 0) + (log.durationMinutes / 60.0);
+      }
+    }
+    return hoursMap;
+  }
+
+  /// Mengambil data aktivitas harian untuk heatmap kalender.
+  /// Mengembalikan `Map<DateTime, int>` (tanggal -> jumlah aktivitas).
+  Map<DateTime, int> getActivityMap() {
+    final Map<DateTime, int> activityMap = {};
+    for (var log in _logs) {
+      final day = DateTime(log.date.year, log.date.month, log.date.day);
+      activityMap[day] = (activityMap[day] ?? 0) + 1;
+    }
+    return activityMap;
+  }
+
+  /// Menghitung total durasi belajar per hari (7 hari terakhir) untuk grafik garis.
+  List<MapEntry<DateTime, double>> getLast7DaysDuration() {
+    final now = DateTime.now();
+    final List<MapEntry<DateTime, double>> result = [];
+
+    for (int i = 6; i >= 0; i--) {
+      final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+      double totalMinutes = 0;
+      for (var log in _logs) {
+        final logDay = DateTime(log.date.year, log.date.month, log.date.day);
+        if (logDay == day) {
+          totalMinutes += log.durationMinutes;
+        }
+      }
+      result.add(MapEntry(day, totalMinutes));
+    }
+    return result;
+  }
+
+  /// Menghitung total tantangan yang selesai vs belum selesai.
+  Map<String, int> getChallengeStats() {
+    final completed = _challenges.where((c) => c.isCompleted == 1).length;
+    final pending = _challenges.length - completed;
+    return {'completed': completed, 'pending': pending, 'total': _challenges.length};
+  }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_web/webview_flutter_web.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
@@ -24,29 +23,29 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      WebViewPlatform.instance = WebWebViewPlatform();
-      isLoading = false;
-      controller = WebViewController()
-        ..loadRequest(Uri.parse(widget.url));
-    } else {
-      controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageStarted: (String url) {
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (String url) {
+            if (mounted) {
               setState(() {
                 isLoading = true;
               });
-            },
-            onPageFinished: (String url) {
+            }
+          },
+          onPageFinished: (String url) {
+            if (mounted) {
               setState(() {
                 isLoading = false;
               });
-            },
-          ),
-        )
-        ..loadRequest(Uri.parse(widget.url));
+            }
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.url));
+    if (kIsWeb) {
+      isLoading = false;
     }
   }
 

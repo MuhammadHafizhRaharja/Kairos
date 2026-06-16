@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../providers/skill_provider.dart';
 import '../models/skill_category.dart';
 import '../models/skill.dart';
 import 'skill_detail_screen.dart';
 import '../providers/progress_provider.dart';
+import '../widgets/skill_hexagon_radar.dart';
 
 /// Halaman utama Modul Skill. Menampilkan kategori keahlian dalam Grid.
 /// Mendukung tambah kategori baru dan hapus kategori via long-press gesture.
@@ -21,6 +23,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   String _searchQuery = '';
   String _selectedFilter =
       'Semua'; // 'Semua', 'Aktif', 'Menguasai', 'Belum Dimulai'
+  bool _showRadarChart = true;
 
   @override
   void dispose() {
@@ -87,9 +90,9 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Modul Keahlian',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          provider.translate('nav_skills'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -109,7 +112,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 1. DASHBOARD STATISTIK DENGAN GRAFIK DISTRIBUSI & METRIK LENGKAP
-                  _buildRichDashboardCard(context, rawCategories, provider),
+                  _buildRichDashboardCard(context, processedCategories, provider),
                   const SizedBox(height: 20),
 
                   // 2. PANEL PENCARIAN & FILTER CHIP
@@ -404,240 +407,314 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                                   final double progress = item['progress'];
                                   final color = Color(category.colorValue);
 
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              SkillDetailScreen(
-                                                category: category,
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Slidable(
+                                        key: ValueKey(category.id),
+                                        endActionPane: ActionPane(
+                                          motion: const BehindMotion(),
+                                          extentRatio: 0.25,
+                                          children: [
+                                            SlidableAction(
+                                              onPressed: (context) {
+                                                _showDeleteConfirmDialog(
+                                                  context,
+                                                  provider,
+                                                  category,
+                                                );
+                                              },
+                                              backgroundColor: Colors.redAccent,
+                                              foregroundColor: Colors.white,
+                                              icon: Icons.delete_outline_rounded,
+                                              label: 'Hapus',
+                                              borderRadius: const BorderRadius.horizontal(
+                                                right: Radius.circular(20),
                                               ),
+                                            ),
+                                          ],
                                         ),
-                                      );
-                                    },
-                                    onLongPress: () {
-                                      _showCategoryOptionsBottomSheet(
-                                        context,
-                                        provider,
-                                        category,
-                                      );
-                                    },
-                                    onDoubleTap: () {
-                                      _showQuickAddSkillDialog(
-                                        context,
-                                        provider,
-                                        category,
-                                      );
-                                    },
-                                    child: Container(
-                                      height: 160,
-                                      margin: const EdgeInsets.only(bottom: 14),
-                                      child: Card(
-                                        elevation: 2,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          side: BorderSide(
-                                            color: color.withValues(
-                                              alpha: 0.25,
+                                        startActionPane: ActionPane(
+                                          motion: const BehindMotion(),
+                                          extentRatio: 0.25,
+                                          children: [
+                                            SlidableAction(
+                                              onPressed: (context) {
+                                                _showEditCategoryDialog(
+                                                  context,
+                                                  provider,
+                                                  category,
+                                                );
+                                              },
+                                              backgroundColor:
+                                                  theme.colorScheme.primary,
+                                              foregroundColor: Colors.white,
+                                              icon: Icons.edit_rounded,
+                                              label: 'Ubah',
+                                              borderRadius: const BorderRadius.horizontal(
+                                                left: Radius.circular(20),
+                                              ),
                                             ),
-                                            width: 1.5,
-                                          ),
+                                          ],
                                         ),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                color.withValues(
-                                                  alpha: isDark ? 0.05 : 0.02,
-                                                ),
-                                                color.withValues(
-                                                  alpha: isDark ? 0.15 : 0.08,
-                                                ),
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                          ),
-                                          padding: const EdgeInsets.all(12),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              // Bagian Atas: Ikon + Mastery Tier Badge
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 18,
-                                                    backgroundColor: color
-                                                        .withValues(alpha: 0.2),
-                                                    child: Icon(
-                                                      _getIconData(
-                                                        category.icon,
-                                                      ),
-                                                      color: color,
-                                                      size: 18,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SkillDetailScreen(
+                                                      category: category,
                                                     ),
-                                                  ),
-                                                  _buildTierBadge(
-                                                    progress,
-                                                    skillsInCategory.isEmpty,
-                                                  ),
-                                                ],
                                               ),
-                                              const SizedBox(height: 8),
-
-                                              // Bagian Tengah: Nama Kategori & Preview Sub-Skills
-                                              Expanded(
+                                            );
+                                          },
+                                          onLongPress: () {
+                                            _showCategoryOptionsBottomSheet(
+                                              context,
+                                              provider,
+                                              category,
+                                            );
+                                          },
+                                          onDoubleTap: () {
+                                            _showQuickAddSkillDialog(
+                                              context,
+                                              provider,
+                                              category,
+                                            );
+                                          },
+                                          child: SizedBox(
+                                            height: 160,
+                                            child: Card(
+                                              margin: EdgeInsets.zero,
+                                              elevation: 2,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                side: BorderSide(
+                                                  color: color.withValues(
+                                                    alpha: 0.25,
+                                                  ),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      color.withValues(
+                                                        alpha: isDark
+                                                            ? 0.05
+                                                            : 0.02,
+                                                      ),
+                                                      color.withValues(
+                                                        alpha: isDark
+                                                            ? 0.15
+                                                            : 0.08,
+                                                      ),
+                                                    ],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  ),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.all(12),
                                                 child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
                                                   children: [
-                                                    Text(
-                                                      category.name,
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
+                                                    // Bagian Atas: Ikon + Mastery Tier Badge
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        CircleAvatar(
+                                                          radius: 18,
+                                                          backgroundColor: color
+                                                              .withValues(
+                                                                  alpha: 0.2),
+                                                          child: Icon(
+                                                            _getIconData(
+                                                              category.icon,
+                                                            ),
+                                                            color: color,
+                                                            size: 18,
+                                                          ),
+                                                        ),
+                                                        _buildTierBadge(
+                                                          progress,
+                                                          skillsInCategory
+                                                              .isEmpty,
+                                                        ),
+                                                      ],
                                                     ),
-                                                    const SizedBox(height: 4),
+                                                    const SizedBox(height: 8),
 
-                                                    // Preview 2 skill pertama
-                                                    if (skillsInCategory
-                                                        .isNotEmpty)
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: skillsInCategory.take(2).map((
-                                                            s,
-                                                          ) {
-                                                            return Padding(
-                                                              padding:
-                                                                  const EdgeInsets.only(
-                                                                    top: 2.0,
-                                                                  ),
-                                                              child: Row(
-                                                                children: [
-                                                                  Container(
-                                                                    width: 4,
-                                                                    height: 4,
-                                                                    decoration: BoxDecoration(
-                                                                      color:
-                                                                          color,
-                                                                      shape: BoxShape
-                                                                          .circle,
+                                                    // Bagian Tengah: Nama Kategori & Preview Sub-Skills
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            category.name,
+                                                            style: const TextStyle(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 4),
+
+                                                          // Preview 2 skill pertama
+                                                          if (skillsInCategory
+                                                              .isNotEmpty)
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children:
+                                                                    skillsInCategory
+                                                                        .take(2)
+                                                                        .map((
+                                                                  s,
+                                                                ) {
+                                                                  return Padding(
+                                                                    padding:
+                                                                        const EdgeInsets
+                                                                            .only(
+                                                                      top: 2.0,
                                                                     ),
-                                                                  ),
-                                                                  const SizedBox(
-                                                                    width: 4,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      '${s.name} (Lvl ${s.level})',
-                                                                      style: TextStyle(
-                                                                        fontSize:
-                                                                            9.5,
-                                                                        color: theme
-                                                                            .textTheme
-                                                                            .bodyMedium
-                                                                            ?.color
-                                                                            ?.withValues(
-                                                                              alpha: 0.7,
+                                                                    child: Row(
+                                                                      children: [
+                                                                        Container(
+                                                                          width:
+                                                                              4,
+                                                                          height:
+                                                                              4,
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                color,
+                                                                            shape:
+                                                                                BoxShape.circle,
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(
+                                                                          width:
+                                                                              4,
+                                                                        ),
+                                                                        Expanded(
+                                                                          child:
+                                                                              Text(
+                                                                            '${s.name} (Lvl ${s.level})',
+                                                                            style:
+                                                                                TextStyle(
+                                                                              fontSize:
+                                                                                  9.5,
+                                                                              color:
+                                                                                  theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                                                                             ),
-                                                                      ),
-                                                                      maxLines:
-                                                                          1,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis,
+                                                                            maxLines:
+                                                                                1,
+                                                                            overflow:
+                                                                                TextOverflow.ellipsis,
+                                                                          ),
+                                                                        ),
+                                                                      ],
                                                                     ),
-                                                                  ),
-                                                                ],
+                                                                  );
+                                                                }).toList(),
                                                               ),
-                                                            );
-                                                          }).toList(),
-                                                        ),
-                                                      )
-                                                    else
-                                                      Text(
-                                                        'Belum ada keahlian',
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          fontStyle:
-                                                              FontStyle.italic,
-                                                          color:
-                                                              theme.hintColor,
-                                                        ),
+                                                            )
+                                                          else
+                                                            Text(
+                                                              'Belum ada keahlian',
+                                                              style: TextStyle(
+                                                                fontSize: 10,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                                color: theme
+                                                                    .hintColor,
+                                                              ),
+                                                            ),
+                                                        ],
                                                       ),
+                                                    ),
+
+                                                    // Bagian Bawah: Statistik Progres
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            Text(
+                                                              '${skillsInCategory.length} Skill',
+                                                              style: TextStyle(
+                                                                fontSize: 10,
+                                                                color: theme
+                                                                    .hintColor,
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              '${(progress * 100).toInt()}%',
+                                                              style: TextStyle(
+                                                                fontSize: 10,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: color,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 4),
+                                                        ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                            4,
+                                                          ),
+                                                          child:
+                                                              LinearProgressIndicator(
+                                                            value: progress,
+                                                            backgroundColor:
+                                                                color
+                                                                    .withValues(
+                                                              alpha: 0.1,
+                                                            ),
+                                                            color: color,
+                                                            minHeight: 4,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ],
                                                 ),
                                               ),
-
-                                              // Bagian Bawah: Statistik Progres
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        '${skillsInCategory.length} Skill',
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          color:
-                                                              theme.hintColor,
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        '${(progress * 100).toInt()}%',
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: color,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          4,
-                                                        ),
-                                                    child:
-                                                        LinearProgressIndicator(
-                                                          value: progress,
-                                                          backgroundColor: color
-                                                              .withValues(
-                                                                alpha: 0.1,
-                                                              ),
-                                                          color: color,
-                                                          minHeight: 4,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -841,7 +918,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
   /// Dashboard Statistik Kompetensi Kaya
   Widget _buildRichDashboardCard(
     BuildContext context,
-    List<SkillCategory> categories,
+    List<Map<String, dynamic>> processedCategories,
     SkillProvider provider,
   ) {
     final theme = Theme.of(context);
@@ -882,10 +959,32 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                   'Dashboard Keahlian',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
-                Icon(
-                  Icons.dashboard_customize_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 18,
+                Row(
+                  children: [
+                    if (processedCategories.isNotEmpty)
+                      IconButton(
+                        icon: Icon(
+                          _showRadarChart
+                              ? Icons.analytics_outlined
+                              : Icons.radar_rounded,
+                          color: theme.colorScheme.primary,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showRadarChart = !_showRadarChart;
+                          });
+                        },
+                        tooltip: _showRadarChart
+                            ? 'Tampilkan Proporsi'
+                            : 'Tampilkan Radar',
+                      ),
+                    Icon(
+                      Icons.dashboard_customize_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -929,7 +1028,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                     children: [
                       _buildDashboardStat(
                         'Kategori',
-                        categories.length.toString(),
+                        processedCategories.length.toString(),
                         theme,
                       ),
                       _buildDashboardStat(
@@ -949,66 +1048,87 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
               ],
             ),
 
-            if (categories.isNotEmpty) ...[
+            if (processedCategories.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Divider(height: 1),
               const SizedBox(height: 12),
-              const Text(
-                'Proporsi Distribusi Kompetensi:',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
 
-              // Tampilkan mini bar proporsi
-              Column(
-                children: categories.take(3).map((category) {
-                  final skills = provider.getSkillsForCategory(
-                    category.id ?? -1,
-                  );
-                  final double ratio = totalSkillsCount > 0
-                      ? skills.length / totalSkillsCount
-                      : 0.0;
-                  final color = Color(category.colorValue);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              category.name,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              '${(ratio * 100).toInt()}% (${skills.length} Skill)',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: color,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(
-                            value: ratio,
-                            backgroundColor: color.withValues(alpha: 0.1),
-                            color: color,
-                            minHeight: 5,
-                          ),
-                        ),
-                      ],
+              AnimatedCrossFade(
+                firstChild: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Radar Kompetensi Heksagon:',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                     ),
-                  );
-                }).toList(),
+                    const SizedBox(height: 8),
+                    SkillHexagonRadar(categoryData: processedCategories),
+                  ],
+                ),
+                secondChild: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Proporsi Distribusi Kompetensi:',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    // Tampilkan mini bar proporsi
+                    Column(
+                      children: processedCategories.take(3).map((item) {
+                        final SkillCategory category = item['category'];
+                        final List<Skill> skills = item['skills'];
+                        final double ratio = totalSkillsCount > 0
+                            ? skills.length / totalSkillsCount
+                            : 0.0;
+                        final color = Color(category.colorValue);
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    category.name,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${(ratio * 100).toInt()}% (${skills.length} Skill)',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(3),
+                                child: LinearProgressIndicator(
+                                  value: ratio,
+                                  backgroundColor: color.withValues(alpha: 0.1),
+                                  color: color,
+                                  minHeight: 5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+                crossFadeState: _showRadarChart
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                duration: const Duration(milliseconds: 300),
               ),
             ],
           ],

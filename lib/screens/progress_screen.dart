@@ -134,11 +134,24 @@ class _AnalyticsView extends StatelessWidget {
     final last7Days = provider.getLast7DaysDuration();
     final totalLogs = provider.logs.length;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 16, bottom: 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 16, bottom: 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // === Stat Cards Row ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -374,8 +387,9 @@ class _AnalyticsView extends StatelessWidget {
           const SizedBox(height: 16),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatCard(
     BuildContext context, {
@@ -538,17 +552,22 @@ class _SkillFrequencyChart extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(5),
                               ),
                             ),
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 1000),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(begin: 0.0, end: ratio),
+                              duration: const Duration(milliseconds: 1500),
                               curve: Curves.easeOutQuart,
-                              height: 10,
-                              width: constraints.maxWidth * ratio,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [theme.colorScheme.primary.withValues(alpha: 0.6), theme.colorScheme.primary],
-                                ),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
+                              builder: (context, value, child) {
+                                return Container(
+                                  height: 10,
+                                  width: constraints.maxWidth * value,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [theme.colorScheme.primary.withValues(alpha: 0.6), theme.colorScheme.primary],
+                                    ),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         );

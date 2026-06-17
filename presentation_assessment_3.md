@@ -55,18 +55,25 @@ Berikut adalah susunan teks per-slide, dilengkapi dengan **Catatan Penjelasan (S
 ---
 
 ## SLIDE 5: Modul Keahlian (Hafizh)
-* **Terhubung Secara Otomatis (State Management):**
-  Level Keahlian kini otomatis diperbarui dari durasi belajar yang diinput di Modul Jurnal.
-* **Visualisasi Keseimbangan (Radar Chart Custom Widget):**
-  Melihat keahlian apa yang mendominasi.
-* **Manajemen Geser Cepat (Swipe Gesture).**
+* **Konektivitas State Management (Otomatisasi Leveling):**
+  Level Keahlian kini tidak diinput secara statis. Modul ini secara otomatis "mendengarkan" durasi belajar yang masuk dari Modul Jurnal milik Darren dan mengubahnya menjadi *Experience Points* (XP) untuk menaikkan level Keahlian secara algoritmik.
+* **Custom Widget (Radar Chart Keseimbangan):**
+  Visualisasi jaring laba-laba untuk melihat dominasi keahlian pengguna (mana yang sering dilatih dan mana yang tertinggal).
+* **Gestur Manajemen Kategori (Swipe-to-Delete):**
+  Menghapus kategori keahlian cukup dengan menggeser layar ke kiri (*Swipe Gesture*).
+* **Library Tambahan (Progress Animasi):**
+  Menggunakan *library* tambahan untuk menganimasikan perpindahan bar persentase level keahlian.
 
 **🗣️ Catatan Penjelasan (Rincian Teknis & Alasan):**
-> **1. Integrasi Antar Modul (Fitur Utama):**
-> *   Melalui pola *Provider State Management*, jika *user* menginput belajar "Pemrograman 60 Menit" di Modul Jurnal (Darren), Progress Bar Keahlian Pemrograman di Modul Hafizh akan otomatis bergerak naik. Data kini tersinkronisasi 100% antar *database*.
+> **1. Integrasi State Management (Fitur Utama):**
+> *   Melalui pola *Provider State Management*, kami memastikan *Data Flow* (aliran data) terpusat. Ketika pengguna menyelesaikan tantangan "Pemrograman 60 Menit" di Modul Jurnal, Modul Keahlian akan menangkap data tersebut secara *real-time*. Fungsi `incrementSkillProgress()` akan memproses 60 menit tersebut menjadi rasio XP, menggerakkan *Progress Bar* keahlian pemrograman, dan bahkan memicu fungsi *Level Up* jika menembus angka 100%. Sinkronisasi database ini membuat Kairos terasa seperti aplikasi utuh.
 > 
-> **2. Radar Chart (Art):**
-> *   Kami kembali menggunakan `CustomPainter` (Art) untuk menggambar grafik jaring laba-laba. Fitur ini krusial agar pengguna langsung sadar secara visual (misal: "Oh, keahlian bahasa saya tertinggal dari keahlian musik").
+> **2. Radar Chart (Custom Widget & Art):**
+> *   Daftar teks biasa tidak cukup untuk membandingkan seberapa seimbang keahlian seseorang. Kami menggunakan `CustomPainter` (Art) untuk menggambar grafik jaring laba-laba poligon. Ini adalah *Custom Widget* murni karena bentuk bangun datarnya dihitung menggunakan rumus Trigonometri Sin/Cos berdasarkan jumlah kategori keahlian dan persentase level masing-masing keahlian.
+>
+> **3. Gestur & Library (`flutter_slidable` & `percent_indicator`):**
+> *   **Gestur:** Menggunakan gestur *Swipe* untuk menghapus Kategori. Selain mempercepat interaksi, *database* kami terkonfigurasi dengan fitur *Cascade Delete*. Artinya saat satu gestur *Swipe* dilakukan, seluruh keahlian dan materi referensi di bawah kategori tersebut akan ikut terhapus rapi.
+> *   **Library:** Menggunakan library untuk animasi *Linear Progress Bar* agar saat XP keahlian bertambah dari Modul Jurnal, *user* bisa melihat indikator barnya berjalan mulus ke kanan, memberikan sensasi gamifikasi RPG yang sangat kental.
 
 ---
 

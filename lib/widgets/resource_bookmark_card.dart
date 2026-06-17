@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lottie/lottie.dart';
+import 'package:open_file/open_file.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
 import '../providers/skill_provider.dart';
@@ -209,23 +210,85 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
 
     if (widget.resource.url.isNotEmpty &&
         (widget.resource.url.startsWith('http') ||
-            widget.resource.url.startsWith('https'))) {
-      if (kIsWeb) {
+            widget.resource.url.startsWith('https') ||
+            widget.resource.url.startsWith('file://'))) {
+      if (widget.resource.url.startsWith('file://')) {
+        final filePath = widget.resource.url.replaceFirst('file://', '');
+        try {
+          final result = await OpenFile.open(filePath);
+          if (result.type != ResultType.done && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Gagal membuka file: ${result.message}'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Terjadi kesalahan: $e'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        }
+      } else if (kIsWeb) {
         final Uri uri = Uri.parse(widget.resource.url);
         try {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } catch (_) {}
       } else {
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WebViewScreen(
-                url: widget.resource.url,
-                title: widget.resource.title,
+        final urlLower = widget.resource.url.toLowerCase();
+        final isDirectFile = urlLower.endsWith('.pdf') ||
+            urlLower.endsWith('.doc') ||
+            urlLower.endsWith('.docx') ||
+            urlLower.endsWith('.xls') ||
+            urlLower.endsWith('.xlsx') ||
+            urlLower.endsWith('.ppt') ||
+            urlLower.endsWith('.pptx') ||
+            urlLower.endsWith('.zip') ||
+            urlLower.endsWith('.rar');
+
+        if (isDirectFile) {
+          final Uri uri = Uri.parse(widget.resource.url);
+          try {
+            final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+            if (!launched && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Gagal membuka tautan file.'),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Terjadi kesalahan: $e'),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WebViewScreen(
+                  url: widget.resource.url,
+                  title: widget.resource.title,
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
     } else {
@@ -269,7 +332,8 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
 
     final bool hasUrl = widget.resource.url.isNotEmpty &&
         (widget.resource.url.startsWith('http') ||
-            widget.resource.url.startsWith('https'));
+            widget.resource.url.startsWith('https') ||
+            widget.resource.url.startsWith('file://'));
 
     final Color progressColor = _progressColor(widget.resource.status);
 

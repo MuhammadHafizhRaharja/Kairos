@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../providers/skill_provider.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
@@ -818,53 +820,90 @@ class _ResourceScreenState extends State<ResourceScreen>
                         ),
                         const SizedBox(height: 16),
 
-                        // Input Tautan/URL
-                        TextFormField(
-                          controller: urlController,
-                          decoration: InputDecoration(
-                            labelText: isReference
-                                ? (provider.defaultLang == 'id'
-                                      ? 'Link / URL Referensi'
-                                      : 'Reference Link / URL')
-                                : (provider.defaultLang == 'id'
-                                      ? 'Link / URL Materi'
-                                      : 'Material Link / URL'),
-                            prefixIcon: const Icon(Icons.link_rounded),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.attach_file_rounded),
-                              tooltip: provider.defaultLang == 'id'
-                                  ? 'Pilih File Lokal'
-                                  : 'Pick Local File',
-                              onPressed: () async {
-                                final result = await FilePicker.pickFiles(
-                                  type: FileType.any,
-                                );
-                                if (result != null && result.files.single.path != null) {
-                                  urlController.text = 'file://${result.files.single.path}';
-                                }
-                              },
+                        // Input Tautan/URL atau File
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: TextFormField(
+                                controller: urlController,
+                                decoration: InputDecoration(
+                                  labelText: isReference
+                                      ? (provider.defaultLang == 'id'
+                                            ? 'Link / URL Referensi'
+                                            : 'Reference Link / URL')
+                                      : (provider.defaultLang == 'id'
+                                            ? 'Link / URL Materi'
+                                            : 'Material Link / URL'),
+                                  prefixIcon: const Icon(Icons.link_rounded),
+                                  hintText: 'https://... atau file lokal',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                validator: (val) {
+                                  if (val == null || val.trim().isEmpty) {
+                                    return provider.defaultLang == 'id'
+                                        ? 'Link tidak boleh kosong'
+                                        : 'Link cannot be empty';
+                                  }
+                                  if (!val.trim().startsWith('http://') &&
+                                      !val.trim().startsWith('https://') &&
+                                      !val.trim().startsWith('file://')) {
+                                    return provider.defaultLang == 'id'
+                                        ? 'Gunakan URL valid atau upload file'
+                                        : 'Use valid URL or upload a file';
+                                  }
+                                  return null;
+                                },
+                                keyboardType: TextInputType.url,
+                              ),
                             ),
-                            hintText: 'https://...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                height: 56, // Matches default TextFormField height
+                                margin: const EdgeInsets.only(top: 2),
+                                child: FilledButton.tonalIcon(
+                                  onPressed: () async {
+                                    final result = await FilePicker.pickFiles(
+                                      type: FileType.any,
+                                    );
+                                    if (result != null && result.files.single.path != null) {
+                                      try {
+                                        final File originalFile = File(result.files.single.path!);
+                                        final Directory appDocsDir = await getApplicationDocumentsDirectory();
+                                        final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+                                        final String fileName = '${timestamp}_${result.files.single.name}';
+                                        final File newFile = File('${appDocsDir.path}/$fileName');
+                                        
+                                        await originalFile.copy(newFile.path);
+                                        
+                                        urlController.text = 'file://${newFile.path}';
+                                      } catch (e) {
+                                        // Fallback to original path if copy fails
+                                        urlController.text = 'file://${result.files.single.path}';
+                                      }
+                                    }
+                                  },
+                                  icon: const Icon(Icons.upload_file_rounded, size: 18),
+                                  label: Text(
+                                    provider.defaultLang == 'id' ? 'Upload\nFile' : 'Upload\nFile',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 11, height: 1.1),
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          validator: (val) {
-                            if (val == null || val.trim().isEmpty) {
-                              return provider.defaultLang == 'id'
-                                  ? 'Link tidak boleh kosong'
-                                  : 'Link cannot be empty';
-                            }
-                            if (!val.trim().startsWith('http://') &&
-                                !val.trim().startsWith('https://') &&
-                                !val.trim().startsWith('file://')) {
-                              return provider.defaultLang == 'id'
-                                  ? 'Gunakan format URL yang valid (dimulai http/https/file)'
-                                  : 'Use valid URL format (starting with http/https/file)';
-                            }
-                            return null;
-                          },
-                          keyboardType: TextInputType.url,
+                          ],
                         ),
                         const SizedBox(height: 16),
 

@@ -162,20 +162,23 @@ class ProgressProvider extends ChangeNotifier {
   // ANALYTICS & GAMIFICATION
   // ==========================================
 
-  /// Menghitung jumlah hari berturut-turut pengguna mengisi jurnal (streak).
   int calculateCurrentStreak() {
     if (_logs.isEmpty) return 0;
 
-    // Kumpulkan tanggal unik (buang jam/menit/detik)
+    final now = DateTime.now();
+    final today = DateTime.utc(now.year, now.month, now.day);
+
+    // Kumpulkan tanggal unik (Gunakan UTC agar aman dari isu zona waktu/DST)
+    // Abaikan log di masa depan jika user tidak sengaja menset tanggal ke depan.
     final uniqueDays = _logs
-        .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
+        .map((l) => DateTime.utc(l.date.year, l.date.month, l.date.day))
+        .where((d) => !d.isAfter(today))
         .toSet()
         .toList()
       ..sort((a, b) => b.compareTo(a)); // Urutkan dari terbaru
 
     if (uniqueDays.isEmpty) return 0;
 
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final yesterday = today.subtract(const Duration(days: 1));
 
     // Streak harus dimulai dari hari ini atau kemarin

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../providers/skill_provider.dart';
 import '../models/resource.dart';
 import '../models/skill.dart';
@@ -870,7 +872,20 @@ class _ResourceScreenState extends State<ResourceScreen>
                                       type: FileType.any,
                                     );
                                     if (result != null && result.files.single.path != null) {
-                                      urlController.text = 'file://${result.files.single.path}';
+                                      try {
+                                        final File originalFile = File(result.files.single.path!);
+                                        final Directory appDocsDir = await getApplicationDocumentsDirectory();
+                                        final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+                                        final String fileName = '${timestamp}_${result.files.single.name}';
+                                        final File newFile = File('${appDocsDir.path}/$fileName');
+                                        
+                                        await originalFile.copy(newFile.path);
+                                        
+                                        urlController.text = 'file://${newFile.path}';
+                                      } catch (e) {
+                                        // Fallback to original path if copy fails
+                                        urlController.text = 'file://${result.files.single.path}';
+                                      }
                                     }
                                   },
                                   icon: const Icon(Icons.upload_file_rounded, size: 18),

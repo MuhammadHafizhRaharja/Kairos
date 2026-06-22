@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../providers/skill_provider.dart';
 import '../models/skill_category.dart';
 import '../models/skill.dart';
@@ -93,7 +93,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       appBar: AppBar(
         title: Text(
           provider.translate('nav_skills'),
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -1073,57 +1073,113 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
                       'Proporsi Distribusi Kompetensi:',
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
-                    // Tampilkan mini bar proporsi
-                    Column(
-                      children: processedCategories.take(3).map((item) {
-                        final SkillCategory category = item['category'];
-                        final List<Skill> skills = item['skills'];
-                        final double ratio = totalSkillsCount > 0
-                            ? skills.length / totalSkillsCount
-                            : 0.0;
-                        final color = Color(category.colorValue);
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    category.name,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${(ratio * 100).toInt()}% (${skills.length} Skill)',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: color,
-                                    ),
-                                  ),
-                                ],
+                    const SizedBox(height: 12),
+                    if (processedCategories.isNotEmpty)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // 1. Pie Chart dari fl_chart
+                          SizedBox(
+                            width: 130,
+                            height: 130,
+                            child: PieChart(
+                              PieChartData(
+                                sectionsSpace: 2,
+                                centerSpaceRadius: 28,
+                                borderData: FlBorderData(show: false),
+                                sections: totalSkillsCount > 0
+                                    ? processedCategories.map((item) {
+                                        final SkillCategory category = item['category'];
+                                        final List<Skill> skills = item['skills'];
+                                        final color = Color(category.colorValue);
+                                        return PieChartSectionData(
+                                          color: color,
+                                          value: skills.length.toDouble(),
+                                          title: skills.isEmpty ? '' : '${skills.length}',
+                                          radius: 30,
+                                          titleStyle: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        );
+                                      }).toList()
+                                    : [
+                                        PieChartSectionData(
+                                          color: Colors.grey.withValues(alpha: 0.3),
+                                          value: 1,
+                                          title: '0',
+                                          radius: 30,
+                                          titleStyle: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
                               ),
-                              const SizedBox(height: 4),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(3),
-                                child: LinearProgressIndicator(
-                                  value: ratio,
-                                  backgroundColor: color.withValues(alpha: 0.1),
-                                  color: color,
-                                  minHeight: 5,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        );
-                      }).toList(),
-                    ),
+                          const SizedBox(width: 16),
+                          // 2. Legenda Kategori
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: processedCategories.map((item) {
+                                final SkillCategory category = item['category'];
+                                final List<Skill> skills = item['skills'];
+                                final double ratio = totalSkillsCount > 0
+                                    ? skills.length / totalSkillsCount
+                                    : 0.0;
+                                final color = Color(category.colorValue);
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          category.name,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${(ratio * 100).toInt()}% (${skills.length})',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: color,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      const Center(
+                        child: Text(
+                          'Tidak ada data kategori.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
                   ],
                 ),
                 crossFadeState: _showRadarChart

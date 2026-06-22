@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/skill_category.dart';
 import '../models/skill.dart';
 
@@ -303,7 +302,7 @@ class _SkillHexagonRadarState extends State<SkillHexagonRadar>
                   children: [
                     Text(
                       category.name,
-                      style: GoogleFonts.poppins(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),

@@ -55,28 +55,22 @@ Berikut adalah susunan teks per-slide, dilengkapi dengan **Catatan Penjelasan (S
 ---
 
 ## SLIDE 5: Modul Keahlian (Hafizh)
-* **Custom Widget 1 — `SkillHexagonRadar`** *(CustomDrawing + Gesture)*
-  Grafik radar heksagon dilukis murni dari `CustomPainter` (*Canvas API*), bisa diputar 360° dengan *Drag Gesture* dan disentuh untuk memilih sumbu kompetensi (*Haptic Feedback*).
-* **Custom Widget 2 — `InteractiveProgressCard`** *(Gesture)*
-  Kartu keahlian yang merespons geseran jari secara horizontal untuk mengubah *progress bar* XP secara langsung di layar.
-* **Gesture (5 Jenis Selain Tap):**
-  *Drag Horizontal* (ubah XP), *Drag Rotasi/Pan* (putar radar), *Swipe* (hapus/edit kategori), *Long Press* (opsi menu), *Double Tap* (tambah keahlian cepat).
-* **4 External Libraries** *(di luar SQLite & SharedPreferences)*:
-  `flutter_slidable`, `provider`, `intl`, `google_fonts`.
+* **Custom Widgets & Animasi Native:**
+  Membangun `InteractiveProgressCard` (Kartu progres dinamis) dan `SkillHexagonRadar` (Grafik radar via *Canvas API*), dipadukan dengan `AnimatedCrossFade` & `DraggableScrollableSheet`.
+* **Konektivitas State Management (Provider):**
+  Logika perolehan *Experience Points* (XP) terotomatisasi secara sinkron dengan durasi aktivitas dari Modul Jurnal (Darren).
+* **5 Interaksi Gestur Fisik:**
+  Mendukung gestur *Drag Horizontal*, *Drag Rotasi 360°*, *Double Tap*, *Long Press*, dan *Swipe* untuk mengontrol sistem.
+* **Integrasi External Libraries:**
+  Menggunakan `fl_chart` (Pie Chart proporsi), `lottie` (dialog selebrasi), `flutter_slidable` (geser-hapus), `provider` (state), dan `intl`.
 
 **🗣️ Catatan Penjelasan (Rincian Teknis & Alasan):**
-> **1. Custom Widget & CustomDrawing:**
-> *   Widget `SkillHexagonRadar` bukan sekadar tampilan statis; ia memiliki *state* internal (`_rotationAngle`, `_selectedIndex`) dan logika fungsionalitas sendiri. Grafik jaring heksagonnya dilukis secara murni menggunakan kelas `CustomPainter` dengan perhitungan koordinat Trigonometri (Sin/Cos) untuk memetakan 6 sumbu poligon, ditambah efek visual berupa *glow/halo* (`MaskFilter.blur`) pada titik vertex yang aktif.
-> *   Widget `InteractiveProgressCard` juga memiliki *state* internal lengkap (`_localProgress`, `_localLevel`, `_isDragging`, `_isExpanded`). Ia menggunakan `GestureDetector` dengan `onHorizontalDragUpdate` yang menghitung perpindahan piksel relatif terhadap lebar layar untuk mengubah nilai XP secara presisi. Ketika nilai menembus 100%, sistem otomatis menaikkan level dan memicu animasi `TweenAnimationBuilder` dengan `Curves.elasticOut` serta getaran *Haptic Feedback*.
+> **1. Eksplorasi Custom Widget & Variasi Gestur:**
+> *   Modul ini kaya akan interaksi sentuhan fisik yang menuntut respons sistem secara *real-time*. Terdapat 5 jenis gestur: **Geser Cepat (Swipe)** pada daftar untuk menghapus kategori, **Tekan Lama (Long Press)** memunculkan opsi menu (*Bottom Sheet*), **Ketuk Ganda (Double Tap)** sebagai pintasan menambah keahlian, **Seret Horizontal (Drag Update)** untuk mengubah level progres XP, serta **Putar (Pan/Rotasi)** untuk memutar grafik radar heksagon. Pengalaman ini diperkaya dengan *Haptic Feedback* (getaran).
+> *   Secara tampilan, kami memanfaatkan `CustomPainter` untuk melukis poligon radar dari nol menggunakan matematika Trigonometri, serta fitur bawaan `AnimatedCrossFade` untuk efek pertukaran dasbor yang sangat halus.
 >
-> **2. Gesture Selain Tap:**
-> *   Modul ini mengimplementasikan 5 variasi gestur selain *Tap*: (a) **Drag Horizontal** pada *progress bar* untuk mengubah XP, (b) **Pan/Rotasi** pada radar untuk memutar grafik heksagon 360 derajat, (c) **Swipe Left/Right** via `flutter_slidable` dan `Dismissible` untuk menghapus/mengedit kategori dan keahlian, (d) **Long Press** untuk memunculkan *Bottom Sheet* opsi, dan (e) **Double Tap** sebagai jalan pintas menambah keahlian baru tanpa membuka form lengkap.
->
-> **3. Pemanfaatan 4 External Library:**
-> *   **`provider`**: Menjadi tulang punggung *State Management* yang menghubungkan data durasi belajar dari Modul Jurnal (Darren) ke Modul Keahlian ini secara reaktif. Ketika pengguna mencatat aktivitas belajar, *progress bar* keahlian terkait langsung bergerak naik.
-> *   **`flutter_slidable`**: Memberikan pengalaman gestur geser (*Swipe*) pada mode tampilan daftar kategori untuk aksi hapus dan edit yang gesit dan elegan.
-> *   **`intl`**: Digunakan untuk memformat tanggal pembuatan keahlian (misal: "22 Jun 2026") pada kartu detail `InteractiveProgressCard` agar lebih *human-readable*.
-> *   **`google_fonts`**: Menerapkan tipografi premium Poppins pada judul halaman dan label widget kustom, memberikan identitas visual yang berbeda dari font bawaan sistem.
+> **2. Pemanfaatan Library Eksternal secara Efektif:**
+> *   Kami mengintegrasikan 5 library eksternal secara aktif: `provider` sebagai jembatan data sinkron lintas modul, `flutter_slidable` untuk pintasan aksi usap, `intl` untuk format data, serta `fl_chart` untuk diagram lingkaran interaktif di dashboard, dan `lottie` untuk memutar selebrasi konfeti instan saat pengguna menaikkan level keahlian.
 
 ---
 
@@ -88,9 +82,8 @@ Berikut adalah susunan teks per-slide, dilengkapi dengan **Catatan Penjelasan (S
   2. *Long Press* (Tekan Lama) pada Custom Widget untuk memunculkan pratinjau kartu.
 
 **🗣️ Catatan Penjelasan (Rincian Teknis & Alasan):**
-> **1. Custom Widget (Art & Gesture):**
-> *   **Art:** Kami mengimplementasikan `CustomPainter` murni untuk menggambar **Pita Pembatas Buku (Bookmark Ribbon)** pada sudut kartu. Warna pita ini bereaksi secara dinamis menyesuaikan status baca pengguna (Misalnya hijau jika sudah selesai dibaca). Ini membuktikan bahwa widget ini bukan sekadar UI statis.
-> *   **Gesture:** Kami meminjam kebiasaan pengguna dari Instagram (*Double Tap to Like*). Daripada mencari tombol kecil, *user* cukup mengetuk ganda pada modul materi untuk memfavoritkannya (*Bookmark*). Ini secara instan memicu transisi animasi pada ikon Bintang.
+> **1. Gestur Intuitif (Gesture):**
+> *   Kami meminjam kebiasaan pengguna dari Instagram (*Double Tap to Like*). Daripada mencari tombol kecil, *user* cukup mengetuk ganda pada modul materi untuk memfavoritkannya (*Bookmark*). Ini secara instan memicu transisi animasi pada ikon Bintang.
 > *   Menggunakan gestur `LongPress` pada kartu materi untuk membuka efek pembesaran layar darurat (*Peek Preview*), mempercepat proses cek materi tanpa harus pindah halaman penuh.
 >
 > **2. `url_launcher` (Library):**

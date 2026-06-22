@@ -47,8 +47,11 @@ Selain itu, dokumen ini juga mencatat integrasi dan perubahan *shared resources*
     *   Menggunakan animasi masuk (scale-up) transisi halus berbasis `AnimationController` & `CurvedAnimation` (`Curves.easeOutBack`) saat inisiasi halaman.
     *   Menyediakan dashboard statistik dengan `AnimatedCrossFade` untuk beralih antara visual radar chart heksagon dan visual proporsi distribusi kompetensi.
 *   **External Libraries:**
-    *   Mendaur ulang (*reuse*) library `flutter_slidable` untuk memberikan gestur geser hapus dan edit pada baris kategori keahlian di mode tampilan List.
-    *   Menggunakan `google_fonts` untuk menerapkan tipografi premium (Poppins) pada judul halaman dan label widget kustom.
+    *   `provider`: State management terpusat untuk alur data sinkron keahlian dan kemajuan.
+    *   `flutter_slidable`: Memberikan gestur geser hapus dan edit pada baris kategori keahlian di mode list.
+    *   `intl`: Pemformatan tanggal dan deskripsi waktu.
+    *   `fl_chart` [NEW]: Visualisasi proporsi distribusi kompetensi menggunakan `PieChart` interaktif pada dashboard statistik.
+    *   `lottie` [NEW]: Integrasi selebrasi konfeti instan via `CelebrationDialog` saat keahlian pengguna naik level.
 
 ### B. Integrasi dengan Darren (Modul Progress)
 *   **Fungsi `incrementSkillProgress()`**: Logika fungsi `incrementSkillProgress` di `SkillProvider` dipertahankan sepenuhnya dan siap dipanggil oleh tantangan harian di Modul Jurnal milik Darren.

@@ -4,6 +4,7 @@ import '../providers/skill_provider.dart';
 import '../models/skill.dart';
 import '../models/skill_category.dart';
 import '../widgets/interactive_progress_card.dart';
+import '../widgets/celebration_dialog.dart';
 import '../providers/progress_provider.dart';
 
 /// Halaman Detail Kategori yang berisi daftar keahlian (Skills) di dalamnya.
@@ -228,6 +229,15 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
         skill: skill,
         themeColor: categoryColor,
         onProgressChanged: (newLevel, newProgress) {
+          if (newLevel > skill.level && context.mounted) {
+            CelebrationDialog.show(
+              context,
+              title: newLevel >= 5 ? '🏆 Master Keahlian!' : '🎉 Naik Level!',
+              message: newLevel >= 5
+                  ? 'Luar biasa! Anda telah menguasai keahlian "${skill.name}" sepenuhnya di Level 5!'
+                  : 'Keahlian "${skill.name}" naik ke Level $newLevel! Teruskan perjuangan Anda! 🚀',
+            );
+          }
           final updatedSkill = Skill(
             id: skill.id,
             categoryId: skill.categoryId,

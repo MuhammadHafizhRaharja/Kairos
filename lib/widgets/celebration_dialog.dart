@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-/// Dialog selebrasi yang menampilkan animasi Lottie saat pengguna
-/// menyelesaikan sebuah tantangan.
-/// Menggunakan library `lottie` (Assessment 3: library eksternal).
+/// [PENTING] Dialog selebrasi ini adalah bagian krusial dari fitur "Gamifikasi".
+/// Saat pengguna menyelesaikan tantangan, memunculkan sekadar teks "Berhasil" itu membosankan.
+/// Dialog ini menggunakan library `lottie` (Assessment 3: library eksternal) untuk memutar
+/// animasi vektor (Konfeti) yang menciptakan "Dopamine Hit" (Rasa senang/reward) di otak pengguna,
+/// sehingga pengguna termotivasi untuk terus menyelesaikan tantangan berikutnya.
 class CelebrationDialog {
   /// Tampilkan dialog selebrasi dengan animasi konfetti.
   static Future<void> show(BuildContext context, {String? title, String? message}) async {

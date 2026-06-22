@@ -162,17 +162,27 @@ class _ProgressHeatmapCalendarState extends State<ProgressHeatmapCalendar> {
                 color: theme.colorScheme.primary.withValues(alpha: 0.7),
               ),
             ),
+            // [PENTING] Bagian ini memodifikasi tampilan kotak-kotak tanggal secara kustom.
+            // Fitur inilah yang mengubah kalender biasa menjadi "Heatmap Kalender" (Gamifikasi).
             calendarBuilders: CalendarBuilders(
               defaultBuilder: (context, day, focusedDay) {
+                // Menyamakan format tanggal agar mengabaikan jam/menit
                 final normalizedDay =
                     DateTime(day.year, day.month, day.day);
+                
+                // Menarik data "Berapa banyak aktivitas di hari ini?" dari Provider
                 final count = activityMap[normalizedDay] ?? 0;
 
+                // Jika ada aktivitas, kotak kalender akan diwarnai
                 if (count > 0) {
+                  // Menghitung rasio intensitas warna (semakin sering belajar = semakin gelap).
+                  // Nilai dibatasi (clamp) minimal 0.3 agar tetap terlihat, maksimal 1.0 (warna solid).
                   final intensity = (count / maxCount).clamp(0.3, 1.0);
+                  
                   return Container(
                     margin: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
+                      // Menerapkan warna dengan transparansi (alpha) berdasarkan intensitas tadi
                       color: theme.colorScheme.primary
                           .withValues(alpha: intensity * 0.6),
                       borderRadius: BorderRadius.circular(8),
@@ -181,6 +191,7 @@ class _ProgressHeatmapCalendarState extends State<ProgressHeatmapCalendar> {
                       child: Text(
                         '${day.day}',
                         style: TextStyle(
+                          // Jika warnanya gelap (intensitas tinggi), teks diubah jadi putih agar terbaca
                           color: intensity > 0.5
                               ? Colors.white
                               : theme.colorScheme.onSurface,
@@ -191,6 +202,7 @@ class _ProgressHeatmapCalendarState extends State<ProgressHeatmapCalendar> {
                     ),
                   );
                 }
+                // Kembalikan null jika tidak ada aktivitas (menggunakan tampilan bawaan kalender)
                 return null;
               },
               markerBuilder: (context, day, events) {

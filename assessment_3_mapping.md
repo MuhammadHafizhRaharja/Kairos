@@ -48,6 +48,7 @@ Selain itu, dokumen ini juga mencatat integrasi dan perubahan *shared resources*
     *   Menyediakan dashboard statistik dengan `AnimatedCrossFade` untuk beralih antara visual radar chart heksagon dan visual proporsi distribusi kompetensi.
 *   **External Libraries:**
     *   Mendaur ulang (*reuse*) library `flutter_slidable` untuk memberikan gestur geser hapus dan edit pada baris kategori keahlian di mode tampilan List.
+    *   Menggunakan `google_fonts` untuk menerapkan tipografi premium (Poppins) pada judul halaman dan label widget kustom.
 
 ### B. Integrasi dengan Darren (Modul Progress)
 *   **Fungsi `incrementSkillProgress()`**: Logika fungsi `incrementSkillProgress` di `SkillProvider` dipertahankan sepenuhnya dan siap dipanggil oleh tantangan harian di Modul Jurnal milik Darren.

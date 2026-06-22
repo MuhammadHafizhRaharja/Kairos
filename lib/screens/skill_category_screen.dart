@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/skill_provider.dart';
 import '../models/skill_category.dart';
 import '../models/skill.dart';
@@ -92,7 +93,7 @@ class _SkillCategoryScreenState extends State<SkillCategoryScreen> {
       appBar: AppBar(
         title: Text(
           provider.translate('nav_skills'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,

@@ -55,25 +55,28 @@ Berikut adalah susunan teks per-slide, dilengkapi dengan **Catatan Penjelasan (S
 ---
 
 ## SLIDE 5: Modul Keahlian (Hafizh)
-* **Konektivitas State Management (Otomatisasi Leveling):**
-  Level Keahlian kini tidak diinput secara statis. Modul ini secara otomatis "mendengarkan" durasi belajar yang masuk dari Modul Jurnal milik Darren dan mengubahnya menjadi *Experience Points* (XP) untuk menaikkan level Keahlian secara algoritmik.
-* **Custom Widget (Radar Chart Keseimbangan):**
-  Visualisasi jaring laba-laba untuk melihat dominasi keahlian pengguna (mana yang sering dilatih dan mana yang tertinggal).
-* **Gestur Manajemen Kategori (Swipe-to-Delete):**
-  Menghapus kategori keahlian cukup dengan menggeser layar ke kiri (*Swipe Gesture*).
-* **Library Tambahan (Progress Animasi):**
-  Menggunakan *library* tambahan untuk menganimasikan perpindahan bar persentase level keahlian.
+* **Custom Widget 1 — `SkillHexagonRadar`** *(CustomDrawing + Gesture)*
+  Grafik radar heksagon dilukis murni dari `CustomPainter` (*Canvas API*), bisa diputar 360° dengan *Drag Gesture* dan disentuh untuk memilih sumbu kompetensi (*Haptic Feedback*).
+* **Custom Widget 2 — `InteractiveProgressCard`** *(Gesture)*
+  Kartu keahlian yang merespons geseran jari secara horizontal untuk mengubah *progress bar* XP secara langsung di layar.
+* **Gesture (5 Jenis Selain Tap):**
+  *Drag Horizontal* (ubah XP), *Drag Rotasi/Pan* (putar radar), *Swipe* (hapus/edit kategori), *Long Press* (opsi menu), *Double Tap* (tambah keahlian cepat).
+* **4 External Libraries** *(di luar SQLite & SharedPreferences)*:
+  `flutter_slidable`, `provider`, `intl`, `google_fonts`.
 
 **🗣️ Catatan Penjelasan (Rincian Teknis & Alasan):**
-> **1. Integrasi State Management (Fitur Utama):**
-> *   Melalui pola *Provider State Management*, kami memastikan *Data Flow* (aliran data) terpusat. Ketika pengguna menyelesaikan tantangan "Pemrograman 60 Menit" di Modul Jurnal, Modul Keahlian akan menangkap data tersebut secara *real-time*. Fungsi `incrementSkillProgress()` akan memproses 60 menit tersebut menjadi rasio XP, menggerakkan *Progress Bar* keahlian pemrograman, dan bahkan memicu fungsi *Level Up* jika menembus angka 100%. Sinkronisasi database ini membuat Kairos terasa seperti aplikasi utuh.
-> 
-> **2. Radar Chart (Custom Widget & Art):**
-> *   Daftar teks biasa tidak cukup untuk membandingkan seberapa seimbang keahlian seseorang. Kami menggunakan `CustomPainter` (Art) untuk menggambar grafik jaring laba-laba poligon. Ini adalah *Custom Widget* murni karena bentuk bangun datarnya dihitung menggunakan rumus Trigonometri Sin/Cos berdasarkan jumlah kategori keahlian dan persentase level masing-masing keahlian.
+> **1. Custom Widget & CustomDrawing:**
+> *   Widget `SkillHexagonRadar` bukan sekadar tampilan statis; ia memiliki *state* internal (`_rotationAngle`, `_selectedIndex`) dan logika fungsionalitas sendiri. Grafik jaring heksagonnya dilukis secara murni menggunakan kelas `CustomPainter` dengan perhitungan koordinat Trigonometri (Sin/Cos) untuk memetakan 6 sumbu poligon, ditambah efek visual berupa *glow/halo* (`MaskFilter.blur`) pada titik vertex yang aktif.
+> *   Widget `InteractiveProgressCard` juga memiliki *state* internal lengkap (`_localProgress`, `_localLevel`, `_isDragging`, `_isExpanded`). Ia menggunakan `GestureDetector` dengan `onHorizontalDragUpdate` yang menghitung perpindahan piksel relatif terhadap lebar layar untuk mengubah nilai XP secara presisi. Ketika nilai menembus 100%, sistem otomatis menaikkan level dan memicu animasi `TweenAnimationBuilder` dengan `Curves.elasticOut` serta getaran *Haptic Feedback*.
 >
-> **3. Gestur & Library (`flutter_slidable` & `percent_indicator`):**
-> *   **Gestur:** Menggunakan gestur *Swipe* untuk menghapus Kategori. Selain mempercepat interaksi, *database* kami terkonfigurasi dengan fitur *Cascade Delete*. Artinya saat satu gestur *Swipe* dilakukan, seluruh keahlian dan materi referensi di bawah kategori tersebut akan ikut terhapus rapi.
-> *   **Library:** Menggunakan library untuk animasi *Linear Progress Bar* agar saat XP keahlian bertambah dari Modul Jurnal, *user* bisa melihat indikator barnya berjalan mulus ke kanan, memberikan sensasi gamifikasi RPG yang sangat kental.
+> **2. Gesture Selain Tap:**
+> *   Modul ini mengimplementasikan 5 variasi gestur selain *Tap*: (a) **Drag Horizontal** pada *progress bar* untuk mengubah XP, (b) **Pan/Rotasi** pada radar untuk memutar grafik heksagon 360 derajat, (c) **Swipe Left/Right** via `flutter_slidable` dan `Dismissible` untuk menghapus/mengedit kategori dan keahlian, (d) **Long Press** untuk memunculkan *Bottom Sheet* opsi, dan (e) **Double Tap** sebagai jalan pintas menambah keahlian baru tanpa membuka form lengkap.
+>
+> **3. Pemanfaatan 4 External Library:**
+> *   **`provider`**: Menjadi tulang punggung *State Management* yang menghubungkan data durasi belajar dari Modul Jurnal (Darren) ke Modul Keahlian ini secara reaktif. Ketika pengguna mencatat aktivitas belajar, *progress bar* keahlian terkait langsung bergerak naik.
+> *   **`flutter_slidable`**: Memberikan pengalaman gestur geser (*Swipe*) pada mode tampilan daftar kategori untuk aksi hapus dan edit yang gesit dan elegan.
+> *   **`intl`**: Digunakan untuk memformat tanggal pembuatan keahlian (misal: "22 Jun 2026") pada kartu detail `InteractiveProgressCard` agar lebih *human-readable*.
+> *   **`google_fonts`**: Menerapkan tipografi premium Poppins pada judul halaman dan label widget kustom, memberikan identitas visual yang berbeda dari font bawaan sistem.
 
 ---
 

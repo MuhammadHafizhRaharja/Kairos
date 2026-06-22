@@ -88,8 +88,9 @@ Berikut adalah susunan teks per-slide, dilengkapi dengan **Catatan Penjelasan (S
   2. *Long Press* (Tekan Lama) pada Custom Widget untuk memunculkan pratinjau kartu.
 
 **🗣️ Catatan Penjelasan (Rincian Teknis & Alasan):**
-> **1. Gestur Intuitif (Gesture):**
-> *   Kami meminjam kebiasaan pengguna dari Instagram (*Double Tap to Like*). Daripada mencari tombol kecil, *user* cukup mengetuk ganda pada modul materi untuk memfavoritkannya (*Bookmark*). Ini secara instan memicu transisi animasi pada ikon Bintang.
+> **1. Custom Widget (Art & Gesture):**
+> *   **Art:** Kami mengimplementasikan `CustomPainter` murni untuk menggambar **Pita Pembatas Buku (Bookmark Ribbon)** pada sudut kartu. Warna pita ini bereaksi secara dinamis menyesuaikan status baca pengguna (Misalnya hijau jika sudah selesai dibaca). Ini membuktikan bahwa widget ini bukan sekadar UI statis.
+> *   **Gesture:** Kami meminjam kebiasaan pengguna dari Instagram (*Double Tap to Like*). Daripada mencari tombol kecil, *user* cukup mengetuk ganda pada modul materi untuk memfavoritkannya (*Bookmark*). Ini secara instan memicu transisi animasi pada ikon Bintang.
 > *   Menggunakan gestur `LongPress` pada kartu materi untuk membuka efek pembesaran layar darurat (*Peek Preview*), mempercepat proses cek materi tanpa harus pindah halaman penuh.
 >
 > **2. `url_launcher` (Library):**

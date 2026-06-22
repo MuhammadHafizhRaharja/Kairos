@@ -394,8 +394,15 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
                     width: widget.resource.status == 2 ? 1.5 : 1.0,
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: CustomPaint(
+                    foregroundPainter: BookmarkRibbonPainter(
+                      color: progressColor,
+                      status: widget.resource.status,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -554,6 +561,8 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
                     ],
                   ),
                 ),
+                  ),
+                ),
               ),
             ),
 
@@ -618,5 +627,43 @@ class _ResourceBookmarkCardState extends State<ResourceBookmarkCard>
         ),
       ),
     );
+  }
+}
+
+class BookmarkRibbonPainter extends CustomPainter {
+  final Color color;
+  final int status;
+
+  BookmarkRibbonPainter({required this.color, required this.status});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (status == 0) return; // Tidak usah digambar jika belum dibaca
+
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.85)
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    // Lebar pita 25, diletakkan 25px dari tepi kanan
+    final double rightEdge = size.width - 25;
+    final double leftEdge = size.width - 50;
+    
+    path.moveTo(leftEdge, 0); 
+    path.lineTo(rightEdge, 0);
+    path.lineTo(rightEdge, 45); // Panjang pita
+    path.lineTo(leftEdge + 12.5, 35); // Titik potong V di bawah pita
+    path.lineTo(leftEdge, 45);
+    path.close();
+
+    // Gambar bayangan kecil
+    canvas.drawShadow(path, Colors.black, 3.0, false);
+    // Gambar area pita
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant BookmarkRibbonPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.status != status;
   }
 }

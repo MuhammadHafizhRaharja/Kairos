@@ -24,33 +24,51 @@ class ProgressScreen extends StatefulWidget {
 }
 
 class _ProgressScreenState extends State<ProgressScreen> {
+  // ===========================================================================
+  // STRUKTUR UI UTAMA: ProgressScreen (Pekerjaan: Johanes Darren Yehuda)
+  // Layar ini adalah "Rumah" dari Modul Jurnal, Tantangan, dan Analitik.
+  // ===========================================================================
   @override
   Widget build(BuildContext context) {
+    // 1. Mengambil referensi tema aktif (termasuk Dark Mode) dari sistem Flutter
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    
+    // 2. Mendengarkan (listen) perubahan dari SkillProvider untuk fungsionalitas multi-bahasa
     final skillProv = context.watch<SkillProvider>();
 
+    // DefaultTabController adalah widget bawaan Flutter untuk mengatur logika perpindahan Tab 
+    // secara otomatis tanpa harus membuat state management manual.
     return DefaultTabController(
-      length: 3,
+      length: 3, // Terdapat 3 halaman Tab (Log, Challenges, Analytics)
       child: Scaffold(
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: theme.colorScheme.surface, // Warna background dinamis mengikuti tema
+        
+        // Membangun area Header (AppBar) di bagian atas layar
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          backgroundColor: Colors.transparent, // Transparan agar terlihat modern
+          elevation: 0, // Menghilangkan bayangan bawaan AppBar
+          
+          // Judul halaman, diambil dari provider bahasa (Indonesia / Inggris)
           title: Text(
             skillProv.translate('progress_journal'),
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
+              color: isDark ? Colors.white : Colors.black87, // Warna teks dinamis
             ),
           ),
+          
+          // Bottom property pada AppBar diisi oleh sederetan Tab (Tombol navigasi)
           bottom: TabBar(
-            indicatorColor: theme.colorScheme.primary,
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: Colors.grey,
+            indicatorColor: theme.colorScheme.primary, // Warna garis bawah saat tab aktif
+            labelColor: theme.colorScheme.primary, // Warna teks saat tab aktif
+            unselectedLabelColor: Colors.grey, // Warna teks saat tab tidak aktif
             tabs: [
+              // Tab 1: Log Aktivitas Jurnal
               Tab(text: skillProv.translate('activity_log'), icon: const Icon(Icons.history_edu)),
+              // Tab 2: Daftar Tantangan / Challenge
               Tab(text: skillProv.translate('challenges'), icon: const Icon(Icons.emoji_events)),
+              // Tab 3: Halaman Analitik (Fokus Utama Assessment 3)
               Tab(
                 text: skillProv.defaultLang == 'id' ? 'Analitik' : 'Analytics',
                 icon: const Icon(Icons.insights_rounded),
@@ -58,17 +76,23 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ],
           ),
         ),
+        
+        // TabBarView adalah penampung konten (halaman) yang berubah sesuai tab yang diklik.
+        // Urutan children di sini mutlak harus sama dengan urutan Tab di AppBar.
         body: const TabBarView(
           children: [
-            _ProgressLogsView(),
-            _ChallengesView(),
-            _AnalyticsView(),
+            _ProgressLogsView(), // Kelas pemanggil layout Log Jurnal
+            _ChallengesView(),   // Kelas pemanggil layout Tantangan
+            _AnalyticsView(),    // Kelas pemanggil layout Grafik dan Statistik
           ],
         ),
+        
+        // FloatingActionButton (Tombol bulat mengambang di pojok kanan bawah)
+        // Berfungsi memunculkan popup (Dialog) untuk menambah Log atau Tantangan baru.
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 96.0),
+          padding: const EdgeInsets.only(bottom: 96.0), // Diangkat sedikit agar tidak terhalang navigasi bawah
           child: FloatingActionButton(
-            onPressed: () => _showAddDialog(context),
+            onPressed: () => _showAddDialog(context), // Panggil fungsi popup form
             backgroundColor: theme.colorScheme.primary,
             elevation: 4,
             child: const Icon(Icons.add, color: Colors.white),
@@ -118,35 +142,44 @@ class _ProgressScreenState extends State<ProgressScreen> {
 }
 
 // =============================================================================
-// TAB 3: ANALITIK (NEW - Assessment 3)
+// TAB 3: ANALITIK (NEW - Assessment 3) (Pekerjaan: Johanes Darren Yehuda)
+// Fokus pada Gamifikasi, Visualisasi Data, dan Animasi.
 // =============================================================================
 class _AnalyticsView extends StatelessWidget {
   const _AnalyticsView();
 
   @override
   Widget build(BuildContext context) {
+    // 1. Menarik data terbaru secara realtime (Reactive) dari State Management
     final provider = context.watch<ProgressProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final streak = provider.calculateCurrentStreak();
-    final challengeStats = provider.getChallengeStats();
-    final last7Days = provider.getLast7DaysDuration();
-    final totalLogs = provider.logs.length;
+    // 2. Mengekstraksi angka-angka gamifikasi dari fungsi-fungsi rumit di Provider
+    final streak = provider.calculateCurrentStreak(); // Menghitung runtun hari login berturut-turut
+    final challengeStats = provider.getChallengeStats(); // Persentase/jumlah misi selesai
+    final last7Days = provider.getLast7DaysDuration(); // Array durasi belajar selama seminggu terakhir
+    final totalLogs = provider.logs.length; // Total entri jurnal sepanjang masa
 
+    // 3. Animasi Transisi Masuk (TweenAnimationBuilder)
+    // Fitur ini adalah perombakan besar untuk memenuhi standar Assessment 3.
+    // Menghindari tampilan kaku dengan memberikan efek memudar (Fade) dan bergeser (Slide).
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
+      tween: Tween<double>(begin: 0.0, end: 1.0), // Nilai animasi bergerak dari 0 (hilang) ke 1 (muncul utuh)
+      duration: const Duration(milliseconds: 600), // Berlangsung selama 0.6 detik
+      curve: Curves.easeOutCubic, // Gaya pergerakan mulus melambat di akhir
       builder: (context, value, child) {
+        // Transform.translate menggeser posisi Y dari bawah ke atas sejauh 30 pixel seiring nilai value naik ke 1
         return Transform.translate(
           offset: Offset(0, 30 * (1 - value)),
+          // Opacity mengatur tingkat transparansi berdasarkan `value` (0.0 -> 1.0)
           child: Opacity(
             opacity: value,
-            child: child,
+            child: child, // `child` di sini merujuk ke isi SingleChildScrollView di bawah
           ),
         );
       },
+      // Isi layar sebenarnya yang bisa di-*scroll*
       child: SingleChildScrollView(
         padding: const EdgeInsets.only(top: 16, bottom: 120),
         child: Column(

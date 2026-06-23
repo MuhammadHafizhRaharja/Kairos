@@ -53,62 +53,92 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
     }
   }
 
+  // =======================================================================
+  // LOGIKA GESTURE DAN GAMIFIKASI (Pekerjaan: Johanes Darren Yehuda)
+  // Fungsi-fungsi di bawah ini memproses interaksi geser (Drag/Swipe) jari pengguna.
+  // =======================================================================
+  
+  /// Dipanggil secara berulang (60fps) ketika jari pengguna sedang menggeser bar progress.
+  /// `details` berisi informasi arah dan jarak pergeseran jari, 
+  /// `cardWidth` adalah lebar total kartu agar kita bisa menghitung persentase geseran.
   void _handleDragUpdate(DragUpdateDetails details, double cardWidth) {
+    // Keamanan: Jika layar error dan lebarnya 0, hentikan fungsi agar tidak terjadi 'Division by Zero'.
     if (cardWidth <= 0) return;
 
     setState(() {
-      _isDragging = true;
-      // Menghitung delta perubahan berdasarkan lebar widget sesungguhnya
+      _isDragging = true; // Tandai bahwa animasi geser sedang aktif
+      
+      // Menghitung delta (jarak pergeseran jari) relatif terhadap lebar widget sesungguhnya.
+      // dx = pergerakan jari horizontal (kiri/kanan).
       final double delta = details.delta.dx / cardWidth;
+      
+      // Tambahkan nilai lama dengan delta (bisa positif/negatif). 
+      // .clamp(0.0, 1.0) memastikan progress tidak pernah tembus di bawah 0% atau di atas 100%.
       _localProgress = (_localProgress + delta).clamp(0.0, 1.0);
 
-      // Logika naik level (Level Up) jika mencapai batas progres 100% (1.0)
+      // Logika gamifikasi: Naik level (Level Up) jika mencapai batas progres penuh (1.0 = 100%)
       if (_localProgress >= 1.0) {
-        _localLevel += 1;
-        _localProgress = 0.0; // Reset progres untuk tingkat berikutnya
-        _triggerLevelUpAnim = true; // Memicu mikro-animasi
+        _localLevel += 1; // Tingkatkan level keahlian
+        _localProgress = 0.0; // Reset bar progres ke 0% untuk level yang baru
+        _triggerLevelUpAnim = true; // Memicu mikro-animasi loncat/berkilau pada label level
 
-        // Memberikan feedback haptic sederhana menggunakan default Flutter feedback
+        // Memberikan sensasi sentuhan fisik (Haptic/Vibration) kepada pengguna
+        // Ini menciptakan kepuasan (Dopamine Hit) saat berhasil Level Up.
         Feedback.forLongPress(context);
       }
     });
   }
 
+  /// Dipanggil tepat saat pengguna mengangkat jarinya dari layar (selesai menggeser).
   void _handleDragEnd() {
     setState(() {
+      // Matikan status dragging agar efek cahaya (Glow) atau bayangan pada UI hilang.
       _isDragging = false;
     });
-    // Memanggil callback untuk menyimpan data secara permanen ke database SQLite
+    // Memanggil callback function bawaan parameter untuk menyimpan data akhir ini
+    // ke Provider dan diteruskan secara permanen ke Database SQLite.
     widget.onProgressChanged(_localLevel, _localProgress);
   }
 
+  /// Fungsi alternatif untuk mengubah progress melalui klik tombol, bukan geser.
+  /// Dipakai pada "Aksi Cepat" (+10% atau -10%).
   void _changeProgressByAmount(double amount) {
     setState(() {
+      // Langsung tambahkan sejumlah persentase yang diminta (misal: +0.1)
       _localProgress += amount;
+      
+      // Jika melampaui 100%, naik level
       if (_localProgress >= 1.0) {
         _localLevel += 1;
-        _localProgress = 0.0;
-        _triggerLevelUpAnim = true;
-        Feedback.forLongPress(context);
-      } else if (_localProgress < 0.0) {
+        _localProgress = 0.0; // Reset progress
+        _triggerLevelUpAnim = true; // Picu animasi
+        Feedback.forLongPress(context); // Getarkan layar
+      } 
+      // Logika khusus jika dikurangi hingga di bawah 0%
+      else if (_localProgress < 0.0) {
         if (_localLevel > 1) {
+          // Jika level masih > 1, turunkan levelnya (Level Down)
           _localLevel -= 1;
-          _localProgress = 0.9;
+          _localProgress = 0.9; // Set progress di angka 90%
         } else {
+          // Jika level sudah mentok di 1, progres cukup berhenti di 0%
           _localProgress = 0.0;
         }
       }
     });
+    // Simpan ke database
     widget.onProgressChanged(_localLevel, _localProgress);
   }
 
+  /// Fungsi mutlak untuk memicu fitur Level Up secara instan.
   void _triggerLevelUp() {
     setState(() {
-      _localLevel += 1;
-      _localProgress = 0.0;
-      _triggerLevelUpAnim = true;
-      Feedback.forLongPress(context);
+      _localLevel += 1; // Langsung tambahkan 1 level
+      _localProgress = 0.0; // Kosongkan progress
+      _triggerLevelUpAnim = true; // Animasi selebrasi mikro
+      Feedback.forLongPress(context); // Getarkan layar
     });
+    // Simpan perubahan drastis ini ke database
     widget.onProgressChanged(_localLevel, _localProgress);
   }
 
@@ -308,17 +338,28 @@ class _InteractiveProgressCardState extends State<InteractiveProgressCard> {
                       const Divider(height: 1),
                       const SizedBox(height: 20),
 
-                      // Interactive Drag Bar
+                      // =================================================================
+                      // UI GESTURE & ANIMATION (Interactive Drag Bar)
+                      // =================================================================
+                      // LayoutBuilder memungkinkan kita mendapatkan informasi ukuran maksimal (maxWidth)
+                      // dari layar HP pengguna secara dinamis tanpa hardcode.
                       LayoutBuilder(
                         builder: (context, boxConstraints) {
+                          // Simpan ukuran lebar layar saat ini ke dalam variabel sheetWidth
                           final sheetWidth = boxConstraints.maxWidth;
+                          
+                          // GestureDetector adalah pembungkus tak terlihat yang mendeteksi sentuhan jari.
                           return GestureDetector(
+                            // onHorizontalDragUpdate dipanggil terus menerus saat jari digeser ke kiri/kanan.
+                            // Kita panggil logika _handleSheetDragUpdate yang sudah dibuat sebelumnya.
                             onHorizontalDragUpdate: (details) =>
                                 _handleSheetDragUpdate(
                                   details,
                                   sheetWidth,
                                   setSheetState,
                                 ),
+                            // onHorizontalDragEnd dipanggil ketika pengguna melepas jarinya dari layar.
+                            // Kita simpan hasil progress terakhir ke database melalui _handleSheetDragEnd.
                             onHorizontalDragEnd: (_) =>
                                 _handleSheetDragEnd(setSheetState),
                             child: Column(
